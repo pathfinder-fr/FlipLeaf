@@ -16,7 +16,26 @@ namespace FlipLeaf
 {
     public static class Engine
     {
-        public static string Render(string root, string page)
+        public static void Render(string root)
+        {
+            if (!Path.IsPathRooted(root))
+            {
+                throw new ArgumentException("root must be absolute", nameof(root));
+            }
+
+            if (root[root.Length - 1] != Path.DirectorySeparatorChar)
+            {
+                root += Path.DirectorySeparatorChar;
+            }
+
+            foreach (var file in Directory.GetFiles(root))
+            {
+                var relativeFile = file.Substring(root.Length);
+                Render(root, relativeFile);
+            }
+        }
+
+        public static void Render(string root, string page, string outputDir = "_site")
         {
             var text = File.ReadAllText(Path.Combine(root, page));
 
@@ -39,7 +58,7 @@ namespace FlipLeaf
 
             if (!parser.Accept<DocumentStart>())
             {
-                return null;
+                return;
             }
 
             var i = parser.Current.End.Index - 1;
@@ -56,7 +75,7 @@ namespace FlipLeaf
             // 2) fluid
             if (!ViewTemplate.TryParse(source, out var template))
             {
-                return null;
+                return;
             }
 
             var context = new TemplateContext();
@@ -72,13 +91,19 @@ namespace FlipLeaf
                 context.AmbientValues.Add("Body", source);
                 if (!ViewTemplate.TryParse(layoutText, out var layoutTemplate))
                 {
-                    return null;
+                    return;
                 }
 
                 source = layoutTemplate.Render(context);
             }
 
-            return source;
+            var fileName = Path.GetFileNameWithoutExtension(page);
+            var outFile = Path.Combine(root, outputDir, fileName + ".html");
+            var dir = Path.GetDirectoryName(outFile);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            Console.WriteLine($"Writing {outFile}...");
+            File.WriteAllText(outFile, source);
         }
 
         private static object ConvertDoc(object doc)

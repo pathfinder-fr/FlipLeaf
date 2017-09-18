@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace FlipLeaf
 {
@@ -6,9 +7,16 @@ namespace FlipLeaf
     {
         static void Main(string[] args)
         {
-            var output = Engine.Render(@"C:\Projets\Perso\FlipLeaf\sample", "sample.md");
+            var folder = System.Environment.CurrentDirectory;
 
-            Console.WriteLine(output);
+            if (args.Length != 0)
+            {
+                folder = args[0];
+            }
+
+            folder = Path.GetFullPath(folder);
+
+            Engine.Render(folder);
         }
     }
 }
