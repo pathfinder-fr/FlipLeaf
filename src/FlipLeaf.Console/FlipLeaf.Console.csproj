@@ -1,14 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>FlipLeaf</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\FlipLeaf.Engine\FlipLeaf.Engine.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <None Update="source\layout.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -17,5 +15,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="ILLink.Tasks" Version="0.1.4-preview-906439" />
+  </ItemGroup>
 </Project>

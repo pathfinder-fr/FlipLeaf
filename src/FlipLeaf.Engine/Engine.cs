@@ -10,67 +10,149 @@ using System.Threading.Tasks;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
-
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace FlipLeaf
 {
-    public static class Engine
+    public class Engine
     {
-        public static void Render(string root)
+        private const string DefaultLayoutsFolder = "_layouts";
+        private const string DefaultOutputFolder = "_site";
+
+        private readonly string _root;
+
+        private string _outputDir;
+
+        public Engine(string root)
         {
-            if (!Path.IsPathRooted(root))
-            {
-                throw new ArgumentException("root must be absolute", nameof(root));
-            }
+            _root = root;
+        }
 
-            if (root[root.Length - 1] != Path.DirectorySeparatorChar)
-            {
-                root += Path.DirectorySeparatorChar;
-            }
+        public SiteSettings Site { get; set; } = new SiteSettings();
 
-            foreach (var file in Directory.GetFiles(root))
+        public void Init()
+        {
+            CompileConfig();
+        }
+
+        public void Compile(string outputDir = DefaultOutputFolder)
+        {
+            _outputDir = outputDir;
+            RenderFolder(string.Empty);
+        }
+
+        private void CompileConfig()
+        {
+            var path = Path.Combine(_root, "_config.yml");
+            if (!File.Exists(path))
+                return;
+
+            var deserializer = new DeserializerBuilder().WithNamingConvention(new CamelCaseNamingConvention()).Build();
+            using (var file = File.OpenRead(path))
+            using (var reader = new StreamReader(file))
             {
-                var relativeFile = file.Substring(root.Length);
-                Render(root, relativeFile);
+                var parser = new Parser(reader);
+                parser.Expect<StreamStart>();
+
+               this.Site= deserializer.Deserialize<SiteSettings>(parser);
             }
         }
 
-        public static void Render(string root, string page, string outputDir = "_site")
+        private void RenderFolder(string directory)
         {
-            var text = File.ReadAllText(Path.Combine(root, page));
+            var dir = Path.Combine(_root, directory);
+
+            var targetDir = Path.Combine(_root, _outputDir, directory);
+            if (!Directory.Exists(targetDir))
+            {
+                Directory.CreateDirectory(targetDir);
+            }
+
+            foreach (var file in Directory.GetFiles(dir))
+            {
+                var fileName = Path.GetFileName(file);
+                var fileExtension = Path.GetExtension(file);
+
+                if (Path.GetExtension(file) == ".md")
+                {
+                    var targetPath = Path.Combine(targetDir, Path.ChangeExtension(fileName, ".html"));
+                    Render(Path.Combine(directory, fileName), targetPath);
+                }
+                else
+                {
+                    File.Copy(file, Path.Combine(targetDir, fileName), true);
+                }
+            }
+
+            foreach (var subDir in Directory.GetDirectories(dir))
+            {
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    RenderFolder(Path.Combine(directory, subDir));
+                }
+                else
+                {
+                    var directoryName = Path.GetFileName(subDir);
+
+                    if (string.Equals(directoryName, _outputDir, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                    if (string.Equals(directoryName, DefaultLayoutsFolder, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    RenderFolder(Path.Combine(directory, subDir));
+                }
+            }
+        }
+
+        public void Render(string page, string targetPath)
+        {
+            var source = File.ReadAllText(Path.Combine(_root, page));
 
 
             // 1) yaml
-            var input = new StringReader(text);
+            var input = new StringReader(source);
             var deserializer = new DeserializerBuilder().Build();
             var parser = new Parser(input);
-            parser.Expect<StreamStart>();
+
 
             object finalDoc = null;
-
-            if (parser.Accept<DocumentStart>())
+            int i;
+            try
             {
-                var doc = deserializer.Deserialize(parser);
-                finalDoc = ConvertDoc(doc);
+                parser.Expect<StreamStart>();
+
+                if (parser.Accept<DocumentStart>())
+                {
+                    var doc = deserializer.Deserialize(parser);
+                    finalDoc = ConvertDoc(doc);
+                }
+
+                if (!parser.Accept<DocumentStart>())
+                {
+                    return;
+                }
+
+                i = parser.Current.End.Index - 1;
+                char c;
+
+                do
+                {
+                    i++;
+                    c = source[i];
+                } while (c == '\r' || c == '\n');
+
+                source = source.Substring(i);
             }
-
-
-
-            if (!parser.Accept<DocumentStart>())
+            catch (YamlException ye)
             {
+                Console.WriteLine($"Unable to parse yaml header for file {page}", ye);
                 return;
             }
 
-            var i = parser.Current.End.Index - 1;
-            char c;
-
-            do
-            {
-                i++;
-                c = text[i];
-            } while (c == '\r' || c == '\n');
-
-            var source = text.Substring(i);
 
             // 2) fluid
             if (!ViewTemplate.TryParse(source, out var template))
@@ -79,7 +161,11 @@ namespace FlipLeaf
             }
 
             var context = new TemplateContext();
+            context.MemberAccessStrategy = new IgnoreCaseMemberAccessStrategy();
+            context.MemberAccessStrategy.Register<SiteSettings>();
             context.SetValue("page", finalDoc);
+            context.SetValue("site", Site);
+
             source = template.Render(context);
 
             source = Markdig.Markdown.ToHtml(source);
@@ -87,7 +173,10 @@ namespace FlipLeaf
             var layoutFile = context.GetValue("page").GetValue("layout", context).ToStringValue();
             if (layoutFile != null)
             {
-                var layoutText = File.ReadAllText(Path.Combine(root, layoutFile));
+                if (Path.GetExtension(layoutFile) == "")
+                    layoutFile += ".html";
+
+                var layoutText = File.ReadAllText(Path.Combine(_root, DefaultLayoutsFolder, layoutFile));
                 context.AmbientValues.Add("Body", source);
                 if (!ViewTemplate.TryParse(layoutText, out var layoutTemplate))
                 {
@@ -97,13 +186,8 @@ namespace FlipLeaf
                 source = layoutTemplate.Render(context);
             }
 
-            var fileName = Path.GetFileNameWithoutExtension(page);
-            var outFile = Path.Combine(root, outputDir, fileName + ".html");
-            var dir = Path.GetDirectoryName(outFile);
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-            Console.WriteLine($"Writing {outFile}...");
-            File.WriteAllText(outFile, source);
+            Console.WriteLine($"Writing {targetPath}...");
+            File.WriteAllText(targetPath, source);
         }
 
         private static object ConvertDoc(object doc)
@@ -146,6 +230,45 @@ namespace FlipLeaf
                     return doc;
             }
         }
+
+        class IgnoreCaseMemberAccessStrategy: IMemberAccessStrategy        {
+            private Dictionary<string, IMemberAccessor> _map = new Dictionary<string, IMemberAccessor>(StringComparer.OrdinalIgnoreCase);
+            private readonly IMemberAccessStrategy _parent;
+
+            public IgnoreCaseMemberAccessStrategy()
+            {
+            }
+
+            public IgnoreCaseMemberAccessStrategy(IMemberAccessStrategy parent)
+            {
+                _parent = parent;
+            }
+
+            public object Get(object obj, string name)
+            {
+                // Look for specific property map
+                if (_map.TryGetValue(Key(obj.GetType(), name), out var getter))
+                {
+                    return getter.Get(obj, name);
+                }
+
+                // Look for a catch-all getter
+                if (_map.TryGetValue(Key(obj.GetType(), "*"), out getter))
+                {
+                    return getter.Get(obj, name);
+                }
+
+                return _parent?.Get(obj, name);
+            }
+
+            public void Register(Type type, string name, IMemberAccessor getter)
+            {
+                _map[Key(type, name)] = getter;
+            }
+
+            private string Key(Type type, string name) => $"{type.Name}.{name}";
+        }
+
 
         class ViewTemplate : BaseFluidTemplate<ViewTemplate>
         {

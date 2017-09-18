@@ -16,7 +16,9 @@ namespace FlipLeaf
 
             folder = Path.GetFullPath(folder);
 
-            Engine.Render(folder);
+            var engine = new Engine(folder);
+            engine.Init();
+            engine.Compile();
         }
     }
 }

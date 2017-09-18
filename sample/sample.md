@@ -1,7 +1,8 @@
 ﻿---
-title: titre de ma sample page
-layout: layout.html
+title: Exemple de page
+layout: default
 ---
-# contenu
+# Chapitre
 
-Voilà {{ page.title }}.
+Voilà un exemple de page.
+Recopie du titre : {{ page.title }}.
