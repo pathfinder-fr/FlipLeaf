@@ -18,7 +18,7 @@ namespace FlipLeaf
 
             var engine = new Engine(folder);
             engine.Init();
-            engine.Compile();
+            engine.RenderAll();
         }
     }
 }
