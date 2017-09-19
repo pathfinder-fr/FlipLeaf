@@ -18,6 +18,19 @@ namespace FlipLeaf
             _project = project;
         }
 
+        //public void Render(RenderContext context, IRenderingMiddleware next)
+        //{
+        //    if (ViewTemplate.TryParse(context.Input.ReadToEnd(), out var template))
+        //    {
+        //        var templateContext = new TemplateContext { MemberAccessStrategy = new IgnoreCaseMemberAccessStrategy() };
+        //        templateContext.MemberAccessStrategy.Register<SiteSettings>();
+        //        templateContext.SetValue("page", null);
+        //        templateContext.SetValue("site", this._project.Settings);
+
+        //        template.Render(context.Output, HtmlEncoder.Default, templateContext);
+        //    }
+        //}
+
         public string ParseContent(string content, object pageContext, out TemplateContext context)
         {
             context = null;
@@ -44,7 +57,9 @@ namespace FlipLeaf
             }
 
             if (Path.GetExtension(layoutFile) == "")
+            {
                 layoutFile += ".html";
+            }
 
             var layoutText = File.ReadAllText(Path.Combine(this._project.Path, this._project.Settings.LayoutFolder, layoutFile));
             context.AmbientValues.Add("Body", source);
