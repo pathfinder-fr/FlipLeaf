@@ -7,6 +7,11 @@ namespace FlipLeaf
     {
         private const string DefaultLayoutsFolder = "_layouts";
         private const string DefaultOutputFolder = "_site";
+        private readonly IRenderingMiddleware[] _middlewares = {
+            new YamlHeaderRenderer(),
+            new FluidRenderer(),
+            new MarkdownRenderer()
+            };
 
         private readonly string _root;
 
@@ -106,33 +111,13 @@ namespace FlipLeaf
         /// </summary>
         public string Render(string path)
         {
-            var source = File.ReadAllText(path);
+            var app = new AppEngine(_middlewares);
 
-            // 1) yaml
-            if (!Yaml.ParseHeader(ref source, out var pageContext))
+            using (var output = app.Execute(File.OpenRead(path)))
             {
-                return null;
+                output.Position = 0;
+                return new StreamReader(output).ReadToEnd();
             }
-
-            // 2) fluid
-            if (!Fluid.ParsePage(ref source, pageContext, Site, out var templateContext))
-            {
-                return null;
-            }
-
-            // 3) markdown
-            if (!Markdown.Parse(ref source))
-            {
-                return null;
-            }
-
-            // 4) layout
-            if (!Fluid.ApplyLayout(ref source, templateContext, _root))
-            {
-                return null;
-            }
-
-            return source;
         }
     }
 }

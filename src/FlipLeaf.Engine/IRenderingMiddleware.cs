@@ -26,19 +26,23 @@ namespace FlipLeaf
         private RenderContext _context;
         private int index;
 
-        public AppEngine(IEnumerable<IRenderingMiddleware> middlewares)
+        public AppEngine(IRenderingMiddleware[] middlewares)
         {
-            _middlewares = middlewares.ToArray();
+            _middlewares = middlewares;
         }
 
-        public void Execute(Stream input, Stream output)
+        public Stream Execute(Stream input, IDictionary<string, object> valueData)
         {
-            _context = new RenderContext { Input = input, Output = output };
+            _context = new RenderContext { Input = input, Output = null };
+
+            foreach(var p in valueData)
+            {
+                _context.Values.Add(p.Key, p.Value);
+            }
+
             ExecuteNext(this._context);
 
-            var first = this._middlewares[index];
-
-            first.Render(this._context, this.ExecuteNext);
+            return _context.Output;
         }
 
         private void ExecuteNext(RenderContext context)

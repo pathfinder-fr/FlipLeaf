@@ -1,10 +1,4 @@
-﻿// -----------------------------------------------------------------------
-// <copyright file="FluidRenderer.cs" company="MB3M">
-// Copyright (c) MB3M. Tous droits reserves.
-// </copyright>
-// -----------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -18,13 +12,6 @@ namespace FlipLeaf
 {
     public class FluidRenderer : IRenderingMiddleware
     {
-        private readonly ProjectContext _project;
-
-        public FluidRenderer(ProjectContext project)
-        {
-            _project = project;
-        }
-
         public void Render(RenderContext context, Action<RenderContext> next)
         {
             // Render fluid template
@@ -65,7 +52,7 @@ namespace FlipLeaf
                 {
                     layoutFile += ".html";
                 }
-                
+
                 // read source from input
                 string source;
                 context.Output.Position = 0;
@@ -85,102 +72,60 @@ namespace FlipLeaf
             }
         }
 
-        public string ParseContent(string content, object pageContext, out TemplateContext context)
-            {
-                context = null;
-
-                if (!ViewTemplate.TryParse(content, out var template))
-                {
-                    throw new ParseException();
-                }
-
-                context = new TemplateContext { MemberAccessStrategy = new IgnoreCaseMemberAccessStrategy() };
-                context.MemberAccessStrategy.Register<SiteSettings>();
-                context.SetValue("page", pageContext);
-                context.SetValue("site", this._project.Settings);
-
-                return template.Render(context);
-            }
-
-            public string ApplyLayout(string source, TemplateContext context)
-            {
-                var layoutFile = context.GetValue("page").GetValue("layout", context).ToStringValue();
-                if (layoutFile == null)
-                {
-                    return source;
-                }
-
-                if (Path.GetExtension(layoutFile) == "")
-                {
-                    layoutFile += ".html";
-                }
-
-                var layoutText = File.ReadAllText(Path.Combine(this._project.Path, this._project.Settings.LayoutFolder, layoutFile));
-                context.AmbientValues.Add("Body", source);
-                if (!ViewTemplate.TryParse(layoutText, out var layoutTemplate))
-                {
-                    throw new ParseException();
-                }
-
-                return layoutTemplate.Render(context);
-            }
-            class
-
-            IgnoreCaseMemberAccessStrategy :
-            IMemberAccessStrategy
-            {
-
-        private Dictionary<string, IMemberAccessor> _map = new Dictionary<string, IMemberAccessor>(StringComparer.OrdinalIgnoreCase);
-
-        public object Get(object obj, string name)
+        class IgnoreCaseMemberAccessStrategy : IMemberAccessStrategy
         {
-            // Look for specific property map
-            if (_map.TryGetValue(Key(obj.GetType(), name), out var getter))
+
+            private Dictionary<string, IMemberAccessor> _map = new Dictionary<string, IMemberAccessor>(StringComparer.OrdinalIgnoreCase);
+
+            public object Get(object obj, string name)
             {
-                return getter.Get(obj, name);
+                // Look for specific property map
+                if (_map.TryGetValue(Key(obj.GetType(), name), out var getter))
+                {
+                    return getter.Get(obj, name);
+                }
+
+                // Look for a catch-all getter
+                if (_map.TryGetValue(Key(obj.GetType(), "*"), out getter))
+                {
+                    return getter.Get(obj, name);
+                }
+
+                return null;
             }
 
-            // Look for a catch-all getter
-            if (_map.TryGetValue(Key(obj.GetType(), "*"), out getter))
+            public void Register(Type type, string name, IMemberAccessor getter)
             {
-                return getter.Get(obj, name);
+                _map[Key(type, name)] = getter;
             }
 
-            return null;
+            private string Key(Type type, string name) => $"{type.Name}.{name}";
         }
 
-        public void Register(Type type, string name, IMemberAccessor getter)
+        class ViewTemplate : BaseFluidTemplate<ViewTemplate>
         {
-            _map[Key(type, name)] = getter;
+            static ViewTemplate()
+            {
+                Factory.RegisterTag<RenderBodyTag>("renderbody");
+            }
         }
 
-        private string Key(Type type, string name) => $"{type.Name}.{name}";
-    }
-
-    class ViewTemplate : BaseFluidTemplate<ViewTemplate>
-    {
-        static ViewTemplate()
+        public class RenderBodyTag : SimpleTag
         {
-            Factory.RegisterTag<RenderBodyTag>("renderbody");
+            public override async Task<Completion> WriteToAsync(TextWriter writer, TextEncoder encoder, TemplateContext context)
+            {
+                if (context.AmbientValues.TryGetValue("Body", out var body))
+                {
+                    await writer.WriteAsync((string)body);
+                }
+                else
+                {
+                    throw new ParseException("Could not render body, Layouts can't be evaluated directly.");
+                }
+
+                return Completion.Normal;
+            }
         }
     }
-
-    public class RenderBodyTag : SimpleTag
-    {
-        public override async Task<Completion> WriteToAsync(TextWriter writer, TextEncoder encoder, TemplateContext context)
-        {
-            if (context.AmbientValues.TryGetValue("Body", out var body))
-            {
-                await writer.WriteAsync((string)body);
-            }
-            else
-            {
-                throw new ParseException("Could not render body, Layouts can't be evaluated directly.");
-            }
-
-            return Completion.Normal;
-        }
-    }
-}
 
 }
