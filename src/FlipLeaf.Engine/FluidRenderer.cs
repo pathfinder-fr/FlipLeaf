@@ -1,6 +1,13 @@
-﻿using System;
+﻿// -----------------------------------------------------------------------
+// <copyright file="FluidRenderer.cs" company="MB3M">
+// Copyright (c) MB3M. Tous droits reserves.
+// </copyright>
+// -----------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Fluid;
@@ -9,7 +16,7 @@ using Fluid.Tags;
 
 namespace FlipLeaf
 {
-    public class FluidRenderer
+    public class FluidRenderer : IRenderingMiddleware
     {
         private readonly ProjectContext _project;
 
@@ -18,111 +25,162 @@ namespace FlipLeaf
             _project = project;
         }
 
-        //public void Render(RenderContext context, IRenderingMiddleware next)
-        //{
-        //    if (ViewTemplate.TryParse(context.Input.ReadToEnd(), out var template))
-        //    {
-        //        var templateContext = new TemplateContext { MemberAccessStrategy = new IgnoreCaseMemberAccessStrategy() };
-        //        templateContext.MemberAccessStrategy.Register<SiteSettings>();
-        //        templateContext.SetValue("page", null);
-        //        templateContext.SetValue("site", this._project.Settings);
+        public void Render(RenderContext context, Action<RenderContext> next)
+        {
+            // Render fluid template
+            TemplateContext templateContext = null;
+            using (var reader = new StreamReader(context.Input, Encoding.UTF8, false, 1024, true))
+            {
+                if (ViewTemplate.TryParse(reader.ReadToEnd(), out var template))
+                {
+                    templateContext = new TemplateContext { MemberAccessStrategy = new IgnoreCaseMemberAccessStrategy() };
+                    templateContext.MemberAccessStrategy.Register<SiteSettings>();
+                    templateContext.SetValue("site", this._project.Settings);
 
-        //        template.Render(context.Output, HtmlEncoder.Default, templateContext);
-        //    }
-        //}
+                    if (context.Values.TryGetValue("PageData", out var page))
+                    {
+                        templateContext.SetValue("page", page);
+                    }
+
+                    var mem = new MemoryStream();
+
+                    using (var writer = new StreamWriter(mem))
+                    {
+                        template.Render(writer, HtmlEncoder.Default, templateContext);
+                    }
+
+                    mem.Position = 0;
+                    context.Output = mem;
+                }
+            }
+
+            // Pass to next pipeline stage
+            next?.Invoke(context);
+
+            // Include the containing layout if necessary
+            var layoutFile = templateContext?.GetValue("page").GetValue("layout", templateContext).ToStringValue();
+            if (layoutFile != null)
+            {
+                if (Path.GetExtension(layoutFile) == "")
+                {
+                    layoutFile += ".html";
+                }
+                
+                // read source from input
+                string source;
+                context.Output.Position = 0;
+                using (var reader = new StreamReader(context.Output))
+                {
+                    source = reader.ReadToEnd();
+                }
+
+                var layoutText = File.ReadAllText(Path.Combine(this._project.Path, this._project.Settings.LayoutFolder, layoutFile));
+                templateContext.AmbientValues.Add("Body", source);
+                if (!ViewTemplate.TryParse(layoutText, out var layoutTemplate))
+                {
+                    throw new ParseException();
+                }
+
+                layoutTemplate.Render(templateContext);
+            }
+        }
 
         public string ParseContent(string content, object pageContext, out TemplateContext context)
-        {
-            context = null;
-
-            if (!ViewTemplate.TryParse(content, out var template))
             {
-                throw new ParseException();
-            }
+                context = null;
 
-            context = new TemplateContext { MemberAccessStrategy = new IgnoreCaseMemberAccessStrategy() };
-            context.MemberAccessStrategy.Register<SiteSettings>();
-            context.SetValue("page", pageContext);
-            context.SetValue("site", this._project.Settings);
-
-            return template.Render(context);
-        }
-
-        public string ApplyLayout(string source, TemplateContext context)
-        {
-            var layoutFile = context.GetValue("page").GetValue("layout", context).ToStringValue();
-            if (layoutFile == null)
-            {
-                return source;
-            }
-
-            if (Path.GetExtension(layoutFile) == "")
-            {
-                layoutFile += ".html";
-            }
-
-            var layoutText = File.ReadAllText(Path.Combine(this._project.Path, this._project.Settings.LayoutFolder, layoutFile));
-            context.AmbientValues.Add("Body", source);
-            if (!ViewTemplate.TryParse(layoutText, out var layoutTemplate))
-            {
-                throw new ParseException();
-            }
-
-            return layoutTemplate.Render(context);
-        }
-
-        class IgnoreCaseMemberAccessStrategy : IMemberAccessStrategy
-        {
-            private Dictionary<string, IMemberAccessor> _map = new Dictionary<string, IMemberAccessor>(StringComparer.OrdinalIgnoreCase);
-
-            public object Get(object obj, string name)
-            {
-                // Look for specific property map
-                if (_map.TryGetValue(Key(obj.GetType(), name), out var getter))
+                if (!ViewTemplate.TryParse(content, out var template))
                 {
-                    return getter.Get(obj, name);
+                    throw new ParseException();
                 }
 
-                // Look for a catch-all getter
-                if (_map.TryGetValue(Key(obj.GetType(), "*"), out getter))
+                context = new TemplateContext { MemberAccessStrategy = new IgnoreCaseMemberAccessStrategy() };
+                context.MemberAccessStrategy.Register<SiteSettings>();
+                context.SetValue("page", pageContext);
+                context.SetValue("site", this._project.Settings);
+
+                return template.Render(context);
+            }
+
+            public string ApplyLayout(string source, TemplateContext context)
+            {
+                var layoutFile = context.GetValue("page").GetValue("layout", context).ToStringValue();
+                if (layoutFile == null)
                 {
-                    return getter.Get(obj, name);
+                    return source;
                 }
 
-                return null;
-            }
+                if (Path.GetExtension(layoutFile) == "")
+                {
+                    layoutFile += ".html";
+                }
 
-            public void Register(Type type, string name, IMemberAccessor getter)
+                var layoutText = File.ReadAllText(Path.Combine(this._project.Path, this._project.Settings.LayoutFolder, layoutFile));
+                context.AmbientValues.Add("Body", source);
+                if (!ViewTemplate.TryParse(layoutText, out var layoutTemplate))
+                {
+                    throw new ParseException();
+                }
+
+                return layoutTemplate.Render(context);
+            }
+            class
+
+            IgnoreCaseMemberAccessStrategy :
+            IMemberAccessStrategy
             {
-                _map[Key(type, name)] = getter;
+
+        private Dictionary<string, IMemberAccessor> _map = new Dictionary<string, IMemberAccessor>(StringComparer.OrdinalIgnoreCase);
+
+        public object Get(object obj, string name)
+        {
+            // Look for specific property map
+            if (_map.TryGetValue(Key(obj.GetType(), name), out var getter))
+            {
+                return getter.Get(obj, name);
             }
 
-            private string Key(Type type, string name) => $"{type.Name}.{name}";
+            // Look for a catch-all getter
+            if (_map.TryGetValue(Key(obj.GetType(), "*"), out getter))
+            {
+                return getter.Get(obj, name);
+            }
+
+            return null;
         }
 
-        class ViewTemplate : BaseFluidTemplate<ViewTemplate>
+        public void Register(Type type, string name, IMemberAccessor getter)
         {
-            static ViewTemplate()
-            {
-                Factory.RegisterTag<RenderBodyTag>("renderbody");
-            }
+            _map[Key(type, name)] = getter;
         }
 
-        public class RenderBodyTag : SimpleTag
-        {
-            public override async Task<Completion> WriteToAsync(TextWriter writer, TextEncoder encoder, TemplateContext context)
-            {
-                if (context.AmbientValues.TryGetValue("Body", out var body))
-                {
-                    await writer.WriteAsync((string)body);
-                }
-                else
-                {
-                    throw new ParseException("Could not render body, Layouts can't be evaluated directly.");
-                }
+        private string Key(Type type, string name) => $"{type.Name}.{name}";
+    }
 
-                return Completion.Normal;
-            }
+    class ViewTemplate : BaseFluidTemplate<ViewTemplate>
+    {
+        static ViewTemplate()
+        {
+            Factory.RegisterTag<RenderBodyTag>("renderbody");
         }
     }
+
+    public class RenderBodyTag : SimpleTag
+    {
+        public override async Task<Completion> WriteToAsync(TextWriter writer, TextEncoder encoder, TemplateContext context)
+        {
+            if (context.AmbientValues.TryGetValue("Body", out var body))
+            {
+                await writer.WriteAsync((string)body);
+            }
+            else
+            {
+                throw new ParseException("Could not render body, Layouts can't be evaluated directly.");
+            }
+
+            return Completion.Normal;
+        }
+    }
+}
+
 }
