@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace FlipLeaf.Services.Git
 {
-    public class Commit
+    public class GitCommit
     {
         public string Sha { get; set; }
 

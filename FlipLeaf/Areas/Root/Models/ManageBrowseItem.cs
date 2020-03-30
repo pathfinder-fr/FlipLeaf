@@ -10,7 +10,7 @@ namespace FlipLeaf.Areas.Root.Models
 
         public DateTimeOffset? LastUpdate { get; set; }
 
-        public ManageBrowseItem WithCommit(Services.Git.Commit commit)
+        public ManageBrowseItem WithCommit(Services.Git.GitCommit commit)
         {
             if (commit != null)
             {

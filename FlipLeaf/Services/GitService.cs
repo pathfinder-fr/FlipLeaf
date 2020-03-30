@@ -14,9 +14,9 @@ namespace FlipLeaf.Services
 
         void SetLastCommit<T>(string parent, IDictionary<string, T> items, Action<T, DateTimeOffset> setLastUpdate);
 
-        IEnumerable<Git.Commit> LogFile(string file, int count = 30);
+        IEnumerable<Git.GitCommit> LogFile(string file, int count = 30);
 
-        IEnumerable<Git.Commit> LogFile(GitRepository repo, string file, int count = 30);
+        IEnumerable<Git.GitCommit> LogFile(GitRepository repo, string file, int count = 30);
 
         void PullPush(IUser merger);
 
@@ -118,7 +118,7 @@ namespace FlipLeaf.Services
             }
         }
 
-        public IEnumerable<Git.Commit> LogFile(string file, int count = 30)
+        public IEnumerable<Git.GitCommit> LogFile(string file, int count = 30)
         {
             lock (_gitLock)
             {
@@ -126,16 +126,16 @@ namespace FlipLeaf.Services
                 return LogFile(repo, file, count);
             }
         }
-        public IEnumerable<Git.Commit> LogFile(GitRepository repo, string file, int count = 30)
+        public IEnumerable<Git.GitCommit> LogFile(GitRepository repo, string file, int count = 30)
         {
             return LogFile(repo.Inner, file, count);
         }
 
-        private IEnumerable<Git.Commit> LogFile(Repository repo, string file, int count = 30)
+        private IEnumerable<Git.GitCommit> LogFile(Repository repo, string file, int count = 30)
         {
             return repo.Commits
                 .QueryBy(file)
-                .Select(x => new Git.Commit { Sha = x.Commit.Sha, Message = x.Commit.Message, Authored = x.Commit.Author.When })
+                .Select(x => new Git.GitCommit { Sha = x.Commit.Sha, Message = x.Commit.Message, Authored = x.Commit.Author.When })
                 .Take(count)
                 .ToList();
         }
