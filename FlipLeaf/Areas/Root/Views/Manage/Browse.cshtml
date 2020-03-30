@@ -1,0 +1,40 @@
+@model ManageBrowseViewModel
+
+<h3>Content Manager</h3>
+
+<nav aria-label="breadcrumb">
+    <manage-breadcrumb path-parts="@Model.PathParts"></manage-breadcrumb>
+</nav>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Last update</th>
+        </tr>
+    </thead>
+    <tbody class="directories">
+        @foreach (var item in Model.Directories)
+        {
+            <tr>
+                <td>
+                    <a asp-action="Browse" asp-route-path="@item.Path.RelativePath">@item.Path.Name</a>
+                </td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+    <tbody class="files">
+        @foreach (var item in Model.Files)
+        {
+            <tr>
+                <td>
+                    <a asp-action="Edit" asp-route-path="@item.Path.RelativePath">@item.Path.Name</a>
+                </td>
+                <td>
+                    <span title="@item.LastUpdate?">@item.LastUpdate.ToRelativeTime()</span>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

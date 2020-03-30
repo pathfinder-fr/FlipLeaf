@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1" />
+    <title>@ViewData["Title"] - Pathfinder-Fr</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="~/css/shared.css" />
+    <link rel="stylesheet" type="text/css" href="~/css/sueetie.css" />
+    <link rel="stylesheet" type="text/css" href="~/css/custom.css" />
+</head>
+<body>
+    <table id="wrapper">
+        <tr>
+            <td id="margin-l" rowspan="2"></td>
+            <td id="page">
+                <div id="header">
+                    <user-menu></user-menu>
+                    <div id="banner">
+                        <span>Pathfinder-Fr</span>
+                    </div>
+                    <div id="nav">
+                        <ul>
+                            <li id="HomeTab"><a href="/" class="home"><span>Accueil</span></a></li>
+                            <li id="BlogTab"><a href="/Blog/" class="blog"><span>Blog</span></a></li>
+                            <li id="WikiTabber">
+                                <span class="bullet"><a href="/Wiki/" class="wikis bullet"><span>Wikis</span></a></span>
+                                <ul class="sub sub-wikis">
+                                    <li><a href="/Wiki/Pathfinder-RPG.MainPage.ashx" class="wiki-pfrpg"><span>Pathfinder-RPG</span></a></li>
+                                    <li><a href="/Wiki/Golarion.MainPage.ashx" class="wiki-golarion"><span>Golarion</span></a></li>
+                                    <li><a href="/Wiki/Ressources.MainPage.ashx" class="wiki-informations"><span>Ressources</span></a></li>
+                                    <li><a href="/Wiki/Aventures.MainPage.ashx" class="wiki-aventures"><span>Aventures</span></a></li>
+                                    <li><a href="/Wiki/Starfinder.MainPage.ashx" class="wiki-starfinder"><span>Starfinder</span></a></li>
+                                </ul>
+                            </li>
+                            <li id="ForumsTab"><span class="bullet"><a href="/Forum/" class="forum bullet"><span>Forum</span></a></span></li>
+                            <li id="MediaTab"><span class="bullet"><a href="/Media/" class="galerie"><span>Galerie</span></a></span></li>
+                            <li id="PartiesTab">
+                                <span class="bullet"><a href="/Wiki/Parties.MainPage.ashx" class="parties"><span>Parties</span></a></span>
+                                <ul class="sub sub-parties">
+                                    <li><a href="/Wiki/Parties.MainPage.ashx" class="parties-wiki"><span>Wikis</span></a></li>
+                                    <li><a href="/Forum/yaf_forum7_Parties-sur-forum.aspx" class="parties-forum"><span>Forums</span></a></li>
+                                </ul>
+                            </li>
+                            <li id="SearchTab"><a href="/Search/" class="search"><span>Recherche</span></a></li>
+                            <li id="ContactTab"><a href="/Blog/Contact.aspx" class="contact"><span>Contact</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="container">
+                    <div id="container-tl">
+                        <div id="sidebar">
+                            @RenderSection("Sidebar", false)
+                        </div>
+                        <div id="container-tr">
+                            <div id="content">
+                                @RenderBody()
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td id="margin-r" rowspan="2"></td>
+        </tr>
+        <tr>
+            <td id="footer">
+                <span>
+                    <div id="footerlinks">
+                        <span id="HomeFooterLink">
+                            <a href="/">Accueil</a>
+                        </span>
+                        <span id="BlogsFooterLink">
+                            &bull; <a href="/Blog/">Blog</a>
+                        </span>
+                        <span id="ForumsFooterLink">
+                            &bull; <a href="/Forum/">Forums</a>
+                        </span>
+                        <span id="MediaFooterLink">
+                            &bull; <a href="/Media/">Galerie</a>
+                        </span>
+                        <span id="WikiFooterLink">
+                            &bull; <a href="/Wiki/">Wikis</a>
+                        </span>
+                        <span id="ContactUsFooterLink">
+                            &bull; <a href="/Blog/contact.aspx">Nous contacter</a>
+                        </span>
+                        <span id="SearchFooterLink">
+                            &bull; <a href="/Search/">Recherche</a>
+                        </span>
+                    </div>
+                </span>
+                <p>La gamme Pathfinder est une cr&eacute;ation de <a href="http://www.paizo.com/" target="_blank">Paizo Publishing</a> traduite en fran&ccedil;ais par <a href="http://www.black-book-editions.fr/">Black Book Editions</a>.</p>
+                <p>Ce site se base sur les licences <a href="/Wiki/OGL.ashx">Open Game License</a>, <a href="/Wiki/PCUP.ashx">Pathfinder Community Use Policy et les conditions d'utilisation BBE</a>.</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

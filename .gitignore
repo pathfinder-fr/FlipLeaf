@@ -1,0 +1,6 @@
+.vs/
+.vscode/
+.content/
+bin/
+obj/
+*.csproj.user

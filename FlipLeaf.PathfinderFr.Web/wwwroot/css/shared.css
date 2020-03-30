@@ -1,0 +1,244 @@
+﻿html, body { margin:0; padding:0; height: 100%; }
+
+body {
+    background: #000 url(theme/body.png) repeat scroll center top;
+}
+
+/**********/
+/* GLOBAL */
+/**********/
+
+body, input, textarea, table { font-family: Arial, Sans-Serif; font-size: 9pt; }
+
+iframe { background-color: #fff; }
+
+form { height: 100%; }
+
+a { color: #853a1e; }
+
+a img { border: none; }
+
+table { border-collapse: collapse; }
+
+.center { text-align: center; }
+
+/*********/
+/* SIZES */
+/*********/
+
+#wrapper {
+    height: 100%;
+    min-width: 960px; 
+    max-width: 1200px;
+    table-layout: fixed; 
+}
+
+#page {
+    min-width: 896px;
+    max-width: 1136px;
+}
+
+/***********/
+/* WRAPPER */
+/***********/
+
+#wrapper {
+    margin: 0 auto;
+    border-collapse: collapse;
+    background: #fff url(theme/wrapper.png) repeat-y scroll right 102px;
+}
+
+#margin-l, #margin-r {
+    padding: 0;
+    vertical-align: top; 
+    width: 22px;
+    min-width: 22px;
+    background: transparent none repeat-y scroll left top;
+}
+
+#margin-l { background-image: url(theme/wrapper-l.png);  }
+#margin-r { background-image: url(theme/wrapper-r.png); }
+
+/********/
+/* PAGE */
+/********/
+
+#page {
+    padding: 0;
+    vertical-align: top; 
+    background: transparent url(theme/page.png) repeat-y scroll left 102px;
+}
+
+/**********/
+/* HEADER */
+/**********/
+
+#header { height: 105px; }
+
+#banner { background: transparent url(theme/banner.jpg) no-repeat scroll -176px 0; height: 82px; }
+#banner span { visibility: hidden; }
+
+/* UserPanel */
+
+#userpanel {
+    float: right;
+    background: transparent url(theme/userpanel.png) no-repeat scroll right 0;
+    width: 256px;
+    height: 82px;
+    font-size: 8pt;
+}
+
+#userpanel ul {
+    list-style-position: inside;
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0 44px;
+}
+
+#userpanel img { float: right; margin-right: 12px; margin-top: 11px; }
+#userpanel a { }
+
+#userpanel .login { border: solid 1px #4b3124; background-color: #f6f4e1; margin: 0 0 0 0; width: 128px; }
+#userpanel .password { border: solid 1px #4b3124; background-color: #f6f4e1; margin: 4px 0 6px 0; width: 102px; float: left; color: #4b3124; }
+#userpanel .button { width: 22px; border: solid 1px #4b3124; background-color: #73351e; color: #fff; margin: 4px 0 0 4px; padding: 0; }
+
+/* Nav */
+
+#nav {
+    display: inline-block;
+    width: 100%;
+    position: relative;
+    top: -15px;
+    margin-bottom: -3px;
+    background: transparent url(theme/nav.png) repeat-x scroll left top;
+    height: 38px;
+    overflow: visible;
+}
+
+#nav ul { margin: 0; padding: 0; list-style: none; }
+#nav li { margin: 0; padding: 0; display: block; float: left; height: 41px; text-align: center; }
+#nav a { margin: 0 5px; padding: 15px 0 3px 0; display: block; line-height: 23px; color: #fff; font-size: 11pt; font-weight: bold; text-decoration: none; }
+#nav a:hover { color: #e4da92; }
+#nav span.bullet { display: block; background: transparent url(theme/nav-bullet.png) no-repeat scroll left center; padding-left: 14px; }
+#nav a.home  { margin: 0 5px; width: 56px; }
+#nav a.blog { font-size: 20pt; padding: 8px 0 0 0; line-height: 33px; }
+#nav a.wikis { font-size: 20pt; padding: 8px 0 0 0; line-height: 33px; }
+#nav a.forum { font-size: 20pt; padding: 8px 0 0 0; line-height: 33px; }
+#nav a.galerie { font-size: 20pt; padding: 8px 0 0 4px; line-height: 33px; }
+#nav a.parties { font-size: 20pt; padding: 8px 0 0 0; line-height: 33px; }
+#nav a.contact { position: absolute; right: 0; margin: 0 20px; }
+#nav a.admin { padding-left: 4px; }
+
+/* Sub-Nav */
+#nav ul.sub { display: none; position: absolute; z-index: 1; margin-top:-5px; background-color: #4b3124; border: solid 2px #391f16; border-width: 0 2px 2px 2px; }
+#nav li:hover ul.sub { display: block; }
+#nav ul.sub li { display: inline; float: none; height: 36px; }
+#nav ul.sub a { font-size: 10pt; margin: 0; line-height: 18px; }
+
+#nav ul.sub-wikis { width: 124px; margin-left: -9px; }
+#nav ul.sub-parties { width: 124px; margin-left: -0px; }
+
+/* PNG Replacement */
+#nav ul a { background: transparent none no-repeat scroll center top; }
+#nav ul.sub a, #nav li.current ul.sub a { background-position: left center; }
+#nav a.home { background-image: url(theme/nav-home.png); }
+    #nav .home span { visibility: hidden; }
+#nav a.blog { background-image: url(theme/nav-blog.png); }
+    #nav .blog span { visibility: hidden; }
+#nav a.wikis { background-image: url(theme/nav-wikis.png); }
+    #nav .wikis span { visibility: hidden; }
+
+#nav a.wiki-pfrpg { background-image: url(theme/wiki-pfrpg.png); }
+    #nav .wiki-pfrpg span { visibility: hidden; }
+	
+#nav a.wiki-golarion { background-image: url(theme/wiki-golarion.png); }
+    #nav .wiki-golarion span { visibility: hidden; }
+	
+#nav a.wiki-informations { background-image: url(theme/wiki-informations.png); }
+    #nav .wiki-informations span { visibility: hidden; }
+
+#nav a.wiki-aventures { background-image: url(theme/wiki-aventures.png); }
+    #nav .wiki-aventures span { visibility: hidden; }
+
+#nav a.wiki-starfinder { background-image: url(theme/wiki-starfinder.png); }
+    #nav .wiki-starfinder span { visibility: hidden; }
+
+#nav a.forum { background-image: url(theme/nav-forum.png); }
+    #nav .forum span { visibility: hidden; }
+#nav a.galerie { background-image: url(theme/nav-galerie.png); }
+    #nav .galerie span { visibility: hidden; }
+
+#nav a.parties { background-image: url(theme/nav-parties.png); }
+    #nav a.parties span { visibility: hidden; }
+
+#nav a.parties-wiki { background-image: url(theme/parties-wikis.png); }
+    #nav .parties-wiki span { visibility: hidden; }
+
+#nav a.parties-forum { background-image: url(theme/parties-forum.png); }
+    #nav .parties-forum span { visibility: hidden; }
+
+#nav a.contact { background-image: url(theme/nav-contact.png); }
+    #nav .contact span { visibility: hidden; }
+
+#nav a:hover, #nav li.current a { background-position: center -41px; }
+#nav ul.sub a:hover, #nav li.current ul.sub a:hover { background-position: -124px center; }
+
+/* Container */
+
+#container { background: transparent url(theme/container-t.png) repeat-x left top; overflow: hidden; }
+#container-tl { background: transparent url(theme/container-tl.png) no-repeat left top; }
+#container-tr { background: transparent url(theme/container-tr.png) no-repeat right top; margin-right: 220px; overflow: hidden; }
+
+/* Sidebar */
+
+#sidebar { float: right; width: 220px; border-left: solid 2px #391f16; background-color: #fff; min-height: 31px; }
+#sidebar h4,
+#sidebar h1 { background-color: #4b3124; border: solid 0 #391f16; border-width: 2px 0; color: #fff; margin: .5em 0; padding: 3px 6px; font-size: 10pt; }
+
+    #sidebar .light, #sidebar .light { background-color: Transparent; border: none; color: #4b3124; border-bottom: solid 1px #4b3124; padding: 0 6px; }
+    
+    #sidebar .disc { background-image: url(theme/sidebar-disc.png); background-repeat: no-repeat; background-position: 3px center; padding-left: 20px; }
+    #sidebar .arrow { background-image: url(theme/sidebar-arrow.png); background-repeat: no-repeat; background-position: 3px center; padding-left: 20px; }
+    #sidebar .star { background-image: url(theme/sidebar-star.png); background-repeat: no-repeat; background-position: 4px center; padding-left: 20px; }
+
+    #sidebar .disc-i { background-image: url(theme/sidebar-disc-i.png); background-repeat: no-repeat; background-position: 3px center; padding-left: 21px; }
+    #sidebar .arrow-i { background-image: url(theme/sidebar-arrow-i.png); background-repeat: no-repeat; background-position: 3px center; padding-left: 21px; }
+    #sidebar .star-i { background-image: url(theme/sidebar-star-i.png); background-repeat: no-repeat; background-position: 3px center; padding-left: 21px; }
+
+#sidebar ul { list-style: disc url(theme/bullet.png) inside; margin: 0; padding: 0 0 0 6px; }
+
+#sidebar p { margin: 3px; }
+
+#sidebar fieldset { border: none; padding: 0; margin: 4px; }
+#sidebar fieldset label { display: block; }
+#sidebar fieldset input { border: solid 1px #4b3124; background-color: #f6f4e1; }
+
+/* Sueetie specifics */
+
+.wikiTagsArea { display: none; }
+
+/* Content */
+
+#content { padding: 31px; }
+
+#content h1 { background: transparent url(theme/content-heading.png) no-repeat left top; padding-left: 26px; color: #4b3124; font-size: 16pt; }
+    #content h1 a { text-decoration: none; color: #4b3124; }
+
+/**********/
+/* Footer */
+/**********/
+
+#footer {
+    padding: 0;
+    vertical-align: top; 
+    background-color: #4b3124;
+    border-top: 2px solid #391f16;
+    color: #fff;
+    text-align: center;
+    height: 4em;
+}
+
+#footer p { margin: 1em 0; }
+#footer ul { height: 2em; text-align: center; list-style: none; margin: 0 auto; padding: 0; }
+#footer ul li { display: inline; padding: 0 10px; }
+#footer a { color: #fff; }

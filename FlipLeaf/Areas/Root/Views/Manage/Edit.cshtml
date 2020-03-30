@@ -1,0 +1,32 @@
+@model ManageEditViewModel
+
+@section Styles
+{
+    <style type="text/css">
+        .btn-toolbar > * {
+            margin: 0 2px;
+        }
+    </style>
+}
+
+<h3>Page Editor</h3>
+
+<nav aria-label="breadcrumb">
+    <manage-breadcrumb path-parts="@Model.PathParts"></manage-breadcrumb>
+</nav>
+
+<form method="post">
+    <div class="form-group">
+        <label asp-for="@Model.Content"></label>
+        <textarea asp-for="@Model.Content" rows="10" class="form-control"></textarea>
+    </div>
+    <div class="form-group">
+        <label asp-for="@Model.Comment"></label>
+        <input asp-for="@Model.Comment" class="form-control" />
+    </div>
+    <div class="btn-toolbar">
+        <button type="submit" name="Action" value="Save" class="btn btn-primary">Save</button>
+        <button type="submit" name="Action" value="SaveAndContinue" class="btn btn-secondary">Save and Continue</button>
+        <a asp-action="Index" asp-controller="Render" asp-route-path="@Model.Path" class="btn btn-link">View</a>
+    </div>
+</form>
