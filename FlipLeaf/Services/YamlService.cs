@@ -34,7 +34,7 @@ namespace FlipLeaf.Services
                 throw new ParseException($"The YAML header of the page is invalid", see);
             }
 
-            items = new Dictionary<string, object>();
+            items = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
             if (parsed)
             {

@@ -102,10 +102,17 @@ namespace FlipLeaf.Areas.Root.Controllers
 
             var vm = new RenderIndexViewModel
             {
-                Html = content,
+                Html = content,                
+                Items = pageContext,
                 Path = path,
                 LastUpdate = commit?.Authored ?? DateTimeOffset.Now
             };
+
+            if(pageContext.TryGetValue("title", out var pageTitle) && pageTitle != null)
+            {
+                vm.Title = pageTitle.ToString();
+                ViewData["Title"] = vm.Title;
+            }
 
             return View(vm);
         }
