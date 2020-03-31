@@ -62,10 +62,12 @@ namespace FlipLeaf.Services
                 using var repo = OpenRepositoryCore();
 
                 Tree newestTree = null;
-                LibGit2Sharp.Commit newestCommit = null;
+                Commit newestCommit = null;
+
 
                 foreach (var commit in repo.Commits)
                 {
+
                     if (items.Count == 0)
                     {
                         return;
@@ -118,7 +120,7 @@ namespace FlipLeaf.Services
             }
         }
 
-        public IEnumerable<Git.GitCommit> LogFile(string file, int count = 30)
+        public IEnumerable<GitCommit> LogFile(string file, int count = 30)
         {
             lock (_gitLock)
             {
@@ -126,18 +128,28 @@ namespace FlipLeaf.Services
                 return LogFile(repo, file, count);
             }
         }
-        public IEnumerable<Git.GitCommit> LogFile(GitRepository repo, string file, int count = 30)
+        
+        public IEnumerable<GitCommit> LogFile(GitRepository repo, string file, int count = 30)
         {
             return LogFile(repo.Inner, file, count);
         }
 
-        private IEnumerable<Git.GitCommit> LogFile(Repository repo, string file, int count = 30)
+        private IEnumerable<GitCommit> LogFile(Repository repo, string file, int count = 30)
         {
-            return repo.Commits
-                .QueryBy(file)
-                .Select(x => new Git.GitCommit { Sha = x.Commit.Sha, Message = x.Commit.Message, Authored = x.Commit.Author.When })
-                .Take(count)
-                .ToList();
+            try
+            {
+                return repo.Commits
+                    .QueryBy(file)
+                    .Take(count)
+                    .Select(x => new Git.GitCommit { Sha = x.Commit.Sha, Message = x.Commit.Message, Authored = x.Commit.Author.When })
+                    .ToList();
+            }
+            catch (KeyNotFoundException)
+            {
+                // bug #1410
+                // https://github.com/libgit2/libgit2sharp/issues/1410
+                return Enumerable.Empty<GitCommit>();
+            }
         }
 
         public void PullPush(IUser merger)
