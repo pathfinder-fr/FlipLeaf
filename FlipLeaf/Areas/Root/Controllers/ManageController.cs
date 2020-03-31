@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -15,13 +16,26 @@ namespace FlipLeaf.Areas.Root.Controllers
     {
         private readonly string _basePath;
         private readonly ILogger<ManageController> _logger;
+        private readonly IYamlService _yaml;
+        private readonly ILiquidService _liquid;
+        private readonly IFormTemplateService formTemplate;
         private readonly IGitService _git;
         private readonly IWebsite _website;
 
-        public ManageController(ILogger<ManageController> logger, FlipLeafSettings settings, IGitService git, IWebsite website)
+        public ManageController(
+            ILogger<ManageController> logger,
+            FlipLeafSettings settings,
+            IGitService git,
+            IYamlService yaml,
+            ILiquidService liquid,
+            IFormTemplateService formTemplate,
+            IWebsite website)
         {
             _logger = logger;
             _git = git;
+            _yaml = yaml;
+            _liquid = liquid;
+            this.formTemplate = formTemplate;
             _website = website;
             _basePath = settings.SourcePath;
         }
@@ -69,8 +83,9 @@ namespace FlipLeaf.Areas.Root.Controllers
         }
 
         [Route("edit/{**path}")]
-        public IActionResult Edit(string path)
+        public IActionResult Edit(string path, string mode)
         {
+            mode = mode?.ToLowerInvariant() ?? string.Empty;
             path = path ?? string.Empty;
             var fullPath = Path.Combine(_basePath, path);
 
@@ -79,22 +94,63 @@ namespace FlipLeaf.Areas.Root.Controllers
                 return NotFound();
             }
 
-            var vm = new ManageEditViewModel()
-            {
-                Path = path,
-                PathParts = path.Split('/'),
-            };
+            var pathParts = path.Split('/');
 
+            var content = string.Empty;
             if (System.IO.File.Exists(fullPath))
             {
-                vm.Content = System.IO.File.ReadAllText(fullPath, Encoding.UTF8);
+                content = System.IO.File.ReadAllText(fullPath, Encoding.UTF8);
             }
 
-            return View(vm);
+            Services.FormTemplating.FormTemplate template = null;
+            var dirPath = Path.GetDirectoryName(fullPath);
+            var ext = Path.GetExtension(fullPath).ToLowerInvariant();
+
+            if (ext == ".md" && System.IO.File.Exists(Path.Combine(dirPath, "template.json")))
+            {
+                template = formTemplate.ParseTemplate(Path.Combine(dirPath, "template.json"));
+
+                // default to form mode if a template is defined
+                if (string.IsNullOrEmpty(mode))
+                {
+                    mode = "form";
+                }
+            }
+
+            if (ext == ".md" && mode == "form")
+            {
+                template = template ?? Services.FormTemplating.FormTemplate.Default;
+                
+                // parse YAML header
+                content = _yaml.ParseHeader(content, out var form);
+
+                var vm = new ManageEditFormViewModel()
+                {
+                    Path = path,
+                    PathParts = pathParts,
+                    Form = form,
+                    FormTemplate = template,
+                    Content = content
+                };
+
+                return View("EditForm", vm);
+            }
+            else
+            {
+                var vm = new ManageEditRawViewModel()
+                {
+                    Path = path,
+                    PathParts = pathParts,
+                    Content = content
+                };
+
+                return View("EditRaw", vm);
+            }
+
         }
 
         [Route("edit/{**path}"), HttpPost]
-        public IActionResult Edit(string path, ManageEditViewModel model)
+        public IActionResult EditRaw(string path, ManageEditRawViewModel model)
         {
             var user = _website.GetCurrentUser();
             if (user == null)

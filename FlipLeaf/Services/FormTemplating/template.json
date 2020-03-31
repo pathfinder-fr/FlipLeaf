@@ -1,0 +1,13 @@
+{
+    "title": "Nouveau sort",
+    "description": "Un nouveau sort.",
+    "fields": [
+        {
+            "id": "title",
+            "name": "Nom",
+            "type": "text",
+            "description": "Nom du sort",
+            "required": true
+        }
+    ]
+}

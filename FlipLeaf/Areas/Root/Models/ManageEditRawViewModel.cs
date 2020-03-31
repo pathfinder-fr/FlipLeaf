@@ -2,7 +2,7 @@
 
 namespace FlipLeaf.Areas.Root.Models
 {
-    public class ManageEditViewModel : ManageDirectoryViewModelBase
+    public class ManageEditRawViewModel : ManageDirectoryViewModelBase
     {
         [Display]
         public string Content { get; set; }

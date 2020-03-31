@@ -20,6 +20,7 @@ namespace FlipLeaf
             services.AddSingleton<IMarkdownService, MarkdownService>();
             services.AddSingleton<ILiquidService, LiquidService>();
             services.AddSingleton<IYamlService, YamlService>();
+            services.AddSingleton<IFormTemplateService, FormTemplateService>();
 
             if (useDefaultWebsite)
             {

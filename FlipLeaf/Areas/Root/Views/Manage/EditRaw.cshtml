@@ -1,4 +1,4 @@
-@model ManageEditViewModel
+@model ManageEditRawViewModel
 
 @{ ViewData["Title"] = "Page Editor"; }
 
@@ -7,6 +7,10 @@
     <style type="text/css">
         .btn-toolbar > * {
             margin: 0 2px;
+        }
+
+        #Content {
+            font-size: .9rem;
         }
     </style>
 }
@@ -18,14 +22,27 @@
 </nav>
 
 <form method="post">
+
+    <ul class="nav nav-tabs mb-2">
+        <li class="nav-item">
+            <a class="nav-link active">Raw</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" asp-action="Edit" asp-route-mode="Form">Form</a>
+        </li>
+    </ul>
+
     <div class="form-group">
-        <label asp-for="@Model.Content"></label>
-        <textarea asp-for="@Model.Content" rows="10" class="form-control"></textarea>
+        <label asp-for="Content"></label>
+        <textarea asp-for="Content" rows="10" class="form-control"></textarea>
     </div>
+
     <div class="form-group">
-        <label asp-for="@Model.Comment"></label>
-        <input asp-for="@Model.Comment" class="form-control" />
+        <label asp-for="Comment"></label>
+        <input asp-for="Comment" class="form-control" />
     </div>
+
     <div class="btn-toolbar">
         <button type="submit" name="Action" value="Save" class="btn btn-primary">Save</button>
         <button type="submit" name="Action" value="SaveAndContinue" class="btn btn-secondary">Save and Continue</button>

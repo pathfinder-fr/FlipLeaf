@@ -13,25 +13,25 @@ namespace FlipLeaf.Areas.Root.Controllers
     public class RenderController : Controller
     {
         private const string DefaultDocumentName = "index.md";
-        private readonly ILogger<ManageController> _logger;
+        private readonly ILogger<ManageController> _logger;        
+        private readonly IYamlService _yaml;
         private readonly ILiquidService _liquid;
         private readonly IMarkdownService _markdown;
-        private readonly IYamlService _yaml;
         private readonly IGitService _git;
         private readonly string _basePath;
 
         public RenderController(
             ILogger<ManageController> logger,
             FlipLeafSettings settings,
+            IYamlService yaml,
             ILiquidService liquid,
             IMarkdownService markdown,
-            IYamlService yaml,
             IGitService git)
         {
             _logger = logger;
+            _yaml = yaml;
             _liquid = liquid;
             _markdown = markdown;
-            _yaml = yaml;
             _git = git;
             _basePath = settings.SourcePath;
         }

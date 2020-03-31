@@ -22,6 +22,8 @@ namespace FlipLeaf.TagHelpers
         [ViewContext]
         public ViewContext ViewContext { get; set; }
 
+        public string Home {get;set;} = "(Home)";
+
 
         public string[] PathParts { get; set; }
 
@@ -32,7 +34,7 @@ namespace FlipLeaf.TagHelpers
             output.TagName = "ol";
             output.Attributes.Add("class", "breadcrumb");
 
-            output.Content.AppendHtml($"<li class=\"breadcrumb-item\"><a href=\"{urlHelper.Action("Browse", new { path = string.Empty })}\">(Accueil)</a></li>");
+            output.Content.AppendHtml($"<li class=\"breadcrumb-item\"><a href=\"{urlHelper.Action("Browse", new { path = string.Empty })}\">{Home}</a></li>");
 
             for (int i = 0; i < PathParts.Length; i++)
             {
