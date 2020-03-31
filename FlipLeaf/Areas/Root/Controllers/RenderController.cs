@@ -14,18 +14,24 @@ namespace FlipLeaf.Areas.Root.Controllers
     {
         private const string DefaultDocumentName = "index.md";
         private readonly ILogger<ManageController> _logger;
+        private readonly ILiquidService _liquid;
         private readonly IMarkdownService _markdown;
+        private readonly IYamlService _yaml;
         private readonly IGitService _git;
         private readonly string _basePath;
 
         public RenderController(
             ILogger<ManageController> logger,
             FlipLeafSettings settings,
+            ILiquidService liquid,
             IMarkdownService markdown,
+            IYamlService yaml,
             IGitService git)
         {
             _logger = logger;
+            _liquid = liquid;
             _markdown = markdown;
+            _yaml = yaml;
             _git = git;
             _basePath = settings.SourcePath;
         }
@@ -78,14 +84,17 @@ namespace FlipLeaf.Areas.Root.Controllers
             // 1) read all content
             var content = System.IO.File.ReadAllText(fullPath);
 
+            // 2) parse yaml header
+            content = _yaml.ParseHeader(content, out var pageContext);
 
+            // 3) parse liquid
+            content = _liquid.Parse(content, pageContext);
 
+            // 4) parse markdown
             if (string.Equals(ext, ".md", StringComparison.Ordinal))
             {
-                // 2) parse markdown
                 content = _markdown.Parse(content);
             }
-
 
             var commit = _git.LogFile(ItemPath.FromFullPath(_basePath, fullPath).RelativePath).FirstOrDefault();
 

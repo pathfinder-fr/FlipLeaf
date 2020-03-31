@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Fluid;
@@ -27,7 +29,7 @@ namespace FlipLeaf.Services.FluidLiquid
             return template;
         }
 
-        public TemplateContext PrepareContext()
+        public TemplateContext PrepareContext(IDictionary<string, object> pageContext)
         {
             TemplateContext context = null;
 
@@ -45,12 +47,15 @@ namespace FlipLeaf.Services.FluidLiquid
 
             //context.MemberAccessStrategy.Register<WebSiteConfiguration>();
             //context.MemberAccessStrategy.Register<WebSite>();
-            //context.SetValue("page", pageContext);
+            context.SetValue("page", pageContext);
             //context.SetValue("site", _ctx.Runtime);
 
 
             return context;
         }
+
+        public string Parse(ViewTemplate template, TemplateContext context)
+            => template.Render(context);
 
         public ValueTask<string> ParseContextAsync(ViewTemplate template, TemplateContext templateContext)
             => template.RenderAsync(templateContext);
