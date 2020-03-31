@@ -81,6 +81,8 @@ namespace FlipLeaf.Areas.Root.Controllers
                 return RedirectToAction("Edit", "Manage", new { path });
             }
 
+            ext = Path.GetExtension(fullPath).ToLowerInvariant();
+
             // 1) read all content
             var content = System.IO.File.ReadAllText(fullPath);
 
