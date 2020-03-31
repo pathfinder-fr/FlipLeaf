@@ -15,9 +15,9 @@ namespace FlipLeaf.Services
     {
         private readonly YamlParser _yaml;
 
-        public YamlService(YamlParser yaml)
+        public YamlService()
         {
-            _yaml = yaml;
+            _yaml = new YamlParser();
         }
 
         public string ParseHeader(string content, out IDictionary<string, object> items)
