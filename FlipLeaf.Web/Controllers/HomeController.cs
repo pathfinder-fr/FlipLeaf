@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using PathfinderFr.FlipLeaf.Models;
+using FlipLeaf.Models;
 
-namespace PathfinderFr.FlipLeaf.Areas.Root.Controllers
+namespace FlipLeaf.Controllers
 {
     public class HomeController : Controller
     {

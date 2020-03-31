@@ -1,4 +1,4 @@
-namespace PathfinderFr.FlipLeaf.Models
+namespace FlipLeaf.Models
 {
     public class ErrorViewModel
     {
