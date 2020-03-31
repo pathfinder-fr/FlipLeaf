@@ -18,6 +18,7 @@ Principales fonctionnalités :
 
 * Tous les OS supportés par .net core sont gérés : Windows, Linux ou macOS.
 * Nécessite le [SDK .NET Core](https://dotnet.microsoft.com/download) installé.
+  La commande `dotnet` doit être disponible depuis l'invite de commande.
 * Pour démarrer le site, lancez la commande `dotnet run -p FlipLeaf.Web` depuis le dossier du projet.
 * Ouvrez votre navigateur à la page `http://localhost:5000`.
 * L’éditeur s’ouvre pour modifier votre page d’accueil, vous pouvez saisir un contenu au format markdown et l’enregistrer.
