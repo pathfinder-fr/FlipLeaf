@@ -13,7 +13,7 @@ namespace FlipLeaf.Areas.Root.Controllers
     public class RenderController : Controller
     {
         private const string DefaultDocumentName = "index.md";
-        private readonly ILogger<ManageController> _logger;        
+        private readonly ILogger<ManageController> _logger;
         private readonly IYamlService _yaml;
         private readonly ILiquidService _liquid;
         private readonly IMarkdownService _markdown;
@@ -39,12 +39,12 @@ namespace FlipLeaf.Areas.Root.Controllers
         [Route("{**path}", Order = int.MaxValue)]
         public IActionResult Index(string path)
         {
+            // compute (relative)path and full path
             path ??= string.Empty;
-
-            // full absolute path
             var fullPath = Path.Combine(_basePath, path);
 
             // default file
+            // if the full path designates a directory, we change the fullpath to the default document
             if (Directory.Exists(fullPath))
             {
                 fullPath = Path.Combine(fullPath, DefaultDocumentName);
@@ -54,23 +54,24 @@ namespace FlipLeaf.Areas.Root.Controllers
             var ext = Path.GetExtension(fullPath).ToLowerInvariant();
 
             // .md => redirect
+            // we don't want to keep .md file in url, so we redirect to the html representation
             if (string.Equals(ext, ".md", StringComparison.Ordinal))
             {
                 return RedirectToAction("Index", new { path = path[0..^3] + ".html" });
             }
 
             // .html => .md
-            if (string.Equals(ext, ".html", StringComparison.Ordinal))
+            // now we want to get the source markdown file from the .html, 
+            // but only if the .html itself does not exist physically on disk
+            if (string.Equals(ext, ".html", StringComparison.Ordinal) && !System.IO.File.Exists(fullPath))
             {
-                if (!System.IO.File.Exists(fullPath))
-                {
-                    fullPath = fullPath[0..^5] + ".md";
-                    path = path[0..^5] + ".md";
-                }
+                fullPath = fullPath[0..^5] + ".md";
+                path = path[0..^5] + ".md";
             }
 
-            // security check, do not manipulate files outside the base path
-            if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, true, CultureInfo.InvariantCulture))
+            // here we have the final file on disk
+            // security check: do not manipulate files outside the base path
+            if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
             {
                 return NotFound();
             }
@@ -83,6 +84,8 @@ namespace FlipLeaf.Areas.Root.Controllers
 
             ext = Path.GetExtension(fullPath).ToLowerInvariant();
 
+            // Here start content parsing and rendering
+
             // 1) read all content
             var content = System.IO.File.ReadAllText(fullPath);
 
@@ -92,23 +95,26 @@ namespace FlipLeaf.Areas.Root.Controllers
             // 3) parse liquid
             content = _liquid.Parse(content, pageContext);
 
-            // 4) parse markdown
+            // 4) parse markdown (if required...)
             if (string.Equals(ext, ".md", StringComparison.Ordinal))
             {
                 content = _markdown.Parse(content);
             }
 
-            var commit = _git.LogFile(ItemPath.FromFullPath(_basePath, fullPath).RelativePath).FirstOrDefault();
+            // GIT: retrieve latest commit
+            var commit = _git.LogFile(ItemPath.FromFullPath(_basePath, fullPath).RelativePath, 1)
+                .FirstOrDefault();
 
             var vm = new RenderIndexViewModel
             {
-                Html = content,                
+                Html = content,
                 Items = pageContext,
                 Path = path,
                 LastUpdate = commit?.Authored ?? DateTimeOffset.Now
             };
 
-            if(pageContext.TryGetValue("title", out var pageTitle) && pageTitle != null)
+            // we automatically use the "title" yaml header as the Page Title
+            if (pageContext.TryGetValue("title", out var pageTitle) && pageTitle != null)
             {
                 vm.Title = pageTitle.ToString();
                 ViewData["Title"] = vm.Title;

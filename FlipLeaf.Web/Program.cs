@@ -14,15 +14,16 @@ namespace FlipLeaf
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host
-                .CreateDefaultBuilder(args)
+                .CreateDefaultBuilder(args)                
                 // configuration
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    config.AddEnvironmentVariables("FlipLeaf_");
+                    config.AddEnvironmentVariables();
                 })
                 // defaults & startup
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.UseWebRoot(@".static"); // hardcoded :(
                     webBuilder.UseStartup<Startup>();
                 });
         }

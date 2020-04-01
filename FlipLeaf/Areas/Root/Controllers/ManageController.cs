@@ -106,9 +106,10 @@ namespace FlipLeaf.Areas.Root.Controllers
             var dirPath = Path.GetDirectoryName(fullPath);
             var ext = Path.GetExtension(fullPath).ToLowerInvariant();
 
-            if (ext == ".md" && System.IO.File.Exists(Path.Combine(dirPath, "template.json")))
+            var templatePath = Path.Combine(dirPath, "template.json");
+            if (ext == ".md" && System.IO.File.Exists(templatePath))
             {
-                template = formTemplate.ParseTemplate(Path.Combine(dirPath, "template.json"));
+                template = formTemplate.ParseTemplate(templatePath);
 
                 // default to form mode if a template is defined
                 if (string.IsNullOrEmpty(mode))
@@ -117,14 +118,15 @@ namespace FlipLeaf.Areas.Root.Controllers
                 }
             }
 
+            // handle form view
             if (ext == ".md" && mode == "form")
             {
                 template = template ?? Services.FormTemplating.FormTemplate.Default;
-                
+
                 // parse YAML header
                 content = _yaml.ParseHeader(content, out var form);
 
-                var vm = new ManageEditFormViewModel()
+                var fvm = new ManageEditFormViewModel()
                 {
                     Path = path,
                     PathParts = pathParts,
@@ -133,20 +135,17 @@ namespace FlipLeaf.Areas.Root.Controllers
                     Content = content
                 };
 
-                return View("EditForm", vm);
+                return View("EditForm", fvm);
             }
-            else
+
+            var vm = new ManageEditRawViewModel()
             {
-                var vm = new ManageEditRawViewModel()
-                {
-                    Path = path,
-                    PathParts = pathParts,
-                    Content = content
-                };
+                Path = path,
+                PathParts = pathParts,
+                Content = content
+            };
 
-                return View("EditRaw", vm);
-            }
-
+            return View("EditRaw", vm);
         }
 
         [Route("edit/{**path}"), HttpPost]

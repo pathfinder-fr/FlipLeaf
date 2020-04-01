@@ -38,8 +38,6 @@ namespace FlipLeaf
 
             app.UseFlipLeaf(env);
 
-            app.UseStaticFiles();
-
             app.UseRouting();
 
             app.UseAuthorization();
@@ -48,6 +46,8 @@ namespace FlipLeaf
             {
                 endpoints.MapControllers();
             });
+
+            app.UseStaticFiles();
         }
     }
 }
