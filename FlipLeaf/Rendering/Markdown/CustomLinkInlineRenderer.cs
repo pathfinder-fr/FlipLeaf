@@ -4,7 +4,7 @@ using Markdig.Renderers;
 using Markdig.Renderers.Html.Inlines;
 using Markdig.Syntax.Inlines;
 
-namespace FlipLeaf.Services.Markdown
+namespace FlipLeaf.Rendering.Markdown
 {
     public class CustomLinkInlineRendererExtension : IMarkdownExtension
     {
@@ -17,7 +17,7 @@ namespace FlipLeaf.Services.Markdown
 
         public void Setup(MarkdownPipelineBuilder pipeline) { }
 
-        public void Setup(MarkdownPipeline pipeline, IMarkdownRenderer renderer)
+        public void Setup(MarkdownPipeline pipeline, Markdig.Renderers.IMarkdownRenderer renderer)
         {
             renderer.ObjectRenderers.Replace<LinkInlineRenderer>(new CustomLinkInlineRenderer(_baseUrl));
         }
@@ -37,6 +37,7 @@ namespace FlipLeaf.Services.Markdown
         protected override void Write(HtmlRenderer renderer, LinkInline link)
         {
             link.Url = PrependBasePath(link.Url);
+
             // quick hack to transform links into their html counterpart
             //
             // should be replaced with a more robust solution to handle extension transformation

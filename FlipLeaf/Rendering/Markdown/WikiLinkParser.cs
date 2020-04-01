@@ -5,7 +5,7 @@ using Markdig.Parsers;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 
-namespace FlipLeaf.Services.Markdown
+namespace FlipLeaf.Rendering.Markdown
 {
     public class WikiLinkParser : InlineParser
     {

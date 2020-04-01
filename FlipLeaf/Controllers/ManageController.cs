@@ -15,8 +15,8 @@ namespace FlipLeaf.Controllers
     {
         private readonly string _basePath;
         private readonly ILogger<ManageController> _logger;
-        private readonly IYamlService _yaml;
-        private readonly ILiquidService _liquid;
+        private readonly Rendering.IYamlParser _yaml;
+        private readonly Rendering.ILiquidRenderer _liquid;
         private readonly IFormTemplateService _formTemplate;
         private readonly IGitService _git;
         private readonly IWebsite _website;
@@ -25,8 +25,8 @@ namespace FlipLeaf.Controllers
             ILogger<ManageController> logger,
             FlipLeafSettings settings,
             IGitService git,
-            IYamlService yaml,
-            ILiquidService liquid,
+            Rendering.IYamlParser yaml,
+            Rendering.ILiquidRenderer liquid,
             IFormTemplateService formTemplate,
             IWebsite website)
         {

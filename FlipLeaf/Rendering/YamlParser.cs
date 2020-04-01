@@ -2,19 +2,53 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Fluid;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
-namespace FlipLeaf.Services.Yaml
+namespace FlipLeaf.Rendering
 {
-    public class YamlParser
+    public interface IYamlParser
+    {
+        string ParseHeader(string content, out IDictionary<string, object> items);
+    }
+
+    public class YamlParser : IYamlParser
     {
         private readonly IDeserializer _deserializer;
 
         public YamlParser()
         {
             _deserializer = new DeserializerBuilder().Build();
+        }
+
+        public string ParseHeader(string content, out IDictionary<string, object> items)
+        {
+            var newContent = content;
+            bool parsed;
+            Dictionary<string, object> pageContext;
+            try
+            {
+                parsed = this.ParseHeader(ref newContent, out pageContext);
+            }
+            catch (SyntaxErrorException see)
+            {
+                throw new ParseException($"The YAML header of the page is invalid", see);
+            }
+
+            items = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+            if (parsed)
+            {
+                content = newContent;
+                foreach (var pair in pageContext)
+                {
+                    items[pair.Key] = pair.Value;
+                }
+            }
+
+            return content;
         }
 
         public bool ParseHeader(ref string source, out Dictionary<string, object> pageContext)

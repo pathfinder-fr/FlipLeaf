@@ -1,7 +1,6 @@
 ﻿using Markdig;
-using Markdig.Renderers;
 
-namespace FlipLeaf.Services.Markdown
+namespace FlipLeaf.Rendering.Markdown
 {
     public class WikiLinkExtension : IMarkdownExtension
     {
@@ -29,7 +28,7 @@ namespace FlipLeaf.Services.Markdown
             }
         }
 
-        public void Setup(MarkdownPipeline pipeline, IMarkdownRenderer renderer)
+        public void Setup(MarkdownPipeline pipeline, Markdig.Renderers.IMarkdownRenderer renderer)
         {
         }
     }

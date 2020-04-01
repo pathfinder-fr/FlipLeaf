@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using FlipLeaf.Models;
 using FlipLeaf.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -12,9 +13,9 @@ namespace FlipLeaf.Controllers
     {
         private const string DefaultDocumentName = "index.md";
         private readonly ILogger<ManageController> _logger;
-        private readonly IYamlService _yaml;
-        private readonly ILiquidService _liquid;
-        private readonly IMarkdownService _markdown;
+        private readonly Rendering.IYamlParser _yaml;
+        private readonly Rendering.ILiquidRenderer _liquid;
+        private readonly Rendering.IMarkdownRenderer _markdown;
         private readonly IGitService _git;
         private readonly string _basePath;
         private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider =
@@ -23,9 +24,9 @@ namespace FlipLeaf.Controllers
         public RenderController(
             ILogger<ManageController> logger,
             FlipLeafSettings settings,
-            IYamlService yaml,
-            ILiquidService liquid,
-            IMarkdownService markdown,
+            Rendering.IYamlParser yaml,
+            Rendering.ILiquidRenderer liquid,
+            Rendering.IMarkdownRenderer markdown,
             IGitService git
             )
         {
@@ -38,7 +39,7 @@ namespace FlipLeaf.Controllers
         }
 
         [Route("{**path}", Order = int.MaxValue)]
-        public IActionResult Index(string path)
+        public async Task<IActionResult> IndexAsync(string path)
         {
             // compute (relative)path and full path
             path ??= string.Empty;
@@ -104,13 +105,16 @@ namespace FlipLeaf.Controllers
             content = _yaml.ParseHeader(content, out var pageContext);
 
             // 3) parse liquid
-            content = _liquid.Parse(content, pageContext);
+            content = await _liquid.RenderAsync(content, pageContext, out var context).ConfigureAwait(false);
 
             // 4) parse markdown (if required...)
             if (string.Equals(ext, ".md", StringComparison.Ordinal))
             {
-                content = _markdown.Parse(content);
+                content = _markdown.Render(content);
             }
+
+            // 5) apply liquid template
+            content = await _liquid.ApplyLayoutAsync(content, context).ConfigureAwait(false);
 
             // GIT: retrieve latest commit
             var commit = _git.LogFile(ItemPath.FromFullPath(_basePath, fullPath).RelativePath, 1)

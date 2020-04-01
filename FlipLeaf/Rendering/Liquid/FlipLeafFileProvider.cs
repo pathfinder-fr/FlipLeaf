@@ -3,7 +3,7 @@ using System.IO;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
 
-namespace FlipLeaf.Services.FluidLiquid
+namespace FlipLeaf.Rendering.Liquid
 {
     public class FlipLeafFileProvider : IFileProvider
     {

@@ -1,12 +1,12 @@
 ﻿using Fluid;
 
-namespace FlipLeaf.Services.FluidLiquid
+namespace FlipLeaf.Rendering.Liquid
 {
     public class ViewTemplate : BaseFluidTemplate<ViewTemplate>
     {
         static ViewTemplate()
         {
-            Factory.RegisterTag<RenderBodyTag>("renderbody");
+            Factory.RegisterTag<RenderBodyTag>(RenderBodyTag.Tag);
         }
     }
 }

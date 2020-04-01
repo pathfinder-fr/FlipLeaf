@@ -17,9 +17,9 @@ namespace FlipLeaf
             services.AddSingleton(settings);
 
             services.AddSingleton<IGitService, GitService>();
-            services.AddSingleton<IMarkdownService, MarkdownService>();
-            services.AddSingleton<ILiquidService, LiquidService>();
-            services.AddSingleton<IYamlService, YamlService>();
+            services.AddSingleton<Rendering.IMarkdownRenderer, Rendering.MarkdownRenderer>();
+            services.AddSingleton<Rendering.ILiquidRenderer, Rendering.LiquidRenderer>();
+            services.AddSingleton<Rendering.IYamlParser, Rendering.YamlParser>();
             services.AddSingleton<IFormTemplateService, FormTemplateService>();
 
             if (useDefaultWebsite)

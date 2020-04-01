@@ -1,39 +1,43 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using FlipLeaf.Rendering.Liquid;
 using Fluid;
+using Fluid.Filters;
+using Fluid.Values;
 
-namespace FlipLeaf.Services.FluidLiquid
+namespace FlipLeaf.Rendering
 {
-    public class FluidParser
+    public interface ILiquidRenderer
     {
-        internal const string BodyAmbientValueKey = "body";
+        ValueTask<string> RenderAsync(string content, IDictionary<string, object> pageContext, out TemplateContext templateContext);
 
+        ValueTask<string> ApplyLayoutAsync(string content, TemplateContext context);
+    }
+
+    public class LiquidRenderer : ILiquidRenderer
+    {
         private readonly ConcurrentDictionary<string, Task<ViewTemplate>> _layoutCache = new ConcurrentDictionary<string, Task<ViewTemplate>>();
         private readonly FlipLeafSettings _settings;
+        private readonly FlipLeafFileProvider _fileProvider;
 
-        public FluidParser(FlipLeafSettings settings)
+        public LiquidRenderer(FlipLeafSettings settings)
         {
             _settings = settings;
+            _fileProvider = new FlipLeafFileProvider(settings);
         }
 
-        public ViewTemplate ParseTemplate(string content)
+        public ValueTask<string> RenderAsync(string content, IDictionary<string, object> pageContext, out TemplateContext templateContext)
         {
+            // parse content as template
             if (!ViewTemplate.TryParse(content, out var template))
             {
                 throw new ParseException();
             }
 
-            return template;
-        }
-
-        public TemplateContext PrepareContext(IDictionary<string, object> pageContext)
-        {
-            TemplateContext context = null;
-
-            context = new TemplateContext
+            // prepare context
+            templateContext = new TemplateContext
             {
                 MemberAccessStrategy = new MemberAccessStrategy
                 {
@@ -42,25 +46,18 @@ namespace FlipLeaf.Services.FluidLiquid
                 }
             };
 
-            context.Filters.AddAsyncFilter("relative_url", FlipLeafFilters.RelativeUrl);
-            context.FileProvider = new FlipLeafFileProvider(_settings);
-
+            templateContext.Filters.AddAsyncFilter("relative_url", FlipLeafFilters.RelativeUrl);
+            templateContext.FileProvider = _fileProvider;
             //context.MemberAccessStrategy.Register<WebSiteConfiguration>();
             //context.MemberAccessStrategy.Register<WebSite>();
-            context.SetValue("page", pageContext);
+            templateContext.SetValue("page", pageContext);
             //context.SetValue("site", _ctx.Runtime);
 
-
-            return context;
+            // render content
+            return template.RenderAsync(templateContext);
         }
 
-        public string Parse(ViewTemplate template, TemplateContext context)
-            => template.Render(context);
-
-        public ValueTask<string> ParseContextAsync(ViewTemplate template, TemplateContext templateContext)
-            => template.RenderAsync(templateContext);
-
-        public async Task<string> ApplyLayoutAsync(string source, TemplateContext context)
+        public async ValueTask<string> ApplyLayoutAsync(string source, TemplateContext context)
         {
             var page = context.GetValue("page");
 
@@ -77,9 +74,9 @@ namespace FlipLeaf.Services.FluidLiquid
                 layoutFile += ".html";
             }
 
-            var layoutTemplate = await LoadLayout(layoutFile);
+            var layoutTemplate = await LoadLayout(layoutFile).ConfigureAwait(false);
 
-            context.AmbientValues.Add(BodyAmbientValueKey, source);
+            context.AmbientValues.Add(RenderBodyTag.BodyAmbientValueKey, source);
 
             try
             {
@@ -87,7 +84,7 @@ namespace FlipLeaf.Services.FluidLiquid
             }
             finally
             {
-                context.AmbientValues.Remove(BodyAmbientValueKey);
+                context.AmbientValues.Remove(RenderBodyTag.BodyAmbientValueKey);
             }
 
             return source;
@@ -110,5 +107,22 @@ namespace FlipLeaf.Services.FluidLiquid
 
             return layoutTemplate;
         }
+        public static class FlipLeafFilters
+        {
+            public static async ValueTask<FluidValue> RelativeUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
+            {
+                var site = context.GetValue("site");
+                var baseUrl = await site.GetValueAsync("baseUrl", context);
+
+                if (baseUrl.IsNil())
+                {
+                    return input;
+                }
+
+                return StringFilters.Prepend(input, new FilterArguments(new StringValue(baseUrl.ToStringValue())), context);
+            }
+        }       
     }
+
+    
 }
