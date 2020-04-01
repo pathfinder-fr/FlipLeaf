@@ -10,6 +10,8 @@
 
         public string BaseUrl { get; set; } = "http://localhost:5000/";
 
+        public bool GitEnabled { get; set; } = true;
+
         public string GitOrigin { get; set; }
 
         public string GitBranch { get; set; } = @"master";

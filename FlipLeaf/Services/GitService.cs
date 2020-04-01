@@ -14,9 +14,9 @@ namespace FlipLeaf.Services
 
         void SetLastCommit<T>(string parent, IDictionary<string, T> items, Action<T, DateTimeOffset> setLastUpdate);
 
-        IEnumerable<Git.GitCommit> LogFile(string file, int count = 30);
+        IEnumerable<GitCommit> LogFile(string file, int count = 30);
 
-        IEnumerable<Git.GitCommit> LogFile(GitRepository repo, string file, int count = 30);
+        IEnumerable<GitCommit> LogFile(GitRepository repo, string file, int count = 30);
 
         void PullPush(IUser merger);
 
@@ -128,7 +128,7 @@ namespace FlipLeaf.Services
                 return LogFile(repo, file, count);
             }
         }
-        
+
         public IEnumerable<GitCommit> LogFile(GitRepository repo, string file, int count = 30)
         {
             return LogFile(repo.Inner, file, count);
@@ -154,6 +154,11 @@ namespace FlipLeaf.Services
 
         public void PullPush(IUser merger)
         {
+            if (!_settings.GitEnabled)
+            {
+                return;
+            }
+
             lock (_gitLock)
             {
                 using (var repo = OpenRepositoryCore())
