@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace FlipLeaf.Areas.Root.Models
+namespace FlipLeaf.Models
 {
     public class ItemPath
     {

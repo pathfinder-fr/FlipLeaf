@@ -1,4 +1,4 @@
-namespace FlipLeaf.Areas.Root.Models
+namespace FlipLeaf.Models
 {
     public class ManageDirectoryViewModelBase
     {

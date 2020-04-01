@@ -1,14 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using FlipLeaf.Areas.Root.Models;
+using FlipLeaf.Models;
 using FlipLeaf.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace FlipLeaf.Areas.Root.Controllers
+namespace FlipLeaf.Controllers
 {
-    [Area("Root")]
     public class RenderController : Controller
     {
         private const string DefaultDocumentName = "index.md";
@@ -28,7 +27,7 @@ namespace FlipLeaf.Areas.Root.Controllers
             ILiquidService liquid,
             IMarkdownService markdown,
             IGitService git
-             )
+            )
         {
             _logger = logger;
             _yaml = yaml;

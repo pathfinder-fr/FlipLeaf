@@ -1,10 +1,9 @@
 ﻿using System.Diagnostics;
-using FlipLeaf.Areas.Root.Models;
+using FlipLeaf.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FlipLeaf.Areas.Root.Controllers
+namespace FlipLeaf.Controllers
 {
-    [Area("Root")]
     public class ErrorController : Controller
     {
         [Route("_site/error")]

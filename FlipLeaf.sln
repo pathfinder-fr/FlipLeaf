@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29924.181
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlipLeaf.PathfinderFr.Web", "FlipLeaf.PathfinderFr.Web\FlipLeaf.PathfinderFr.Web.csproj", "{6835E48D-3315-460A-A57B-184D992FD9C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PathfinderFr.Web", "FlipLeaf.PathfinderFr.Web\PathfinderFr.Web.csproj", "{6835E48D-3315-460A-A57B-184D992FD9C5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlipLeaf", "FlipLeaf\FlipLeaf.csproj", "{53E64894-7A19-430E-A6F3-8CB785B39DF9}"
 EndProject

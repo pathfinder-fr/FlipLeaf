@@ -25,4 +25,11 @@
     <None Remove="Resources\Layouts\Default.html" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Views\Shared\_ManageLayout.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

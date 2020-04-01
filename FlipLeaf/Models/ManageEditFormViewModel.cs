@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace FlipLeaf.Areas.Root.Models
+namespace FlipLeaf.Models
 {
     public class ManageEditFormViewModel : ManageDirectoryViewModelBase
     {

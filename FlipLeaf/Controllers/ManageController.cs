@@ -3,14 +3,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using FlipLeaf.Areas.Root.Models;
+using FlipLeaf.Models;
 using FlipLeaf.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace FlipLeaf.Areas.Root.Controllers
+namespace FlipLeaf.Controllers
 {
-    [Area("Root"), Route("_manage")]
+    [Route("_manage")]
     public class ManageController : Controller
     {
         private readonly string _basePath;

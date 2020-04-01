@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace FlipLeaf.Areas.Root.Models
+namespace FlipLeaf.Models
 {
     public class ManageEditRawViewModel : ManageDirectoryViewModelBase
     {
