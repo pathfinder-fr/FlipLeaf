@@ -1,0 +1,13 @@
+{
+    "title": "New Page",
+    "description": "A new empty page",
+    "fields": [
+        {
+            "id": "title",
+            "name": "Title",
+            "type": "text",
+            "description": "Title of the page",
+            "required": true
+        }
+    ]
+}

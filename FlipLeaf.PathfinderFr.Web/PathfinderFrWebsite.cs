@@ -2,11 +2,12 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using Dapper;
-using FlipLeaf.Compatibility;
+using FlipLeaf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
+using PathfinderFr.Compatibility;
 
-namespace FlipLeaf
+namespace PathfinderFr
 {
     public interface IPathfinderFrWebsite : IWebsite
     {

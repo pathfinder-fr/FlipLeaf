@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace FlipLeaf.Compatibility
+namespace PathfinderFr.Compatibility
 {
     public sealed class AspNetFormsTicketAuthentication
     {

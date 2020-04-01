@@ -1,4 +1,4 @@
-﻿namespace FlipLeaf
+﻿namespace PathfinderFr
 {
     public sealed class PathfinderFrSettings
     {

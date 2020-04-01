@@ -2,7 +2,7 @@
 using System.IO;
 using System.Security.Cryptography;
 
-namespace FlipLeaf.Compatibility
+namespace PathfinderFr.Compatibility
 {
     public sealed class AspNetMachineKeySection : IDisposable
     {

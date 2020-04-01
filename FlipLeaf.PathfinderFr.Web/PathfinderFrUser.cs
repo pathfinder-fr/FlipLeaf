@@ -1,6 +1,7 @@
 ﻿using System;
+using FlipLeaf;
 
-namespace FlipLeaf
+namespace PathfinderFr
 {
     public sealed class PathfinderFrUser : IUser
     {

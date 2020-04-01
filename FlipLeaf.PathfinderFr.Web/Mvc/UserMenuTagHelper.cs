@@ -2,7 +2,7 @@
 using System.IO;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
-namespace FlipLeaf.Mvc
+namespace PathfinderFr.Mvc
 {
     [HtmlTargetElement("user-menu")]
     public class UserMenuTagHelper : TagHelper

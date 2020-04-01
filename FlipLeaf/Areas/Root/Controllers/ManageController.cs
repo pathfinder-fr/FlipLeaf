@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -46,8 +45,6 @@ namespace FlipLeaf.Areas.Root.Controllers
         [Route("browse/{*path}")]
         public IActionResult Browse(string path)
         {
-            throw new ApplicationException();
-
             path ??= string.Empty;
             var fullPath = Path.Combine(_basePath, path);
             if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, true, CultureInfo.InvariantCulture))

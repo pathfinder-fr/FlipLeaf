@@ -18,6 +18,8 @@ namespace FlipLeaf.Areas.Root.Controllers
         private readonly IMarkdownService _markdown;
         private readonly IGitService _git;
         private readonly string _basePath;
+        private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider =
+            new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
 
         public RenderController(
             ILogger<ManageController> logger,
@@ -25,7 +27,8 @@ namespace FlipLeaf.Areas.Root.Controllers
             IYamlService yaml,
             ILiquidService liquid,
             IMarkdownService markdown,
-            IGitService git)
+            IGitService git
+             )
         {
             _logger = logger;
             _yaml = yaml;
@@ -82,6 +85,16 @@ namespace FlipLeaf.Areas.Root.Controllers
             }
 
             ext = Path.GetExtension(fullPath).ToLowerInvariant();
+
+            if (ext != ".md" && ext != ".html")
+            {
+                if (!_contentTypeProvider.TryGetContentType(ext, out var contentType))
+                {
+                    contentType = "application/octet-stream";
+                }
+
+                return PhysicalFile(fullPath, contentType);
+            }
 
             // Here start content parsing and rendering
 

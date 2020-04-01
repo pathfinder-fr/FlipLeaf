@@ -74,6 +74,11 @@ namespace FlipLeaf.Services.Yaml
 
         private static object ConvertDoc(object doc)
         {
+            if (doc == null)
+            {
+                return null;
+            }
+
             var docType = doc.GetType();
 
             switch (Type.GetTypeCode(docType))
