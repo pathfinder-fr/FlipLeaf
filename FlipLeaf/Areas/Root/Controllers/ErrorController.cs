@@ -1,15 +1,12 @@
 ﻿using System.Diagnostics;
+using FlipLeaf.Areas.Root.Models;
 using Microsoft.AspNetCore.Mvc;
-using FlipLeaf.Models;
 
-namespace FlipLeaf.Controllers
+namespace FlipLeaf.Areas.Root.Controllers
 {
-    public class HomeController : Controller
+    [Area("Root")]
+    public class ErrorController : Controller
     {
-        public HomeController()
-        {
-        }
-
         [Route("_site/error")]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

@@ -1,4 +1,4 @@
-namespace FlipLeaf.Models
+﻿namespace FlipLeaf.Areas.Root.Models
 {
     public class ErrorViewModel
     {

@@ -18,7 +18,7 @@ namespace FlipLeaf.Areas.Root.Controllers
         private readonly ILogger<ManageController> _logger;
         private readonly IYamlService _yaml;
         private readonly ILiquidService _liquid;
-        private readonly IFormTemplateService formTemplate;
+        private readonly IFormTemplateService _formTemplate;
         private readonly IGitService _git;
         private readonly IWebsite _website;
 
@@ -35,7 +35,7 @@ namespace FlipLeaf.Areas.Root.Controllers
             _git = git;
             _yaml = yaml;
             _liquid = liquid;
-            this.formTemplate = formTemplate;
+            _formTemplate = formTemplate;
             _website = website;
             _basePath = settings.SourcePath;
         }
@@ -46,6 +46,8 @@ namespace FlipLeaf.Areas.Root.Controllers
         [Route("browse/{*path}")]
         public IActionResult Browse(string path)
         {
+            throw new ApplicationException();
+
             path ??= string.Empty;
             var fullPath = Path.Combine(_basePath, path);
             if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, true, CultureInfo.InvariantCulture))
@@ -109,7 +111,7 @@ namespace FlipLeaf.Areas.Root.Controllers
             var templatePath = Path.Combine(dirPath, "template.json");
             if (ext == ".md" && System.IO.File.Exists(templatePath))
             {
-                template = formTemplate.ParseTemplate(templatePath);
+                template = _formTemplate.ParseTemplate(templatePath);
 
                 // default to form mode if a template is defined
                 if (string.IsNullOrEmpty(mode))
