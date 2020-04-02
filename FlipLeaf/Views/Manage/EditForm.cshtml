@@ -24,16 +24,6 @@
 
 <form method="post">
 
-    <ul class="nav nav-tabs mb-2">
-        <li class="nav-item">
-            <a class="nav-link active">Form</a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" asp-action="Edit" asp-route-mode="Raw">Raw</a>
-        </li>
-    </ul>
-
     @foreach (var field in Model.FormTemplate.Fields)
     {
         if (field.Id == null) continue;

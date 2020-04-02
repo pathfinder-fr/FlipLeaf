@@ -58,39 +58,38 @@ namespace FlipLeaf.Rendering
             var parser = new Parser(input);
             pageContext = null;
 
-            int i;
             parser.Consume<StreamStart>();
 
-            if (!parser.Accept<DocumentStart>(out _))
+            if (!parser.Accept<DocumentStart>(out var docStart))
+            {
+                return false;
+            }
+
+            // we don't accept implicit start document: the --- are mandatory
+            // they serve as a method to detect the yaml header
+            if (docStart.IsImplicit)
             {
                 return false;
             }
 
             var doc = _deserializer.Deserialize(parser);
-
             if (doc == null)
             {
                 return false;
             }
 
             pageContext = ConvertDoc(doc) as Dictionary<string, object>;
-
             if (pageContext == null)
             {
                 return false;
             }
 
-            if (!parser.Accept<DocumentStart>(out _))
+            if (!parser.Accept<DocumentStart>(out _) || parser.Current == null)
             {
                 return false;
             }
 
-            if (parser.Current == null)
-            {
-                return false;
-            }
-
-            i = parser.Current.End.Index - 1;
+            var i = parser.Current.End.Index - 1;
 
             char c;
             do

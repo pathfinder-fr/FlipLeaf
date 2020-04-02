@@ -67,7 +67,7 @@ namespace FlipLeaf.Storage
         public void WriteAllText(IStorageItem file, string text, Encoding? encoding = null)
         {
             EnsureDirectoryForFile(file.FullPath);
-            File.WriteAllText(file.FullPath, text, encoding);
+            File.WriteAllText(file.FullPath, text, encoding ?? Encoding.UTF8);
         }
 
         public string GetExtension(string path)
@@ -239,7 +239,7 @@ namespace FlipLeaf.Storage
             public StorageItem(string fullPath, string relativePath)
             {
                 FullPath = fullPath;
-                RelativePath = relativePath;
+                RelativePath = relativePath.Replace('\\', '/');
                 _getName = new Lazy<string>(GetName);
                 _getExtension = new Lazy<string>(GetExtension);
             }

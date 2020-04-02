@@ -71,46 +71,52 @@ namespace FlipLeaf.Controllers
         }
 
         [Route("edit/{**path}")]
-        public IActionResult Edit(string path, string mode)
+        public IActionResult Edit(string path)
         {
-            mode = mode?.ToLowerInvariant() ?? string.Empty;
-
             var file = _fileSystem.GetItem(path);
             if (file == null)
             {
                 return NotFound();
             }
 
-            // templating
-            Rendering.FormTemplating.FormTemplate? template = null;
+            // detect templating
             var templateFile = _fileSystem.GetFileFromSameDirectoryAs(file, "template.json", true);
             if (file.IsMarkdown() && templateFile != null)
             {
-                template = _formTemplate.ParseTemplate(templateFile.FullPath);
-
-                // default to form mode if a template is defined
-                if (string.IsNullOrEmpty(mode))
-                {
-                    mode = "form";
-                }
+                // redirect to form edit
+                return this.RedirectToAction(nameof(EditForm), new { path });
             }
 
-            // read
-            var content = _fileSystem.ReadAllText(file);
+            return this.RedirectToAction(nameof(EditRaw), new { path });
+        }
 
-            // handle raw view
-            if (mode != "form" || file.IsMarkdown())
+        [Route("edit-form/{**path}")]
+        public IActionResult EditForm(string path)
+        {
+            var file = _fileSystem.GetItem(path);
+            if (file == null)
             {
-                var vm = new ManageEditRawViewModel(path)
-                {
-                    Content = content
-                };
-
-                return View("EditRaw", vm);
+                return NotFound();
             }
 
-            // handle form view
-            template ??= Rendering.FormTemplating.FormTemplate.Default;
+            // form edition reserved to markdown files
+            if (!file.IsMarkdown())
+            {
+                return this.RedirectToAction(nameof(EditRaw), new { path });
+            }
+
+            // detect template
+            var templateFile = _fileSystem.GetFileFromSameDirectoryAs(file, "template.json", true);
+            if (templateFile == null)
+            {
+                return this.RedirectToAction(nameof(EditRaw), new { path });
+            }
+
+            // load form template
+            var template = _formTemplate.ParseTemplate(templateFile.FullPath);
+
+            // read raw content
+            var content = _fileSystem.ReadAllText(file);
 
             // parse YAML header
             var fields = _yaml.ParseHeader(content, out content);
@@ -122,10 +128,40 @@ namespace FlipLeaf.Controllers
                 Content = content
             };
 
-            return View("EditForm", fvm);
+            return View(fvm);
         }
 
-        [Route("edit/raw/{**path}"), HttpPost]
+        [Route("edit-raw/{**path}")]
+        public IActionResult EditRaw(string path)
+        {
+            var file = _fileSystem.GetItem(path);
+            if (file == null)
+            {
+                return NotFound();
+            }
+
+            if (_fileSystem.DirectoryExists(file))
+            {
+                return NotFound();
+            }
+
+            var content = string.Empty;
+            if (_fileSystem.FileExists(file))
+            {
+                // read raw content
+                content = _fileSystem.ReadAllText(file);
+            }
+
+            // handle raw view
+            var vm = new ManageEditRawViewModel(path)
+            {
+                Content = content
+            };
+
+            return View(vm);
+        }
+
+        [Route("edit-raw/{**path}"), HttpPost]
         public IActionResult EditRaw(string path, ManageEditRawViewModel model)
         {
             var user = _website.GetCurrentUser();

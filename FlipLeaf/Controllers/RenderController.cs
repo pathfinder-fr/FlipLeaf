@@ -46,6 +46,11 @@ namespace FlipLeaf.Controllers
                 return NotFound();
             }
 
+            if (file.RelativePath.StartsWith('.') || file.RelativePath.StartsWith('_'))
+            {
+                return Redirect("/");
+            }
+
             // default file
             // if the full path designates a directory, we change the fullpath to the default document
             if (_fileSystem.DirectoryExists(file))
@@ -57,7 +62,7 @@ namespace FlipLeaf.Controllers
             // we don't want to keep .md file in url, so we redirect to the html representation
             if (file.IsMarkdown())
             {
-                return RedirectToAction("Index", new { path = _fileSystem.ReplaceExtension(file, ".html") });
+                return RedirectToAction("Index", new { path = _fileSystem.ReplaceExtension(file, ".html").RelativePath });
             }
 
             // .html => .md
@@ -74,8 +79,10 @@ namespace FlipLeaf.Controllers
                 return RedirectToAction("Edit", "Manage", new { path });
             }
 
+            // if the file is a static resource, eg. not a markdown or html file we just return the content
             if (!file.IsMarkdown() && !file.IsHtml())
             {
+                // we try to detect the content-type based on the
                 if (!_contentTypeProvider.TryGetContentType(file.Extension, out var contentType))
                 {
                     contentType = "application/octet-stream";
@@ -90,10 +97,10 @@ namespace FlipLeaf.Controllers
             var content = _fileSystem.ReadAllText(file);
 
             // 2) parse yaml header
-            var pageContext = _yaml.ParseHeader(content, out content);
+            var yamlHeader = _yaml.ParseHeader(content, out content);
 
             // 3) parse liquid
-            content = await _liquid.RenderAsync(content, pageContext, out var context).ConfigureAwait(false);
+            content = await _liquid.RenderAsync(content, yamlHeader, out var context).ConfigureAwait(false);
 
             // 4) parse markdown (if required...)
             if (file.IsMarkdown())
@@ -101,7 +108,8 @@ namespace FlipLeaf.Controllers
                 content = _markdown.Render(content);
             }
 
-            // 5) apply liquid template
+            // 5) apply liquid layout
+            // this call can be recusrive if there are multiple layouts
             content = await _liquid.ApplyLayoutAsync(content, context).ConfigureAwait(false);
 
             // GIT: retrieve latest commit
@@ -111,13 +119,13 @@ namespace FlipLeaf.Controllers
             var vm = new RenderIndexViewModel
             {
                 Html = content,
-                Items = pageContext,
-                Path = path,
+                Items = yamlHeader,
+                Path = file.RelativePath,
                 LastUpdate = commit?.Authored ?? DateTimeOffset.Now
             };
 
             // we automatically use the "title" yaml header as the Page Title
-            if (pageContext.TryGetValue("title", out var pageTitle) && pageTitle != null)
+            if (yamlHeader.TryGetValue("title", out var pageTitle) && pageTitle != null)
             {
                 vm.Title = pageTitle.ToString() ?? string.Empty;
                 ViewData["Title"] = vm.Title;

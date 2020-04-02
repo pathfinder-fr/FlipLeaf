@@ -4,6 +4,11 @@ namespace FlipLeaf.Models
 {
     public class ManageEditRawViewModel : ManageDirectoryViewModelBase
     {
+        public ManageEditRawViewModel()
+            :base(string.Empty)
+        {
+        }
+
         public ManageEditRawViewModel(string path)
             : base(path)
         {

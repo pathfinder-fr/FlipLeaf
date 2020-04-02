@@ -2,6 +2,19 @@
 
 @{ ViewData["Title"] = "Content Manager"; }
 
+@section Styles
+{
+    <style type="text/css">
+        td .hover-link {
+            visibility: hidden;
+        }
+
+        td:hover .hover-link {
+            visibility: visible;
+        }
+    </style>
+}
+
 <h3>Content Manager</h3>
 
 <nav aria-label="breadcrumb">
@@ -32,6 +45,9 @@
             <tr>
                 <td>
                     <a asp-action="Edit" asp-route-path="@item.Path.RelativePath">@item.Path.Name</a>
+                    <span class="hover-link align-right">
+                        <a asp-action="EditRaw" asp-route-path="@item.Path.RelativePath">Raw</a>
+                    </span>
                 </td>
                 <td>
                     <span title="@item.LastUpdate?">@item.LastUpdate.ToRelativeTime()</span>

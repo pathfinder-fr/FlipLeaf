@@ -1,8 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using FlipLeaf.Rendering.Liquid;
+using FlipLeaf.Storage;
 using Fluid;
 using Fluid.Filters;
 using Fluid.Values;
@@ -13,31 +15,117 @@ namespace FlipLeaf.Rendering
     {
         ValueTask<string> RenderAsync(string content, IDictionary<string, object> pageContext, out TemplateContext templateContext);
 
-        ValueTask<string> ApplyLayoutAsync(string content, TemplateContext context);
+        ValueTask<string> ApplyLayoutAsync(string source, TemplateContext sourceContext);
     }
 
     public class LiquidRenderer : ILiquidRenderer
     {
-        private readonly ConcurrentDictionary<string, Task<ViewTemplate>> _layoutCache = new ConcurrentDictionary<string, Task<ViewTemplate>>();
+        private readonly ConcurrentDictionary<string, LayoutCache?> _layoutCache = new ConcurrentDictionary<string, LayoutCache?>();
         private readonly FlipLeafSettings _settings;
+        private readonly IYamlParser _yaml;
         private readonly FlipLeafFileProvider _fileProvider;
+        private readonly IFileSystem _fileSystem;
 
-        public LiquidRenderer(FlipLeafSettings settings)
+        public LiquidRenderer(FlipLeafSettings settings, IYamlParser yaml, IFileSystem fileSystem)
         {
             _settings = settings;
+            _yaml = yaml;
+            _fileSystem = fileSystem;
             _fileProvider = new FlipLeafFileProvider(settings);
         }
 
-        public ValueTask<string> RenderAsync(string content, IDictionary<string, object> pageContext, out TemplateContext templateContext)
+        public ValueTask<string> RenderAsync(string content, IDictionary<string, object> yamlHeader, out TemplateContext templateContext)
         {
             // parse content as template
-            if (!ViewTemplate.TryParse(content, out var template))
-            {
-                throw new ParseException();
-            }
+            var template = PageTemplate.Parse(content);
 
             // prepare context
-            templateContext = new TemplateContext
+            templateContext = CreateTemplateContext();
+            templateContext.SetValue("page", yamlHeader);
+
+            // render content
+            return template.RenderAsync(templateContext);
+        }
+
+        public async ValueTask<string> ApplyLayoutAsync(string source, TemplateContext sourceContext)
+        {
+            var pageItem = sourceContext.GetValue("page");
+            var layout = await pageItem.GetValueAsync("layout", sourceContext).ConfigureAwait(false);
+            var layoutFile = layout.ToStringValue();
+            if (string.IsNullOrEmpty(layoutFile))
+            {
+                return source; // no layout field, ends here
+            }
+
+            return await ApplyLayoutAsync(source, sourceContext, layoutFile, 0).ConfigureAwait(false);
+        }
+
+        private async ValueTask<string> ApplyLayoutAsync(string source, TemplateContext sourceContext, string layoutFile, int level)
+        {
+            if (level >= 5)
+            {
+                // no more than 10 levels of nesting
+                throw new NotSupportedException($"Recursive layouts are limited to 5 levels of recursion");
+            }
+
+            if (string.IsNullOrEmpty(Path.GetExtension(layoutFile)))
+            {
+                layoutFile += ".html";
+            }
+
+            // load layout
+            var layoutCache = LoadLayout(layoutFile);
+            if (layoutCache == null)
+            {
+                return source;
+            }
+
+            // create new TemplateContext for the layout
+            var layoutContext = CreateTemplateContext();
+            layoutContext.SetValue("page", sourceContext.GetValue("page"));
+            layoutContext.SetValue("layout", layoutCache.YamlHeader);
+            layoutContext.AmbientValues.Add(LayoutTemplate.BodyAmbientValueKey, source);
+
+            // render layout
+            source = await layoutCache.ViewTemplate.RenderAsync(layoutContext).ConfigureAwait(false);
+
+            if (!layoutCache.YamlHeader.TryGetValue("layout", out var outerLayoutObject) || !(outerLayoutObject is string outerLayoutFile))
+            {
+                // no recusrive layout, we stop here
+                return source;
+            }
+
+            // recursive layout...
+            return await ApplyLayoutAsync(source, sourceContext, outerLayoutFile, level + 1).ConfigureAwait(false);
+        }
+
+        private LayoutCache? LoadLayout(string fileName)
+        {
+            return CreateLayout(fileName);
+            //return _layoutCache.GetOrAdd(fileName, CreateLayout);
+        }
+
+        private LayoutCache? CreateLayout(string fileName)
+        {
+            var layoutPath = Path.Combine("_layouts", fileName);
+            var layoutItem = _fileSystem.GetItem(layoutPath);
+            if (layoutItem == null || !_fileSystem.FileExists(layoutItem))
+            {
+                return null;
+            }
+
+            var layoutText = _fileSystem.ReadAllText(layoutItem);
+
+            var yamlHeader = _yaml.ParseHeader(layoutText, out layoutText);
+
+            var layoutTemplate = LayoutTemplate.Parse(layoutText);
+
+            return new LayoutCache(layoutTemplate, yamlHeader);
+        }
+
+        private TemplateContext CreateTemplateContext()
+        {
+            var templateContext = new TemplateContext
             {
                 MemberAccessStrategy = new MemberAccessStrategy
                 {
@@ -46,83 +134,34 @@ namespace FlipLeaf.Rendering
                 }
             };
 
-            templateContext.Filters.AddAsyncFilter("relative_url", FlipLeafFilters.RelativeUrl);
+            templateContext.Filters.AddFilter("relative_url", RelativeUrlFilter);
             templateContext.FileProvider = _fileProvider;
-            //context.MemberAccessStrategy.Register<WebSiteConfiguration>();
-            //context.MemberAccessStrategy.Register<WebSite>();
-            templateContext.SetValue("page", pageContext);
-            //context.SetValue("site", _ctx.Runtime);
 
-            // render content
-            return template.RenderAsync(templateContext);
+            return templateContext;
         }
 
-        public async ValueTask<string> ApplyLayoutAsync(string source, TemplateContext context)
+        private FluidValue RelativeUrlFilter(FluidValue input, FilterArguments arguments, TemplateContext context)
         {
-            var page = context.GetValue("page");
-
-            var layout = await page.GetValueAsync("layout", context).ConfigureAwait(false);
-
-            var layoutFile = layout.ToStringValue();
-            if (string.IsNullOrEmpty(layoutFile))
+            var baseUrl = _settings.BaseUrl;
+            if (string.IsNullOrEmpty(baseUrl))
             {
-                return source;
+                return input;
             }
 
-            if (string.IsNullOrEmpty(Path.GetExtension(layoutFile)))
-            {
-                layoutFile += ".html";
-            }
-
-            var layoutTemplate = await LoadLayout(layoutFile).ConfigureAwait(false);
-
-            context.AmbientValues.Add(RenderBodyTag.BodyAmbientValueKey, source);
-
-            try
-            {
-                source = await layoutTemplate.RenderAsync(context).ConfigureAwait(false);
-            }
-            finally
-            {
-                context.AmbientValues.Remove(RenderBodyTag.BodyAmbientValueKey);
-            }
-
-            return source;
+            return StringFilters.Prepend(input, new FilterArguments(new StringValue(baseUrl)), context);
         }
 
-        private Task<ViewTemplate> LoadLayout(string fileName) => _layoutCache.GetOrAdd(fileName, CreateLayout);
-
-        private async Task<ViewTemplate> CreateLayout(string fileName)
+        private class LayoutCache
         {
-            string layoutText;
-            using (var reader = new StreamReader(Path.Combine(_settings.SourcePath, ".layouts", fileName)))
+            public LayoutCache(LayoutTemplate viewTemplate, IDictionary<string, object> yamlHeader)
             {
-                layoutText = await reader.ReadToEndAsync().ConfigureAwait(false);
+                ViewTemplate = viewTemplate;
+                YamlHeader = yamlHeader;
             }
 
-            if (!ViewTemplate.TryParse(layoutText, out var layoutTemplate))
-            {
-                throw new ParseException();
-            }
+            public IDictionary<string, object> YamlHeader { get; }
 
-            return layoutTemplate;
+            public LayoutTemplate ViewTemplate { get; }
         }
-        public static class FlipLeafFilters
-        {
-            public static async ValueTask<FluidValue> RelativeUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
-            {
-                var site = context.GetValue("site");
-                var baseUrl = await site.GetValueAsync("baseUrl", context);
-
-                if (baseUrl.IsNil())
-                {
-                    return input;
-                }
-
-                return StringFilters.Prepend(input, new FilterArguments(new StringValue(baseUrl.ToStringValue())), context);
-            }
-        }       
     }
-
-    
 }
