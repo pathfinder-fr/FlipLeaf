@@ -1,54 +1,73 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace FlipLeaf.Storage
 {
     public interface IFileSystem
     {
-        IItemPath ItemPathFromFullPath(string fullPath);
+        IStorageItem? GetItem(string relativePath);
 
-        IItemPath ItemPathFromRelative(string relativePath);
+        IStorageItem? GetFileFromSameDirectoryAs(IStorageItem file, string fileName, bool checkExists);
 
-        bool CheckFileExists(string path);
+        IStorageItem Combine(IStorageItem item, string path);
 
-        string? GetDirectoryName(string? fullPath);
+        bool FileExists(IStorageItem file);
 
-        string GetFullPath(string relativePath);
+        bool DirectoryExists(IStorageItem directory);
 
-        string GetRelativePath(string fullPath);
+        IEnumerable<IStorageItem> GetSubDirectories(IStorageItem directory, bool prefixDotIncluded, bool prefixUnderscoreIncluded);
 
-        bool IsPathRooted(string fullPath);
+        IEnumerable<IStorageItem> GetFiles(IStorageItem directory, bool prefixDotIncluded, bool prefixUnderscoreIncluded, string? pattern = null);
 
-        string GetExtension(string path);
+        void WriteAllText(IStorageItem file, string text, Encoding? encoding = null);
 
-        string ReadAllText(string fullPath, Encoding? encoding = null);
+        IStorageItem ReplaceExtension(IStorageItem item, string newExtension);
 
-        string ReplaceExtension(string path, string newExtension, string? currentExt = null);
+        string ReadAllText(IStorageItem file, Encoding? encoding = null);
     }
 
     public class FileSystem : IFileSystem
     {
+        private readonly char[] _invalidFileNameChars;
+        private readonly char[] _invalidPathChars;
         private readonly string _basePath;
+        private readonly IStorageItem _baseDir;
 
         public FileSystem(FlipLeafSettings settings)
         {
+            _invalidFileNameChars = Path.GetInvalidFileNameChars();
+            _invalidPathChars = Path.GetInvalidPathChars();
+
             _basePath = settings.SourcePath;
+            _baseDir = new StorageItem(_basePath, string.Empty);
         }
 
-        public string? GetDirectoryName(string? fullPath)
+        public IStorageItem? GetItem(string relativePath)
         {
-            return Path.GetDirectoryName(fullPath);
+            if (string.IsNullOrEmpty(relativePath))
+            {
+                return _baseDir;
+            }
+
+            relativePath ??= string.Empty;
+            var fullPath = Path.Combine(_basePath, relativePath);
+            if (!CheckPathRooted(fullPath))
+            {
+                return null;
+            }
+
+            return new StorageItem(fullPath, relativePath);
         }
 
-        public string GetFullPath(string relativePath)
-        {
-            return Path.Combine(_basePath, relativePath);
-        }
+        public bool FileExists(IStorageItem file) => File.Exists(file.FullPath);
 
-        public bool IsPathRooted(string fullPath)
+        public void WriteAllText(IStorageItem file, string text, Encoding? encoding = null)
         {
-            return new Uri(fullPath).LocalPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase);
+            EnsureDirectoryForFile(file.FullPath);
+            File.WriteAllText(file.FullPath, text, encoding);
         }
 
         public string GetExtension(string path)
@@ -56,70 +75,186 @@ namespace FlipLeaf.Storage
             return Path.GetExtension(path).ToLowerInvariant();
         }
 
-        public string GetRelativePath(string fullPath)
-        {
-            if (!fullPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException();
-            }
-
-            var l = _basePath.Length;
-            if (fullPath[l] == '/' || fullPath[l] == '\\')
-                l++;
-
-            return fullPath.Substring(l);
-        }
-
         public string ReadAllText(string fullPath, Encoding? encoding = null)
         {
             return File.ReadAllText(fullPath, encoding ?? Encoding.UTF8);
+        }
+
+        public string ReadAllText(IStorageItem file, Encoding? encoding = null)
+        {
+            return File.ReadAllText(file.FullPath, encoding ?? Encoding.UTF8);
         }
 
         public bool CheckFileExists(string path)
         {
             if (!Path.IsPathRooted(path))
             {
-                path = GetFullPath(path);
+                path = Path.GetFullPath(path);
             }
 
             return File.Exists(path);
         }
 
-        public string ReplaceExtension(string path, string newExtension, string? currentExt = null)
+        public void WriteAllText(string fullPath, string text, Encoding? encoding = null)
         {
-            currentExt ??= GetExtension(path);
-
-            return path[0..^currentExt.Length] + currentExt;
+            EnsureDirectoryForFile(fullPath);
+            File.WriteAllText(fullPath, text, encoding);
         }
 
-        public IItemPath ItemPathFromFullPath(string fullPath)
+        private void EnsureDirectoryForFile(string fullPath)
         {
-            return ItemPathFromRelative(GetRelativePath(fullPath));
+            var dir = Path.GetDirectoryName(fullPath);
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
         }
 
-        public IItemPath ItemPathFromRelative(string relativePath)
+        public IStorageItem? GetFileFromSameDirectoryAs(IStorageItem file, string fileName, bool checkExists)
         {
-            return new ItemPath(
-                Path.Combine(_basePath, relativePath),
-                relativePath,
-                Path.GetFileName(relativePath)
-            );
+            CheckFileName(fileName);
+
+            if (!File.Exists(file.FullPath))
+            {
+                return null;
+            }
+
+            var dir = Path.GetDirectoryName(file.FullPath);
+            if (dir == null)
+            {
+                return null;
+            }
+
+            var targetFile = Path.Combine(dir, fileName);
+            if (checkExists && !File.Exists(targetFile))
+            {
+                return null;
+            }
+
+            return GetItemFromFullPathUnsafe(targetFile);
         }
 
-        public class ItemPath : IItemPath
+        public bool DirectoryExists(IStorageItem directory)
         {
-            public ItemPath(string fullPath, string relativePath, string name)
+            return Directory.Exists(directory.FullPath);
+        }
+
+        public IEnumerable<IStorageItem> GetSubDirectories(IStorageItem directory, bool prefixDotIncluded, bool prefixUnderscoreIncluded)
+        {
+            IEnumerable<IStorageItem> files = Directory
+                .GetDirectories(directory.FullPath)
+                .Where(d => d != null)
+                .Select(d => GetItemFromFullPathUnsafe(d));
+
+            if (!prefixDotIncluded)
+            {
+                files = files.Where(f => f.Name[0] != '.');
+            }
+
+            if (!prefixUnderscoreIncluded)
+            {
+                files = files.Where(f => f.Name[0] != '_');
+            }
+
+            return files;
+        }
+
+        public IEnumerable<IStorageItem> GetFiles(IStorageItem directory, bool prefixDotIncluded, bool prefixUnderscoreIncluded, string? pattern = null)
+        {
+            IEnumerable<IStorageItem> dirs = Directory
+                .GetFiles(directory.FullPath, pattern ?? "*.*")
+                .Where(f => f != null)
+                .Select(f => GetItemFromFullPathUnsafe(f));
+
+            if (!prefixDotIncluded)
+            {
+                dirs = dirs.Where(f => f.Name[0] != '.');
+            }
+
+            if (!prefixUnderscoreIncluded)
+            {
+                dirs = dirs.Where(f => f.Name[0] != '_');
+            }
+
+            return dirs;
+        }
+
+        public IStorageItem Combine(IStorageItem item, string path)
+        {
+            return GetItem(Path.Combine(item.RelativePath, path)) ?? throw new ArgumentException(nameof(path));
+        }
+
+        public IStorageItem ReplaceExtension(IStorageItem item, string newExtension)
+        {
+            var l = item.Extension.Length;
+            if (string.IsNullOrEmpty(newExtension) || newExtension.Length < 2 || newExtension[0] != '.')
+            {
+                throw new ArgumentOutOfRangeException(nameof(newExtension), newExtension, $"Extension name {newExtension} is not valid. It must start with a dot and be at least one character long");
+            }
+
+            if (newExtension.IndexOfAny(_invalidFileNameChars) != -1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(newExtension), newExtension, $"Extension name {newExtension} is not valid");
+            }
+
+            var newFullPath = item.FullPath[0..^l] + newExtension;
+
+            return GetItemFromFullPathUnsafe(newFullPath);
+        }
+
+        private IStorageItem GetItemFromFullPathUnsafe(string fullPath)
+        {
+            if (!fullPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Invalid full path {fullPath}", nameof(fullPath));
+            }
+
+            var l = _basePath.Length;
+            if (fullPath[l] == '/' || fullPath[l] == '\\')
+                l++;
+
+            var relativePath = fullPath.Substring(l);
+
+            return new StorageItem(fullPath, relativePath);
+        }
+
+        private bool CheckPathRooted(string fullPath)
+        {
+            return new Uri(fullPath).LocalPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void CheckFileName(string fileName)
+        {
+            if (fileName.IndexOfAny(_invalidFileNameChars) != -1)
+            {
+                throw new ArgumentException($"Invalid file name : {fileName}", nameof(fileName));
+            }
+        }
+
+        private class StorageItem : IStorageItem
+        {
+            private Lazy<string> _getName;
+            private Lazy<string> _getExtension;
+
+            public StorageItem(string fullPath, string relativePath)
             {
                 FullPath = fullPath;
                 RelativePath = relativePath;
-                Name = name;
+                _getName = new Lazy<string>(GetName);
+                _getExtension = new Lazy<string>(GetExtension);
             }
 
-            public string Name { get; }
+            public string FullPath { get; }
 
             public string RelativePath { get; }
 
-            public string FullPath { get; }
+            public string Name => _getName.Value;
+
+            public string Extension => _getExtension.Value;
+
+            private string GetName() => Path.GetFileName(FullPath);
+
+            private string GetExtension() => Path.GetExtension(FullPath).ToLowerInvariant();
         }
     }
 }

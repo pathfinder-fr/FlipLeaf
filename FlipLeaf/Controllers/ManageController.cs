@@ -1,9 +1,7 @@
-﻿using System;
-using System.Globalization;
-using System.IO;
+﻿//using System.IO;
 using System.Linq;
-using System.Text;
 using FlipLeaf.Models;
+using FlipLeaf.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -17,8 +15,8 @@ namespace FlipLeaf.Controllers
         private readonly Rendering.IYamlParser _yaml;
         private readonly Rendering.ILiquidRenderer _liquid;
         private readonly Rendering.IFormTemplateParser _formTemplate;
-        private readonly Storage.IFileSystem _fileSystem;
-        private readonly Storage.IGitRepository _git;
+        private readonly IFileSystem _fileSystem;
+        private readonly IGitRepository _git;
         private readonly IWebsite _website;
 
         public ManageController(
@@ -27,8 +25,8 @@ namespace FlipLeaf.Controllers
             Rendering.IYamlParser yaml,
             Rendering.ILiquidRenderer liquid,
             Rendering.IFormTemplateParser formTemplate,
-            Storage.IFileSystem fileSystem,
-            Storage.IGitRepository git,
+            IFileSystem fileSystem,
+            IGitRepository git,
             IWebsite website)
         {
             _logger = logger;
@@ -47,34 +45,28 @@ namespace FlipLeaf.Controllers
         [Route("browse/{*path}")]
         public IActionResult Browse(string path)
         {
-            path ??= string.Empty;
-            var fullPath = Path.Combine(_basePath, path);
-            if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, true, CultureInfo.InvariantCulture))
+            var directory = _fileSystem.GetItem(path);
+            if (directory == null)
             {
                 return NotFound();
             }
 
-            if (!Directory.Exists(fullPath))
+            if (!_fileSystem.DirectoryExists(directory))
             {
                 return NotFound();
             }
 
-            var directories = Directory
-                .GetDirectories(fullPath)
-                .Select(f => new ManageBrowseItem(_fileSystem.ItemPathFromFullPath(f), true))
-                .Where(f => f.Path.Name[0] != '.') // ignore all directories starting with '.'
+            var directories = _fileSystem.GetSubDirectories(directory, prefixDotIncluded: false, prefixUnderscoreIncluded: true)
+                .Select(f => new ManageBrowseItem(f, true))
                 .ToList();
 
-            var files = Directory
-                .GetFiles(fullPath, "*.*")
-                .Select(f => new ManageBrowseItem(_fileSystem.ItemPathFromFullPath(f), false))
-                .Where(f => f.Path.Name[0] != '.') // ignore all files starting with '.'
+            var files = _fileSystem.GetFiles(directory, prefixDotIncluded: false, prefixUnderscoreIncluded: true)
+                .Select(f => new ManageBrowseItem(f, false))
                 .ToList();
 
+            var vm = new ManageBrowseViewModel(directory.RelativePath, directories, files);
 
-            var vm = new ManageBrowseViewModel(path, directories, files);
-
-            _git.SetLastCommit(path, vm.Files.ToDictionary(f => f.Path.Name, f => f), (f, date) => f.WithCommit(date));
+            _git.SetLastCommit(directory.RelativePath, vm.Files.ToDictionary(f => f.Path.Name, f => f), (f, date) => f.WithCommit(date));
 
             return View(nameof(Browse), vm);
         }
@@ -83,43 +75,32 @@ namespace FlipLeaf.Controllers
         public IActionResult Edit(string path, string mode)
         {
             mode = mode?.ToLowerInvariant() ?? string.Empty;
-            path ??= string.Empty;
-            var fullPath = Path.Combine(_basePath, path);
 
-            if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
+            var file = _fileSystem.GetItem(path);
+            if (file == null)
             {
                 return NotFound();
             }
 
-            var dirPath = _fileSystem.GetDirectoryName(fullPath);
-            var ext = _fileSystem.GetExtension(fullPath);
-
             // templating
             Rendering.FormTemplating.FormTemplate? template = null;
-            if (dirPath != null)
+            var templateFile = _fileSystem.GetFileFromSameDirectoryAs(file, "template.json", true);
+            if (file.IsMarkdown() && templateFile != null)
             {
-                var templatePath = Path.Combine(dirPath, "template.json");
-                if (ext == ".md" && _fileSystem.CheckFileExists(templatePath))
-                {
-                    template = _formTemplate.ParseTemplate(templatePath);
+                template = _formTemplate.ParseTemplate(templateFile.FullPath);
 
-                    // default to form mode if a template is defined
-                    if (string.IsNullOrEmpty(mode))
-                    {
-                        mode = "form";
-                    }
+                // default to form mode if a template is defined
+                if (string.IsNullOrEmpty(mode))
+                {
+                    mode = "form";
                 }
             }
 
             // read
-            var content = string.Empty;
-            if (_fileSystem.CheckFileExists(fullPath))
-            {
-                content = _fileSystem.ReadAllText(fullPath);
-            }
+            var content = _fileSystem.ReadAllText(file);
 
             // handle raw view
-            if (mode != "form" || ext != ".md")
+            if (mode != "form" || file.IsMarkdown())
             {
                 var vm = new ManageEditRawViewModel(path)
                 {
@@ -145,7 +126,7 @@ namespace FlipLeaf.Controllers
             return View("EditForm", fvm);
         }
 
-        [Route("edit/{**path}"), HttpPost]
+        [Route("edit/raw/{**path}"), HttpPost]
         public IActionResult EditRaw(string path, ManageEditRawViewModel model)
         {
             var user = _website.GetCurrentUser();
@@ -154,21 +135,13 @@ namespace FlipLeaf.Controllers
                 return Unauthorized();
             }
 
-            path ??= string.Empty;
-            var fullPath = Path.Combine(_basePath, path);
-
-            if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, true, CultureInfo.InvariantCulture))
+            var fileItem = _fileSystem.GetItem(path);
+            if (fileItem == null)
             {
                 return NotFound();
             }
 
-            var dir = Path.GetDirectoryName(fullPath);
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
-            System.IO.File.WriteAllText(fullPath, model.Content);
+            _fileSystem.WriteAllText(fileItem, model.Content ?? string.Empty);
 
             var websiteUser = _website.GetWebsiteUser();
             _git.Commit(user, websiteUser, path, model.Comment);

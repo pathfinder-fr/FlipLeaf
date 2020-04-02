@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using FlipLeaf.Storage.Git;
 using LibGit2Sharp;
@@ -209,7 +208,7 @@ namespace FlipLeaf.Storage
 
             if (!_repoIsValid)
             {
-                if (!Directory.Exists(_settings.SourcePath))
+                if (!System.IO.Directory.Exists(_settings.SourcePath))
                 {
                     // should have been handled by UseFlipLeaf() in ApplicationBuilderExtensions...
                     throw new InvalidOperationException($"Invalid configuration : SourcePath is supposed to be set and design an existing directory on disk");

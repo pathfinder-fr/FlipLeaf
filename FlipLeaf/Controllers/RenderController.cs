@@ -1,8 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FlipLeaf.Models;
+using FlipLeaf.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -15,8 +15,8 @@ namespace FlipLeaf.Controllers
         private readonly Rendering.IYamlParser _yaml;
         private readonly Rendering.ILiquidRenderer _liquid;
         private readonly Rendering.IMarkdownRenderer _markdown;
-        private readonly Storage.IGitRepository _git;
-        private readonly Storage.IFileSystem _fileSystem;
+        private readonly IGitRepository _git;
+        private readonly IFileSystem _fileSystem;
         private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider =
             new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
 
@@ -25,8 +25,8 @@ namespace FlipLeaf.Controllers
             Rendering.IYamlParser yaml,
             Rendering.ILiquidRenderer liquid,
             Rendering.IMarkdownRenderer markdown,
-            Storage.IGitRepository git,
-            Storage.IFileSystem fileSystem
+            IGitRepository git,
+            IFileSystem fileSystem
             )
         {
             _logger = logger;
@@ -40,65 +40,54 @@ namespace FlipLeaf.Controllers
         [Route("{**path}", Order = int.MaxValue)]
         public async Task<IActionResult> IndexAsync(string path)
         {
-            // compute (relative)path and full path
-            path ??= string.Empty;
-            var fullPath = _fileSystem.GetFullPath(path);
+            var file = _fileSystem.GetItem(path);
+            if (file == null)
+            {
+                return NotFound();
+            }
 
             // default file
             // if the full path designates a directory, we change the fullpath to the default document
-            if (Directory.Exists(fullPath))
+            if (_fileSystem.DirectoryExists(file))
             {
-                fullPath = Path.Combine(fullPath, DefaultDocumentName);
-                path = Path.Combine(path, DefaultDocumentName);
+                file = _fileSystem.Combine(file, DefaultDocumentName);
             }
-
-            var ext = _fileSystem.GetExtension(fullPath);
 
             // .md => redirect
             // we don't want to keep .md file in url, so we redirect to the html representation
-            if (string.Equals(ext, ".md", StringComparison.Ordinal))
+            if (file.IsMarkdown())
             {
-                return RedirectToAction("Index", new { path = _fileSystem.ReplaceExtension(path, ".html", ext) });
+                return RedirectToAction("Index", new { path = _fileSystem.ReplaceExtension(file, ".html") });
             }
 
             // .html => .md
             // now we want to get the source markdown file from the .html, 
             // but only if the .html itself does not exist physically on disk
-            if (string.Equals(ext, ".html", StringComparison.Ordinal) && !System.IO.File.Exists(fullPath))
+            if (file.IsHtml() && !_fileSystem.FileExists(file))
             {
-                fullPath = _fileSystem.ReplaceExtension(fullPath, ".md", ext);
-                path = _fileSystem.ReplaceExtension(path, ".md", ext);
-            }
-
-            // here we have the final file on disk
-            // security check: do not manipulate files outside the base path
-            if (!_fileSystem.IsPathRooted(fullPath))
-            {
-                return NotFound();
+                file = _fileSystem.ReplaceExtension(file, ".md");
             }
 
             // if file does not exists, redirect to page creation
-            if (!_fileSystem.CheckFileExists(fullPath))
+            if (!_fileSystem.FileExists(file))
             {
                 return RedirectToAction("Edit", "Manage", new { path });
             }
 
-            ext = _fileSystem.GetExtension(fullPath);
-
-            if (ext != ".md" && ext != ".html")
+            if (!file.IsMarkdown() && !file.IsHtml())
             {
-                if (!_contentTypeProvider.TryGetContentType(ext, out var contentType))
+                if (!_contentTypeProvider.TryGetContentType(file.Extension, out var contentType))
                 {
                     contentType = "application/octet-stream";
                 }
 
-                return PhysicalFile(fullPath, contentType);
+                return PhysicalFile(file.FullPath, contentType);
             }
 
             // Here start content parsing and rendering
 
             // 1) read all content
-            var content = _fileSystem.ReadAllText(fullPath);
+            var content = _fileSystem.ReadAllText(file);
 
             // 2) parse yaml header
             var pageContext = _yaml.ParseHeader(content, out content);
@@ -107,7 +96,7 @@ namespace FlipLeaf.Controllers
             content = await _liquid.RenderAsync(content, pageContext, out var context).ConfigureAwait(false);
 
             // 4) parse markdown (if required...)
-            if (string.Equals(ext, ".md", StringComparison.Ordinal))
+            if (file.IsMarkdown())
             {
                 content = _markdown.Render(content);
             }
@@ -116,7 +105,7 @@ namespace FlipLeaf.Controllers
             content = await _liquid.ApplyLayoutAsync(content, context).ConfigureAwait(false);
 
             // GIT: retrieve latest commit
-            var commit = _git.LogFile(_fileSystem.GetRelativePath(fullPath), 1)
+            var commit = _git.LogFile(file.RelativePath, 1)
                 .FirstOrDefault();
 
             var vm = new RenderIndexViewModel

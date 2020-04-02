@@ -4,7 +4,7 @@ namespace FlipLeaf.Models
 {
     public class ManageBrowseItem
     {
-        public ManageBrowseItem(Storage.IItemPath path, bool isDirectory)
+        public ManageBrowseItem(Storage.IStorageItem path, bool isDirectory)
         {
             Path = path;
             IsDirectory = isDirectory;
@@ -12,7 +12,7 @@ namespace FlipLeaf.Models
 
         public bool IsDirectory { get; }
 
-        public Storage.IItemPath Path { get; }
+        public Storage.IStorageItem Path { get; }
 
         public DateTimeOffset? LastUpdate { get; set; }
 
