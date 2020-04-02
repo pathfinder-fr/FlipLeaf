@@ -57,10 +57,12 @@ namespace FlipLeaf.Controllers
 
             var directories = _fileSystem.GetSubDirectories(directory, prefixDotIncluded: false, prefixUnderscoreIncluded: true)
                 .Select(f => new ManageBrowseItem(f, true))
+                .OrderBy(f => f.Path.RelativePath)
                 .ToList();
 
             var files = _fileSystem.GetFiles(directory, prefixDotIncluded: false, prefixUnderscoreIncluded: true)
                 .Select(f => new ManageBrowseItem(f, false))
+                .OrderBy(f => f.Path.RelativePath)
                 .ToList();
 
             var vm = new ManageBrowseViewModel(directory.RelativePath, directories, files);
