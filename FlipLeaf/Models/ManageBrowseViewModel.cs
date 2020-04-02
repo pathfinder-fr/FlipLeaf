@@ -4,9 +4,16 @@ namespace FlipLeaf.Models
 {
     public class ManageBrowseViewModel : ManageDirectoryViewModelBase
     {
-        public List<ManageBrowseItem> Directories { get; set; }
+        public ManageBrowseViewModel(string path, List<ManageBrowseItem> directories, List<ManageBrowseItem> files)
+            : base(path)
+        {
+            Directories = directories;
+            Files = files;
+        }
 
-        public List<ManageBrowseItem> Files { get; set; }
+        public List<ManageBrowseItem> Directories { get; }
+
+        public List<ManageBrowseItem> Files { get; }
 
         public string CombineDirectory(string directoryName)
         {

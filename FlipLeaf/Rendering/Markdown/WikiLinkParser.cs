@@ -14,7 +14,7 @@ namespace FlipLeaf.Rendering.Markdown
             OpeningCharacters = new[] { '[' };
         }
 
-        public string Extension { get; set; }
+        public string Extension { get; set; } = string.Empty;
 
         public bool IncludeTrailingCharacters { get; set; } = false;
 
@@ -22,8 +22,9 @@ namespace FlipLeaf.Rendering.Markdown
 
         public override bool Match(InlineProcessor processor, ref StringSlice slice)
         {
-            var c = slice.CurrentChar;
-            var p = processor.GetSourcePosition(slice.Start, out var line, out var column);
+            char c;
+            //var c = slice.CurrentChar;
+            processor.GetSourcePosition(slice.Start, out var line, out var column);
 
             // consume first '['
             var c2 = slice.NextChar();
@@ -37,9 +38,9 @@ namespace FlipLeaf.Rendering.Markdown
 
             var hasEscape = false;
             SourceSpan? labelSpan = null;
-            string label = null;
+            string? label = null;
             SourceSpan? urlSpan = null;
-            string url = null;
+            string? url = null;
             var success = false;
             var hasSeparator = false;
             while (true)
@@ -131,6 +132,11 @@ namespace FlipLeaf.Rendering.Markdown
             {
                 if (url == null)
                 {
+                    if (label == null)
+                    {
+                        return false;
+                    }
+
                     // occurs when no separator were used
                     // copy label as url
                     url = label;

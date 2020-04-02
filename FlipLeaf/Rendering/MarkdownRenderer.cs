@@ -12,23 +12,19 @@ namespace FlipLeaf.Rendering
 
     public class MarkdownRenderer : IMarkdownRenderer
     {
-        private readonly MarkdownPipelineBuilder _pipelineBuilder = new MarkdownPipelineBuilder();
-
-        private MarkdownPipeline _pipeline;
+        private readonly MarkdownPipeline _pipeline;
 
         public MarkdownRenderer(FlipLeafSettings settings)
         {
-            _pipelineBuilder.Extensions.AddIfNotAlready(new WikiLinkExtension() { Extension = ".md" });
-            _pipelineBuilder.Extensions.AddIfNotAlready(new CustomLinkInlineRendererExtension(settings.BaseUrl));
+            var builder = new MarkdownPipelineBuilder();
+            builder.Extensions.AddIfNotAlready(new WikiLinkExtension() { Extension = ".md" });
+            builder.Extensions.AddIfNotAlready(new CustomLinkInlineRendererExtension(settings.BaseUrl));
+
+            _pipeline = builder.UseAdvancedExtensions().Build();
         }
 
         public string Render(string markdown)
         {
-            if (_pipeline == null)
-            {
-                _pipeline = _pipelineBuilder.UseAdvancedExtensions().Build();
-            }
-
             using (var writer = new StringWriter())
             {
                 var renderer = new HtmlRenderer(writer);

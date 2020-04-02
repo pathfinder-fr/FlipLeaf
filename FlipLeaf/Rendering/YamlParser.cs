@@ -11,7 +11,7 @@ namespace FlipLeaf.Rendering
 {
     public interface IYamlParser
     {
-        string ParseHeader(string content, out IDictionary<string, object> items);
+        IDictionary<string, object> ParseHeader(string content, out string newContent);
     }
 
     public class YamlParser : IYamlParser
@@ -23,11 +23,12 @@ namespace FlipLeaf.Rendering
             _deserializer = new DeserializerBuilder().Build();
         }
 
-        public string ParseHeader(string content, out IDictionary<string, object> items)
+        public IDictionary<string, object> ParseHeader(string content, out string newContent)
         {
-            var newContent = content;
+            IDictionary<string, object> items;
+            newContent = content;
             bool parsed;
-            Dictionary<string, object> pageContext;
+            Dictionary<string, object>? pageContext;
             try
             {
                 parsed = this.ParseHeader(ref newContent, out pageContext);
@@ -39,19 +40,18 @@ namespace FlipLeaf.Rendering
 
             items = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-            if (parsed)
+            if (parsed && pageContext != null)
             {
-                content = newContent;
                 foreach (var pair in pageContext)
                 {
                     items[pair.Key] = pair.Value;
                 }
             }
 
-            return content;
+            return items;
         }
 
-        public bool ParseHeader(ref string source, out Dictionary<string, object> pageContext)
+        public bool ParseHeader(ref string source, out Dictionary<string, object>? pageContext)
         {
             var input = new StringReader(source);
 
@@ -85,6 +85,11 @@ namespace FlipLeaf.Rendering
                 return false;
             }
 
+            if (parser.Current == null)
+            {
+                return false;
+            }
+
             i = parser.Current.End.Index - 1;
 
             char c;
@@ -106,7 +111,7 @@ namespace FlipLeaf.Rendering
             return true;
         }
 
-        private static object ConvertDoc(object doc)
+        private static object? ConvertDoc(object doc)
         {
             if (doc == null)
             {

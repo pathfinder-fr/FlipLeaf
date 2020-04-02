@@ -12,12 +12,12 @@
 
         public bool GitEnabled { get; set; } = true;
 
-        public string GitOrigin { get; set; }
+        public string? GitOrigin { get; set; } = null;
 
         public string GitBranch { get; set; } = @"master";
 
-        public string GitUsername { get; set; }
+        public string? GitUsername { get; set; } = null;
 
-        public string GitPassword { get; set; }
+        public string? GitPassword { get; set; } = null;
     }
 }

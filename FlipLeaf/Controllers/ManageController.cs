@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FlipLeaf.Models;
-using FlipLeaf.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -17,17 +16,19 @@ namespace FlipLeaf.Controllers
         private readonly ILogger<ManageController> _logger;
         private readonly Rendering.IYamlParser _yaml;
         private readonly Rendering.ILiquidRenderer _liquid;
-        private readonly IFormTemplateService _formTemplate;
-        private readonly IGitService _git;
+        private readonly Rendering.IFormTemplateParser _formTemplate;
+        private readonly Storage.IFileSystem _fileSystem;
+        private readonly Storage.IGitRepository _git;
         private readonly IWebsite _website;
 
         public ManageController(
             ILogger<ManageController> logger,
             FlipLeafSettings settings,
-            IGitService git,
             Rendering.IYamlParser yaml,
             Rendering.ILiquidRenderer liquid,
-            IFormTemplateService formTemplate,
+            Rendering.IFormTemplateParser formTemplate,
+            Storage.IFileSystem fileSystem,
+            Storage.IGitRepository git,
             IWebsite website)
         {
             _logger = logger;
@@ -35,6 +36,7 @@ namespace FlipLeaf.Controllers
             _yaml = yaml;
             _liquid = liquid;
             _formTemplate = formTemplate;
+            _fileSystem = fileSystem;
             _website = website;
             _basePath = settings.SourcePath;
         }
@@ -57,26 +59,22 @@ namespace FlipLeaf.Controllers
                 return NotFound();
             }
 
-            var vm = new ManageBrowseViewModel()
-            {
-                Path = path,
-                PathParts = path.Split('/')
-            };
-
-            vm.Directories = Directory
+            var directories = Directory
                 .GetDirectories(fullPath)
-                .Select(f => new ManageBrowseItem { IsDirectory = true, Path = ItemPath.FromFullPath(_basePath, f) })
+                .Select(f => new ManageBrowseItem(_fileSystem.ItemPathFromFullPath(f), true))
                 .Where(f => f.Path.Name[0] != '.') // ignore all directories starting with '.'
                 .ToList();
 
-            vm.Files = Directory
+            var files = Directory
                 .GetFiles(fullPath, "*.*")
-                .Select(f => new ManageBrowseItem { IsDirectory = false, Path = ItemPath.FromFullPath(_basePath, f) })
+                .Select(f => new ManageBrowseItem(_fileSystem.ItemPathFromFullPath(f), false))
                 .Where(f => f.Path.Name[0] != '.') // ignore all files starting with '.'
                 .ToList();
 
 
-            _git.SetLastCommit(path, vm.Files.ToDictionary(f => f.Path.Name, f => f), (f, date) => f.LastUpdate = date);
+            var vm = new ManageBrowseViewModel(path, directories, files);
+
+            _git.SetLastCommit(path, vm.Files.ToDictionary(f => f.Path.Name, f => f), (f, date) => f.WithCommit(date));
 
             return View(nameof(Browse), vm);
         }
@@ -85,66 +83,66 @@ namespace FlipLeaf.Controllers
         public IActionResult Edit(string path, string mode)
         {
             mode = mode?.ToLowerInvariant() ?? string.Empty;
-            path = path ?? string.Empty;
+            path ??= string.Empty;
             var fullPath = Path.Combine(_basePath, path);
 
-            if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, true, CultureInfo.InvariantCulture))
+            if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
             {
                 return NotFound();
             }
 
-            var pathParts = path.Split('/');
+            var dirPath = _fileSystem.GetDirectoryName(fullPath);
+            var ext = _fileSystem.GetExtension(fullPath);
 
-            var content = string.Empty;
-            if (System.IO.File.Exists(fullPath))
+            // templating
+            Rendering.FormTemplating.FormTemplate? template = null;
+            if (dirPath != null)
             {
-                content = System.IO.File.ReadAllText(fullPath, Encoding.UTF8);
-            }
-
-            Services.FormTemplating.FormTemplate template = null;
-            var dirPath = Path.GetDirectoryName(fullPath);
-            var ext = Path.GetExtension(fullPath).ToLowerInvariant();
-
-            var templatePath = Path.Combine(dirPath, "template.json");
-            if (ext == ".md" && System.IO.File.Exists(templatePath))
-            {
-                template = _formTemplate.ParseTemplate(templatePath);
-
-                // default to form mode if a template is defined
-                if (string.IsNullOrEmpty(mode))
+                var templatePath = Path.Combine(dirPath, "template.json");
+                if (ext == ".md" && _fileSystem.CheckFileExists(templatePath))
                 {
-                    mode = "form";
+                    template = _formTemplate.ParseTemplate(templatePath);
+
+                    // default to form mode if a template is defined
+                    if (string.IsNullOrEmpty(mode))
+                    {
+                        mode = "form";
+                    }
                 }
             }
 
-            // handle form view
-            if (ext == ".md" && mode == "form")
+            // read
+            var content = string.Empty;
+            if (_fileSystem.CheckFileExists(fullPath))
             {
-                template = template ?? Services.FormTemplating.FormTemplate.Default;
+                content = _fileSystem.ReadAllText(fullPath);
+            }
 
-                // parse YAML header
-                content = _yaml.ParseHeader(content, out var form);
-
-                var fvm = new ManageEditFormViewModel()
+            // handle raw view
+            if (mode != "form" || ext != ".md")
+            {
+                var vm = new ManageEditRawViewModel(path)
                 {
-                    Path = path,
-                    PathParts = pathParts,
-                    Form = form,
-                    FormTemplate = template,
                     Content = content
                 };
 
-                return View("EditForm", fvm);
+                return View("EditRaw", vm);
             }
 
-            var vm = new ManageEditRawViewModel()
+            // handle form view
+            template ??= Rendering.FormTemplating.FormTemplate.Default;
+
+            // parse YAML header
+            var fields = _yaml.ParseHeader(content, out content);
+
+            var fvm = new ManageEditFormViewModel(path)
             {
-                Path = path,
-                PathParts = pathParts,
+                Form = fields,
+                FormTemplate = template,
                 Content = content
             };
 
-            return View("EditRaw", vm);
+            return View("EditForm", fvm);
         }
 
         [Route("edit/{**path}"), HttpPost]
@@ -156,7 +154,7 @@ namespace FlipLeaf.Controllers
                 return Unauthorized();
             }
 
-            path = path ?? string.Empty;
+            path ??= string.Empty;
             var fullPath = Path.Combine(_basePath, path);
 
             if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, true, CultureInfo.InvariantCulture))

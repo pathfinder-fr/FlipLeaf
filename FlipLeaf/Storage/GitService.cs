@@ -2,58 +2,35 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using FlipLeaf.Services.Git;
+using FlipLeaf.Storage.Git;
 using LibGit2Sharp;
 
-namespace FlipLeaf.Services
+namespace FlipLeaf.Storage
 {
-    public interface IGitService
+    public interface IGitRepository
     {
-        GitRepository OpenRepository();
-
-        void SetLastCommit<T>(string parent, IDictionary<string, T> items, Action<T, DateTimeOffset> setLastUpdate);
+        void SetLastCommit<T>(string parent, IDictionary<string, T> items, Action<T, Commit> setLastCommit);
 
         IEnumerable<GitCommit> LogFile(string file, int count = 30);
 
-        IEnumerable<GitCommit> LogFile(GitRepository repo, string file, int count = 30);
-
         void PullPush(IUser merger);
 
-        void Commit(IUser author, IUser committer, string path, string comment);
+        void Commit(IUser author, IUser committer, string path, string? comment);
     }
 
-    public class GitService : IGitService
+    public class GitRepository : IGitRepository
     {
         private static readonly object _gitLock = new object();
 
         private readonly FlipLeafSettings _settings;
-
-        /// <summary>
-        /// Is set to true when the repository has been verified and created if required.
-        /// </summary>
         private bool _repoIsValid;
 
-        public GitService(FlipLeafSettings settings)
+        public GitRepository(FlipLeafSettings settings)
         {
             _settings = settings;
         }
 
-        public GitRepository OpenRepository()
-        {
-            Monitor.Enter(_gitLock);
-            try
-            {
-                return new GitRepository(OpenRepositoryCore(), _gitLock);
-            }
-            catch
-            {
-                Monitor.Exit(_gitLock);
-                throw;
-            }
-        }
-
-        public void SetLastCommit<T>(string parent, IDictionary<string, T> items, Action<T, DateTimeOffset> setLastUpdate)
+        public void SetLastCommit<T>(string parent, IDictionary<string, T> items, Action<T, Commit> setLastUpdate)
         {
             var parentParts = parent.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
@@ -61,13 +38,12 @@ namespace FlipLeaf.Services
             {
                 using var repo = OpenRepositoryCore();
 
-                Tree newestTree = null;
-                Commit newestCommit = null;
+                Tree? newestTree = null;
+                Commit? newestCommit = null;
 
 
                 foreach (var commit in repo.Commits)
                 {
-
                     if (items.Count == 0)
                     {
                         return;
@@ -84,7 +60,7 @@ namespace FlipLeaf.Services
 
                     if (tree == null) continue;
 
-                    if (newestTree != null)
+                    if (newestTree != null && newestCommit != null)
                     {
                         foreach (var newestEntry in newestTree)
                         {
@@ -97,7 +73,7 @@ namespace FlipLeaf.Services
                             if (previousEntry == null)
                             {
                                 // new file
-                                setLastUpdate(item, newestCommit.Author.When);
+                                setLastUpdate(item, newestCommit);
                                 items.Remove(newestEntry.Name);
                             }
                             else if (previousEntry.TargetType == TreeEntryTargetType.Blob && newestEntry.TargetType == TreeEntryTargetType.Blob)
@@ -105,9 +81,9 @@ namespace FlipLeaf.Services
                                 // compare
                                 var previousBlob = previousEntry.Target as Blob;
                                 var newestBlob = newestEntry.Target as Blob;
-                                if (previousBlob.Sha != newestBlob.Sha)
+                                if (previousBlob != null && newestBlob != null && previousBlob.Sha != newestBlob.Sha)
                                 {
-                                    setLastUpdate(item, newestCommit.Author.When);
+                                    setLastUpdate(item, newestCommit);
                                     items.Remove(newestEntry.Name);
                                 }
                             }
@@ -125,30 +101,21 @@ namespace FlipLeaf.Services
             lock (_gitLock)
             {
                 using var repo = OpenRepositoryCore();
-                return LogFile(repo, file, count);
-            }
-        }
 
-        public IEnumerable<GitCommit> LogFile(GitRepository repo, string file, int count = 30)
-        {
-            return LogFile(repo.Inner, file, count);
-        }
-
-        private IEnumerable<GitCommit> LogFile(Repository repo, string file, int count = 30)
-        {
-            try
-            {
-                return repo.Commits
-                    .QueryBy(file)
-                    .Take(count)
-                    .Select(x => new Git.GitCommit { Sha = x.Commit.Sha, Message = x.Commit.Message, Authored = x.Commit.Author.When })
-                    .ToList();
-            }
-            catch (KeyNotFoundException)
-            {
-                // bug #1410
-                // https://github.com/libgit2/libgit2sharp/issues/1410
-                return Enumerable.Empty<GitCommit>();
+                try
+                {
+                    return repo.Commits
+                        .QueryBy(file)
+                        .Take(count)
+                        .Select(x => new GitCommit(x.Commit.Sha, x.Commit.Message, x.Commit.Author.When))
+                        .ToList();
+                }
+                catch (KeyNotFoundException)
+                {
+                    // bug #1410
+                    // https://github.com/libgit2/libgit2sharp/issues/1410
+                    return Enumerable.Empty<GitCommit>();
+                }
             }
         }
 
@@ -188,7 +155,7 @@ namespace FlipLeaf.Services
             }
         }
 
-        public void Commit(IUser author, IUser committer, string path, string comment)
+        public void Commit(IUser author, IUser committer, string path, string? comment)
         {
             if (string.IsNullOrWhiteSpace(comment))
             {

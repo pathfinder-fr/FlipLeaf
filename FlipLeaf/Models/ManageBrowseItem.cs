@@ -4,17 +4,23 @@ namespace FlipLeaf.Models
 {
     public class ManageBrowseItem
     {
-        public bool IsDirectory { get; set; }
+        public ManageBrowseItem(Storage.IItemPath path, bool isDirectory)
+        {
+            Path = path;
+            IsDirectory = isDirectory;
+        }
 
-        public ItemPath Path { get; set; }
+        public bool IsDirectory { get; }
+
+        public Storage.IItemPath Path { get; }
 
         public DateTimeOffset? LastUpdate { get; set; }
 
-        public ManageBrowseItem WithCommit(Services.Git.GitCommit commit)
+        public ManageBrowseItem WithCommit(LibGit2Sharp.Commit commit)
         {
             if (commit != null)
             {
-                LastUpdate = commit.Authored;
+                LastUpdate = commit.Author.When;
             }
 
             return this;

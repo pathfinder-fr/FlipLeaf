@@ -1,21 +1,21 @@
-using System.IO;
-using FlipLeaf.Services.FormTemplating;
+﻿using System.IO;
+using FlipLeaf.Rendering.FormTemplating;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace FlipLeaf.Services
+namespace FlipLeaf.Rendering
 {
-    public interface IFormTemplateService
+    public interface IFormTemplateParser
     {
         FormTemplate ParseTemplate(string path);
     }
 
-    public class FormTemplateService : IFormTemplateService
+    public class FormTemplateParser : IFormTemplateParser
     {
         private readonly string _basePath;
 
-        public FormTemplateService(FlipLeafSettings settings)
+        public FormTemplateParser(FlipLeafSettings settings)
         {
             _basePath = settings.SourcePath;
         }

@@ -1,5 +1,4 @@
-﻿using FlipLeaf.Services;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FlipLeaf
@@ -16,11 +15,13 @@ namespace FlipLeaf
             var settings = configuration.GetSection(section).Get<FlipLeafSettings>() ?? new FlipLeafSettings();
             services.AddSingleton(settings);
 
-            services.AddSingleton<IGitService, GitService>();
+            services.AddSingleton<Storage.IFileSystem, Storage.FileSystem>();
+            services.AddSingleton<Storage.IGitRepository, Storage.GitRepository>();
+
             services.AddSingleton<Rendering.IMarkdownRenderer, Rendering.MarkdownRenderer>();
             services.AddSingleton<Rendering.ILiquidRenderer, Rendering.LiquidRenderer>();
             services.AddSingleton<Rendering.IYamlParser, Rendering.YamlParser>();
-            services.AddSingleton<IFormTemplateService, FormTemplateService>();
+            services.AddSingleton<Rendering.IFormTemplateParser, Rendering.FormTemplateParser>();
 
             if (useDefaultWebsite)
             {

@@ -1,5 +1,5 @@
 @model ManageEditFormViewModel
-@using FlipLeaf.Services.FormTemplating;
+@using FlipLeaf.Rendering.FormTemplating;
 
 @{ ViewData["Title"] = "Page Editor"; }
 
@@ -35,7 +35,9 @@
     </ul>
 
     @foreach (var field in Model.FormTemplate.Fields)
-    {        
+    {
+        if (field.Id == null) continue;
+
         var hasValue = Model.Form.TryGetValue(field.Id, out var value);
         var fieldId = $"Form_{field.Id}";
         var fieldName = $"Form.{field.Id}";
@@ -61,9 +63,12 @@
             <div class="form-group">
                 <label for="{fieldId}">@field.Name</label>
                 <select id="{fieldId}" name="{fieldName}" class="form-control">
-                    @foreach(var choice in field.Choices)
+                    @if (field.Choices != null)
                     {
+                        foreach (var choice in field.Choices)
+                        {
                         <option value="@choice.Value" selected="@choice.IsSelected(value)">@choice.Text</option>
+                        }
                     }
                 </select>
                 @if (!string.IsNullOrWhiteSpace(field.Description))

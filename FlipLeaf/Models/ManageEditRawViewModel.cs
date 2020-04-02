@@ -4,12 +4,17 @@ namespace FlipLeaf.Models
 {
     public class ManageEditRawViewModel : ManageDirectoryViewModelBase
     {
-        [Display]
-        public string Content { get; set; }
+        public ManageEditRawViewModel(string path)
+            : base(path)
+        {
+        }
 
         [Display]
-        public string Comment { get; set; }
+        public string? Content { get; set; }
 
-        public string Action { get; set; }
+        [Display]
+        public string? Comment { get; set; }
+
+        public string? Action { get; set; }
     }
 }

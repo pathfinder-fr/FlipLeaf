@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -20,15 +21,19 @@ namespace FlipLeaf.TagHelpers
         /// </summary>
         [HtmlAttributeNotBound]
         [ViewContext]
-        public ViewContext ViewContext { get; set; }
+        public ViewContext? ViewContext { get; set; }
 
-        public string Home {get;set;} = "(Home)";
+        public string Home { get; set; } = "(Home)";
 
-
-        public string[] PathParts { get; set; }
+        public string[] PathParts { get; set; } = Array.Empty<string>();
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
+            if (ViewContext == null)
+            {
+                return;
+            }
+
             var urlHelper = _urlHelperFactory.GetUrlHelper(ViewContext);
 
             output.TagName = "ol";

@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FlipLeaf.Models;
-using FlipLeaf.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -16,18 +15,18 @@ namespace FlipLeaf.Controllers
         private readonly Rendering.IYamlParser _yaml;
         private readonly Rendering.ILiquidRenderer _liquid;
         private readonly Rendering.IMarkdownRenderer _markdown;
-        private readonly IGitService _git;
-        private readonly string _basePath;
+        private readonly Storage.IGitRepository _git;
+        private readonly Storage.IFileSystem _fileSystem;
         private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider =
             new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
 
         public RenderController(
             ILogger<ManageController> logger,
-            FlipLeafSettings settings,
             Rendering.IYamlParser yaml,
             Rendering.ILiquidRenderer liquid,
             Rendering.IMarkdownRenderer markdown,
-            IGitService git
+            Storage.IGitRepository git,
+            Storage.IFileSystem fileSystem
             )
         {
             _logger = logger;
@@ -35,7 +34,7 @@ namespace FlipLeaf.Controllers
             _liquid = liquid;
             _markdown = markdown;
             _git = git;
-            _basePath = settings.SourcePath;
+            _fileSystem = fileSystem;
         }
 
         [Route("{**path}", Order = int.MaxValue)]
@@ -43,7 +42,7 @@ namespace FlipLeaf.Controllers
         {
             // compute (relative)path and full path
             path ??= string.Empty;
-            var fullPath = Path.Combine(_basePath, path);
+            var fullPath = _fileSystem.GetFullPath(path);
 
             // default file
             // if the full path designates a directory, we change the fullpath to the default document
@@ -53,13 +52,13 @@ namespace FlipLeaf.Controllers
                 path = Path.Combine(path, DefaultDocumentName);
             }
 
-            var ext = Path.GetExtension(fullPath).ToLowerInvariant();
+            var ext = _fileSystem.GetExtension(fullPath);
 
             // .md => redirect
             // we don't want to keep .md file in url, so we redirect to the html representation
             if (string.Equals(ext, ".md", StringComparison.Ordinal))
             {
-                return RedirectToAction("Index", new { path = path[0..^3] + ".html" });
+                return RedirectToAction("Index", new { path = _fileSystem.ReplaceExtension(path, ".html", ext) });
             }
 
             // .html => .md
@@ -67,24 +66,24 @@ namespace FlipLeaf.Controllers
             // but only if the .html itself does not exist physically on disk
             if (string.Equals(ext, ".html", StringComparison.Ordinal) && !System.IO.File.Exists(fullPath))
             {
-                fullPath = fullPath[0..^5] + ".md";
-                path = path[0..^5] + ".md";
+                fullPath = _fileSystem.ReplaceExtension(fullPath, ".md", ext);
+                path = _fileSystem.ReplaceExtension(path, ".md", ext);
             }
 
             // here we have the final file on disk
             // security check: do not manipulate files outside the base path
-            if (!new Uri(fullPath).LocalPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
+            if (!_fileSystem.IsPathRooted(fullPath))
             {
                 return NotFound();
             }
 
             // if file does not exists, redirect to page creation
-            if (!System.IO.File.Exists(fullPath))
+            if (!_fileSystem.CheckFileExists(fullPath))
             {
                 return RedirectToAction("Edit", "Manage", new { path });
             }
 
-            ext = Path.GetExtension(fullPath).ToLowerInvariant();
+            ext = _fileSystem.GetExtension(fullPath);
 
             if (ext != ".md" && ext != ".html")
             {
@@ -99,10 +98,10 @@ namespace FlipLeaf.Controllers
             // Here start content parsing and rendering
 
             // 1) read all content
-            var content = System.IO.File.ReadAllText(fullPath);
+            var content = _fileSystem.ReadAllText(fullPath);
 
             // 2) parse yaml header
-            content = _yaml.ParseHeader(content, out var pageContext);
+            var pageContext = _yaml.ParseHeader(content, out content);
 
             // 3) parse liquid
             content = await _liquid.RenderAsync(content, pageContext, out var context).ConfigureAwait(false);
@@ -117,7 +116,7 @@ namespace FlipLeaf.Controllers
             content = await _liquid.ApplyLayoutAsync(content, context).ConfigureAwait(false);
 
             // GIT: retrieve latest commit
-            var commit = _git.LogFile(ItemPath.FromFullPath(_basePath, fullPath).RelativePath, 1)
+            var commit = _git.LogFile(_fileSystem.GetRelativePath(fullPath), 1)
                 .FirstOrDefault();
 
             var vm = new RenderIndexViewModel
@@ -131,7 +130,7 @@ namespace FlipLeaf.Controllers
             // we automatically use the "title" yaml header as the Page Title
             if (pageContext.TryGetValue("title", out var pageTitle) && pageTitle != null)
             {
-                vm.Title = pageTitle.ToString();
+                vm.Title = pageTitle.ToString() ?? string.Empty;
                 ViewData["Title"] = vm.Title;
             }
 

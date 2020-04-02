@@ -1,17 +1,17 @@
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
-namespace FlipLeaf.Services.FormTemplating
+namespace FlipLeaf.Rendering.FormTemplating
 {
     public class FormTemplate
     {
         public static readonly FormTemplate Default = CreateDefaultTemplate();
 
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
-        public List<FormTemplateField> Fields { get; set; }
+        public IEnumerable<FormTemplateField> Fields { get; set; } = Enumerable.Empty<FormTemplateField>();
 
         private static FormTemplate CreateDefaultTemplate()
         {

@@ -4,6 +4,13 @@ namespace FlipLeaf
 {
     public static class Extensions
     {
+        public static bool EqualsOrdinal(this string? @this, string? other)
+        {
+            if (@this == null && other == null) return true;
+            if (@this == null || other == null) return false;
+
+            return string.Equals(@this, other, StringComparison.Ordinal);
+        }
 
         public static string ToRelativeTime(this DateTimeOffset? @this)
         {
@@ -12,6 +19,7 @@ namespace FlipLeaf
 
             return ToRelativeTime(@this.Value);
         }
+
         public static string ToRelativeTime(this DateTimeOffset @this)
         {
             var ago = DateTimeOffset.Now - @this;
@@ -35,7 +43,7 @@ namespace FlipLeaf
             if (ago.TotalDays / 7 == 4)
                 return $"{(ago.TotalDays / 7):0} weeks ago";
 
-            return $"{(ago.TotalDays / 30):0} months ago";
+            return $"{ago.TotalDays / 30:0} months ago";
         }
     }
 }
