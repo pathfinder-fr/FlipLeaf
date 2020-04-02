@@ -1,8 +1,7 @@
-﻿using System.IO;
-using FlipLeaf.Rendering.FormTemplating;
-
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using FlipLeaf.Rendering.FormTemplating;
+using FlipLeaf.Storage;
 
 namespace FlipLeaf.Rendering
 {
@@ -13,22 +12,22 @@ namespace FlipLeaf.Rendering
 
     public class FormTemplateParser : IFormTemplateParser
     {
-        private readonly string _basePath;
+        private readonly IFileSystem _fileSystem;
 
-        public FormTemplateParser(FlipLeafSettings settings)
+        public FormTemplateParser(IFileSystem fileSystem)
         {
-            _basePath = settings.SourcePath;
+            _fileSystem = fileSystem;
         }
 
         public FormTemplate ParseTemplate(string path)
         {
-            var fullPath = Path.Combine(_basePath, path);
-            if (!File.Exists(fullPath))
+            var item = _fileSystem.GetItem(path);
+            if (item == null || !_fileSystem.FileExists(item))
             {
                 return FormTemplate.Default;
             }
 
-            var templateJson = File.ReadAllText(fullPath);
+            var templateJson = _fileSystem.ReadAllText(item);
 
             return JsonSerializer.Deserialize<FormTemplate>(templateJson, new JsonSerializerOptions
             {
