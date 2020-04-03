@@ -116,7 +116,15 @@ namespace FlipLeaf.Rendering
 
             var layoutText = _fileSystem.ReadAllText(layoutItem);
 
-            var yamlHeader = _yaml.ParseHeader(layoutText, out layoutText);
+            IDictionary<string, object>? yamlHeader;
+            try
+            {
+                yamlHeader = _yaml.ParseHeader(layoutText, out layoutText);
+            }
+            catch(Exception ex)
+            {
+                throw new ArgumentOutOfRangeException($"Layout {fileName} is invalid", ex);
+            }
 
             var layoutTemplate = LayoutTemplate.Parse(layoutText);
 

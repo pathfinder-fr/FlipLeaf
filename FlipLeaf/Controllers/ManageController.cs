@@ -1,15 +1,18 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using FlipLeaf.Models;
+using FlipLeaf.Rendering.Templating;
 using FlipLeaf.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 
 namespace FlipLeaf.Controllers
 {
     [Route("_manage")]
     public class ManageController : Controller
     {
-        private readonly string _basePath;
         private readonly ILogger<ManageController> _logger;
         private readonly Rendering.IYamlParser _yaml;
         private readonly Rendering.ILiquidRenderer _liquid;
@@ -20,7 +23,6 @@ namespace FlipLeaf.Controllers
 
         public ManageController(
             ILogger<ManageController> logger,
-            FlipLeafSettings settings,
             Rendering.IYamlParser yaml,
             Rendering.ILiquidRenderer liquid,
             Rendering.IFormTemplateParser formTemplate,
@@ -35,13 +37,12 @@ namespace FlipLeaf.Controllers
             _formTemplate = formTemplate;
             _fileSystem = fileSystem;
             _website = website;
-            _basePath = settings.SourcePath;
         }
 
         [Route("")]
         public IActionResult Index() => Browse(string.Empty);
 
-        [Route("browse/{*path}")]
+        [Route("browse/{**path}")]
         public IActionResult Browse(string path)
         {
             var directory = _fileSystem.GetItem(path);
@@ -73,27 +74,7 @@ namespace FlipLeaf.Controllers
         }
 
         [Route("edit/{**path}")]
-        public IActionResult Edit(string path)
-        {
-            var file = _fileSystem.GetItem(path);
-            if (file == null)
-            {
-                return NotFound();
-            }
-
-            // detect templating
-            var templateFile = _fileSystem.GetFileFromSameDirectoryAs(file, "template.json", true);
-            if (file.IsMarkdown() && templateFile != null)
-            {
-                // redirect to form edit
-                return this.RedirectToAction(nameof(EditForm), new { path });
-            }
-
-            return this.RedirectToAction(nameof(EditRaw), new { path });
-        }
-
-        [Route("edit-form/{**path}")]
-        public IActionResult EditForm(string path)
+        public IActionResult Edit(string path, bool form = false, string? template = null)
         {
             var file = _fileSystem.GetItem(path);
             if (file == null)
@@ -107,30 +88,102 @@ namespace FlipLeaf.Controllers
                 return this.RedirectToAction(nameof(EditRaw), new { path });
             }
 
-            // detect template
-            var templateFile = _fileSystem.GetFileFromSameDirectoryAs(file, "template.json", true);
-            if (templateFile == null)
+            if (!TryLoadTemplate(template, file, out var yamlHeader, out var templateName, out var formTemplate, out var content)
+                || formTemplate == null)
             {
+                if (form || template != null)
+                {
+                    return BadRequest("This file does not supports form editing. No template or invalid template specified");
+                }
+
                 return this.RedirectToAction(nameof(EditRaw), new { path });
             }
 
-            // load form template
-            var template = _formTemplate.ParseTemplate(templateFile.FullPath);
-
-            // read raw content
-            var content = _fileSystem.ReadAllText(file);
-
-            // parse YAML header
-            var fields = _yaml.ParseHeader(content, out content);
+            var formValues = new Dictionary<string, StringValues>();
+            foreach(var yamlItem in yamlHeader)
+            {
+                if(yamlItem.Value is string yamlString)
+                {
+                    formValues[yamlItem.Key] = new StringValues(yamlString);
+                }
+                else if(yamlItem.Value is List<object> yamlArray)
+                {
+                    formValues[yamlItem.Key] = new StringValues(yamlArray.Select(x => x.ToString()).ToArray());
+                }
+            }
 
             var fvm = new ManageEditFormViewModel(path)
             {
-                Form = fields,
-                FormTemplate = template,
+                Form = formValues,
+                TemplateName = templateName,
+                FormTemplate = formTemplate,
                 Content = content
             };
 
-            return View(fvm);
+            return View(nameof(Edit), fvm);
+        }
+
+        [Route("edit/{**path}"), HttpPost]
+        public IActionResult Edit(string path, ManageEditFormPostViewModel model)
+        {
+            var user = _website.GetCurrentUser();
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var file = _fileSystem.GetItem(path);
+            if (file == null)
+            {
+                return NotFound();
+            }
+
+            if (!file.IsMarkdown() || string.IsNullOrEmpty(model.TemplateName))
+            {
+                return BadRequest();
+            }
+
+            if (!TryLoadTemplate(model.TemplateName, file, out var yamlHeader, out _, out var formTemplate, out var content)
+                || formTemplate == null)
+            {
+                return BadRequest();
+            }
+
+            using (var writer = new StringWriter())
+            {
+                writer.WriteLine("---");
+                writer.WriteLine($"template: {model.TemplateName}");
+
+                foreach (var field in formTemplate.Fields)
+                {
+                    if (field.Id == null) continue;
+                    if (!Request.Form.TryGetValue($"Fields.{field.Id}", out var formValues))
+                    {
+                        formValues = StringValues.Empty;
+                    }
+
+                    switch (field.Type)
+                    {
+                        case FormTemplateFieldType.Text:
+                        case FormTemplateFieldType.Choice:
+                        case FormTemplateFieldType.MultiCheckBox:
+                            _yaml.WriteHeaderValue(writer, field.Id, formValues, field.DefaultValue?.ToString());
+                            break;
+                    }
+                }
+
+                writer.WriteLine("---");
+
+                writer.Write(model.Content);
+
+                _fileSystem.WriteAllText(file, writer.ToString());
+            }
+
+            var websiteUser = _website.GetWebsiteUser();
+            _git.Commit(user, websiteUser, path, model.Comment);
+            _git.PullPush(websiteUser);
+
+            return this.RedirectToAction(nameof(Edit), new { path });
         }
 
         [Route("edit-raw/{**path}")]
@@ -192,6 +245,54 @@ namespace FlipLeaf.Controllers
             {
                 return RedirectToAction("Index", "Render", new { path });
             }
+        }
+
+        private bool TryLoadTemplate(
+            string? templateName,
+            IStorageItem file,
+            out IDictionary<string, object> yamlHeader,
+            out string? loadedTemplateName,
+            out FormTemplate? formTemplate,
+            out string content)
+        {
+            formTemplate = null;
+            loadedTemplateName = null;
+            content = string.Empty;
+
+            if (_fileSystem.FileExists(file) && templateName == null)
+            {
+                // read raw content
+                content = _fileSystem.ReadAllText(file);
+
+                // parse YAML header
+                yamlHeader = _yaml.ParseHeader(content, out content);
+
+                if (yamlHeader.TryGetValue(KnownFields.Template, out var templateNameObj))
+                {
+                    templateName = templateNameObj as string;
+                }
+            }
+            else
+            {
+                yamlHeader = new Dictionary<string, object>();
+            }
+
+            if (templateName == null)
+            {
+                return false;
+            }
+
+            // try load template
+            var templateFile = _fileSystem.GetTemplate(templateName);
+            if (templateFile == null)
+            {
+                return false;
+            }
+
+            // parse template
+            loadedTemplateName = templateName;
+            formTemplate = _formTemplate.ParseTemplate(templateFile.FullPath);
+            return true;
         }
     }
 }

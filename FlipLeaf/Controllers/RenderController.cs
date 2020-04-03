@@ -38,7 +38,7 @@ namespace FlipLeaf.Controllers
         }
 
         [Route("{**path}", Order = int.MaxValue)]
-        public async Task<IActionResult> IndexAsync(string path)
+        public async Task<IActionResult> Index(string path)
         {
             var file = _fileSystem.GetItem(path);
             if (file == null)
@@ -62,7 +62,7 @@ namespace FlipLeaf.Controllers
             // we don't want to keep .md file in url, so we redirect to the html representation
             if (file.IsMarkdown())
             {
-                return RedirectToAction("Index", new { path = _fileSystem.ReplaceExtension(file, ".html").RelativePath });
+                return RedirectToAction(nameof(Index), new { path = _fileSystem.ReplaceExtension(file, ".html").RelativePath });
             }
 
             // .html => .md
@@ -76,23 +76,26 @@ namespace FlipLeaf.Controllers
             // if file does not exists, redirect to page creation
             if (!_fileSystem.FileExists(file))
             {
-                return RedirectToAction("Edit", "Manage", new { path });
+                return RedirectToAction(nameof(ManageController.Edit), "Manage", new { path });
+            }
+
+            if (file.IsMarkdown() || file.IsHtml())
+            {
+                return await RenderParsedContent(file);
             }
 
             // if the file is a static resource, eg. not a markdown or html file we just return the content
-            if (!file.IsMarkdown() && !file.IsHtml())
+            // we try to detect the content-type based on the
+            if (!_contentTypeProvider.TryGetContentType(file.Extension, out var contentType))
             {
-                // we try to detect the content-type based on the
-                if (!_contentTypeProvider.TryGetContentType(file.Extension, out var contentType))
-                {
-                    contentType = "application/octet-stream";
-                }
-
-                return PhysicalFile(file.FullPath, contentType);
+                contentType = "application/octet-stream";
             }
 
-            // Here start content parsing and rendering
+            return PhysicalFile(file.FullPath, contentType);
+        }
 
+        private async Task<IActionResult> RenderParsedContent(IStorageItem file)
+        {
             // 1) read all content
             var content = _fileSystem.ReadAllText(file);
 
@@ -113,8 +116,7 @@ namespace FlipLeaf.Controllers
             content = await _liquid.ApplyLayoutAsync(content, context).ConfigureAwait(false);
 
             // GIT: retrieve latest commit
-            var commit = _git.LogFile(file.RelativePath, 1)
-                .FirstOrDefault();
+            var commit = _git.LogFile(file.RelativePath, 1).FirstOrDefault();
 
             var vm = new RenderIndexViewModel
             {
@@ -131,7 +133,7 @@ namespace FlipLeaf.Controllers
                 ViewData["Title"] = vm.Title;
             }
 
-            return View(vm);
+            return View(nameof(Index), vm);
         }
     }
 }

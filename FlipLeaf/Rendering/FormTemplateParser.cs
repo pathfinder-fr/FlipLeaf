@@ -1,7 +1,9 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using FlipLeaf.Rendering.FormTemplating;
+using FlipLeaf.Rendering.Templating;
 using FlipLeaf.Storage;
+using YamlDotNet.Serialization;
 
 namespace FlipLeaf.Rendering
 {
@@ -27,15 +29,23 @@ namespace FlipLeaf.Rendering
                 return FormTemplate.Default;
             }
 
-            var templateJson = _fileSystem.ReadAllText(item);
+            var templateSource = _fileSystem.ReadAllText(item);
 
-            return JsonSerializer.Deserialize<FormTemplate>(templateJson, new JsonSerializerOptions
+            if (item.IsJson())
             {
-                PropertyNameCaseInsensitive = true,
-                Converters = {
-                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-                }
-            });
+                return JsonSerializer.Deserialize<FormTemplate>(templateSource, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+                });
+            }
+            else if(item.IsYaml())
+            {
+                var deserializer = new Deserializer();
+                return deserializer.Deserialize<FormTemplate>(templateSource);
+            }
+
+            throw new NotSupportedException($"Template with extension {item.Extension} are not supported");
         }
     }
 }

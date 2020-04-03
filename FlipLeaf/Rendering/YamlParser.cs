@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Fluid;
+using Microsoft.Extensions.Primitives;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
@@ -11,6 +12,8 @@ namespace FlipLeaf.Rendering
 {
     public interface IYamlParser
     {
+        void WriteHeaderValue(TextWriter writer, string name, StringValues values, string? defaultValue);
+
         IDictionary<string, object> ParseHeader(string content, out string newContent);
     }
 
@@ -21,6 +24,61 @@ namespace FlipLeaf.Rendering
         public YamlParser()
         {
             _deserializer = new DeserializerBuilder().Build();
+        }
+
+        public void WriteHeaderValue(TextWriter writer, string name, StringValues values, string? defaultValue)
+        {
+            if (values == StringValues.Empty && defaultValue == null)
+            {
+                return;
+            }
+
+
+            writer.Write(name);
+            writer.Write(": ");
+
+            if (values == StringValues.Empty)
+            {
+                // default value
+                WriteValue(writer, defaultValue);
+            }
+            else if (values.Count > 1)
+            {
+                // mutiple values
+                writer.WriteLine();
+
+                foreach (var value in values)
+                {
+                    writer.Write("  - ");
+                    WriteValue(writer, value);
+                }
+            }
+            else
+            {
+                // single value
+                WriteValue(writer, values[0]);
+            }
+
+            static void WriteValue(TextWriter w, string value)
+            {
+                if (value == string.Empty)
+                {
+                    w.Write("''");
+                    w.WriteLine();
+                }
+                else if (value.IndexOf(',') != -1)
+                {
+                    w.Write("\"");
+                    w.Write(value);
+                    w.Write("\"");
+                    w.WriteLine();
+                }
+                else
+                {
+                    w.Write(value);
+                    w.WriteLine();
+                }
+            }
         }
 
         public IDictionary<string, object> ParseHeader(string content, out string newContent)
@@ -53,10 +111,20 @@ namespace FlipLeaf.Rendering
 
         public bool ParseHeader(ref string source, out Dictionary<string, object>? pageContext)
         {
-            var input = new StringReader(source);
+            pageContext = null;
+            if (!source.StartsWith("---", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            using var input = new StringReader(source);
 
             var parser = new Parser(input);
-            pageContext = null;
+
+            if (!parser.Accept<StreamStart>(out _))
+            {
+                return false;
+            }
 
             parser.Consume<StreamStart>();
 

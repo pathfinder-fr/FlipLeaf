@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace FlipLeaf.Rendering.FormTemplating
+namespace FlipLeaf.Rendering.Templating
 {
     public class FormTemplate
     {
@@ -10,6 +10,10 @@ namespace FlipLeaf.Rendering.FormTemplating
         public string? Title { get; set; }
 
         public string? Description { get; set; }
+
+        public string? ContentName { get; set; }
+
+        public string? ContentDescription { get; set; }
 
         public IEnumerable<FormTemplateField> Fields { get; set; } = Enumerable.Empty<FormTemplateField>();
 

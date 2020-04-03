@@ -10,6 +10,10 @@ namespace FlipLeaf.Storage
     {
         IStorageItem? GetItem(string relativePath);
 
+        IStorageItem? GetLayout(string name);
+
+        IStorageItem? GetTemplate(string name);
+
         IStorageItem? GetFileFromSameDirectoryAs(IStorageItem file, string fileName, bool checkExists);
 
         IStorageItem Combine(IStorageItem item, string path);
@@ -31,6 +35,8 @@ namespace FlipLeaf.Storage
 
     public class FileSystem : IFileSystem
     {
+        private const string TemplatesFolder = "_templates";
+        private const string LayoutsFolder = "_layouts";
         private readonly char[] _invalidFileNameChars;
         private readonly char[] _invalidPathChars;
         private readonly string _basePath;
@@ -60,6 +66,63 @@ namespace FlipLeaf.Storage
             }
 
             return new StorageItem(fullPath, relativePath);
+        }
+
+        public IStorageItem? GetLayout(string name)
+        {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException($"Name can not be empty", nameof(name));
+
+            if (name.IndexOfAny(_invalidFileNameChars) != -1)
+                throw new ArgumentException($"{name} is not a valid layout name", nameof(name));
+
+            if (Path.GetExtension(name) != ".")
+                throw new ArgumentException($"The layout name must not include the file extension. Use {Path.GetFileNameWithoutExtension(name)} instead of {name}", nameof(name));
+
+            return GetExistingItemUnsafe($"{LayoutsFolder}/{name}.html");
+        }
+
+        public IStorageItem? GetTemplate(string name)
+        {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException($"Name can not be empty", nameof(name));
+
+            if (name.IndexOfAny(_invalidFileNameChars) != -1)
+                throw new ArgumentException($"{name} is not a valid template name", nameof(name));
+
+            if (!string.IsNullOrEmpty(Path.GetExtension(name)))
+                throw new ArgumentException($"The template name must not include the file extension. Use {Path.GetFileNameWithoutExtension(name)} instead of {name}", nameof(name));
+
+            IStorageItem? item;
+
+            // json first
+            item = GetExistingItemUnsafe($"{TemplatesFolder}/{name}.json");
+            if (item != null)
+            {
+                return item;
+            }
+
+            // yaml then
+            item = GetExistingItemUnsafe($"{TemplatesFolder}/{name}.yaml");
+            if (item != null)
+            {
+                return item;
+            }
+
+            // yaml then
+            item = GetExistingItemUnsafe($"{TemplatesFolder}/{name}.yml");
+            if (item != null)
+            {
+                return item;
+            }
+
+            return null;
         }
 
         public bool FileExists(IStorageItem file) => File.Exists(file.FullPath);
@@ -202,6 +265,22 @@ namespace FlipLeaf.Storage
             return GetItemFromFullPathUnsafe(newFullPath);
         }
 
+        private IStorageItem? GetExistingItemUnsafe(string relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath))
+            {
+                return _baseDir;
+            }
+
+            var fullPath = Path.Combine(_basePath, relativePath);
+            if (File.Exists(fullPath))
+            {
+                return new StorageItem(fullPath, relativePath);
+            }
+
+            return null;
+        }
+
         private IStorageItem GetItemFromFullPathUnsafe(string fullPath)
         {
             if (!fullPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
@@ -238,7 +317,7 @@ namespace FlipLeaf.Storage
 
             public StorageItem(string fullPath, string relativePath)
             {
-                FullPath = fullPath;
+                FullPath = fullPath.Replace('/', '\\');
                 RelativePath = relativePath.Replace('\\', '/');
                 _getName = new Lazy<string>(GetName);
                 _getExtension = new Lazy<string>(GetExtension);

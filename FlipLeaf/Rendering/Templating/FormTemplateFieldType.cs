@@ -1,9 +1,11 @@
-﻿namespace FlipLeaf.Rendering.FormTemplating
+﻿namespace FlipLeaf.Rendering.Templating
 {
     public enum FormTemplateFieldType
     {
-        Text,
+        Text = 0,
 
         Choice,
+
+        MultiCheckBox,
     }
 }
