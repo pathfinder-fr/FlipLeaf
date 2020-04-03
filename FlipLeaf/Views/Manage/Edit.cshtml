@@ -33,6 +33,7 @@
             var hasValue = Model.Form.TryGetValue(field.Id, out var value);
             var fieldId = $"Fields_{field.Id}";
             var fieldName = $"Fields.{field.Id}";
+            var isReadOnly = field.Visibility == FormTemplateFieldVisibility.ReadOnly;
 
             if (!hasValue && field.DefaultValue != null)
             {
@@ -58,11 +59,11 @@
                 </label>
                 @if (field.Type == FormTemplateFieldType.Text)
                 {
-                    <input type="text" id="@fieldId" name="@fieldName" value="@value" class="form-control" />
+                    <input type="text" id="@fieldId" name="@fieldName" value="@value" class="form-control" readonly="@isReadOnly" />
                 }
                 else if (field.Type == FormTemplateFieldType.Choice)
                 {
-                    <select id="@fieldId" name="@fieldName" class="form-control">
+                    <select id="@fieldId" name="@fieldName" class="form-control" readonly="@isReadOnly">
                         @if (field.Choices != null)
                         {
                             foreach (var choice in field.Choices)
@@ -81,7 +82,7 @@
                             {
                                 var isChecked = value.Any(v => choice.IsSelected(v));
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" name="@fieldName" id="@(fieldId)_@choice.Value" value="@choice.Value" checked="@choice.IsSelected(value)">
+                                    <input class="form-check-input" type="checkbox" name="@fieldName" id="@(fieldId)_@choice.Value" value="@choice.Value" checked="@choice.IsSelected(value)" readonly="@isReadOnly">
                                     <label class="form-check-label" for="@(fieldId)_@choice.Value">@choice.Text</label>
                                 </div>
                             }

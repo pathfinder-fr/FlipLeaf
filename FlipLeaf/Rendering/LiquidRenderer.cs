@@ -121,12 +121,20 @@ namespace FlipLeaf.Rendering
             {
                 yamlHeader = _yaml.ParseHeader(layoutText, out layoutText);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                throw new ArgumentOutOfRangeException($"Layout {fileName} is invalid", ex);
+                throw new ArgumentException($"Layout {fileName} is invalid: YAML errors", nameof(fileName), ex);
             }
 
-            var layoutTemplate = LayoutTemplate.Parse(layoutText);
+            LayoutTemplate? layoutTemplate;
+            try
+            {
+                layoutTemplate = LayoutTemplate.Parse(layoutText);
+            }
+            catch(Exception ex)
+            {
+                throw new ArgumentException($"Layout {fileName} in invalid: Liquid errors", nameof(fileName), ex);
+            }
 
             return new LayoutCache(layoutTemplate, yamlHeader);
         }
