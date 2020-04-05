@@ -12,9 +12,9 @@ namespace FlipLeaf.Storage
 
         IEnumerable<GitCommit> LogFile(string file, int count = 30);
 
-        void PullPush(IUser merger);
+        void PullPush(Website.IUser merger);
 
-        void Commit(IUser author, IUser committer, string path, string? comment, bool remove = false);
+        void Commit(Website.IUser author, Website.IUser committer, string path, string? comment, bool remove = false);
     }
 
     public class GitRepository : IGitRepository
@@ -118,7 +118,7 @@ namespace FlipLeaf.Storage
             }
         }
 
-        public void PullPush(IUser merger)
+        public void PullPush(Website.IUser merger)
         {
             if (!_settings.GitEnabled)
             {
@@ -154,7 +154,7 @@ namespace FlipLeaf.Storage
             }
         }
 
-        public void Commit(IUser author, IUser committer, string path, string? comment, bool remove = false)
+        public void Commit(Website.IUser author, Website.IUser committer, string path, string? comment, bool remove = false)
         {
             if (string.IsNullOrWhiteSpace(comment))
             {

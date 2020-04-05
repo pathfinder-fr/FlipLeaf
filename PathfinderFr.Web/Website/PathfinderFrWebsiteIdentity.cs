@@ -2,21 +2,21 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using Dapper;
-using FlipLeaf;
+using FlipLeaf.Website;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
 using PathfinderFr.Compatibility;
 
-namespace PathfinderFr
+namespace PathfinderFr.Website
 {
-    public interface IPathfinderFrWebsite : IWebsite
+    public interface IPathfinderFrWebsiteIdentity : IWebsiteIdentity
     {
         PathfinderFrUser GetCurrentPathfinderFrUser();
 
         PathfinderFrUser GetUser(string userName);
     }
 
-    public class PathfinderFrWebsite : IPathfinderFrWebsite
+    public class PathfinderFrWebsiteIdentity : IPathfinderFrWebsiteIdentity
     {
         private static readonly ConcurrentDictionary<string, PathfinderFrUser> _users = new ConcurrentDictionary<string, PathfinderFrUser>(StringComparer.OrdinalIgnoreCase);
         private readonly string _connectionString;
@@ -24,14 +24,14 @@ namespace PathfinderFr
         private readonly AspNetMachineKeySection _section;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public PathfinderFrWebsite(PathfinderFrSettings settings, IHttpContextAccessor httpContextAccessor)
+        public PathfinderFrWebsiteIdentity(PathfinderFrSettings settings, IHttpContextAccessor httpContextAccessor)
         {
             _connectionString = settings.ConnectionString;
             _cookieName = settings.AuthCookieName;
             _section = new AspNetMachineKeySection("AES", settings.DecryptionKey, "SHA1", settings.ValidationKey); _httpContextAccessor = httpContextAccessor;
         }
 
-        IUser IWebsite.GetCurrentUser() => GetCurrentPathfinderFrUser();
+        IUser IWebsiteIdentity.GetCurrentUser() => GetCurrentPathfinderFrUser();
 
         public IUser GetWebsiteUser() => PathfinderFrUser.SiteUser;
 

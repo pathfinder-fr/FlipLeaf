@@ -38,5 +38,7 @@
         public static bool IsYaml(this IStorageItem @this) => @this.Extension == ".yml" || @this.Extension == ".yaml";
 
         public static bool IsJson(this IStorageItem @this) => @this.Extension == ".json";
+
+        public static bool IsXml(this IStorageItem @this) => @this.Extension == ".xml";
     }
 }

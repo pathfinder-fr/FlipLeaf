@@ -1,4 +1,4 @@
-﻿namespace FlipLeaf
+﻿namespace FlipLeaf.Website
 {
     public interface IUser
     {

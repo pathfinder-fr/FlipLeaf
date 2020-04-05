@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using FlipLeaf.Models;
 using FlipLeaf.Storage;
@@ -88,7 +87,7 @@ namespace FlipLeaf.Controllers
                 return RedirectToAction(nameof(ManageController.Edit), "Manage", new { path });
             }
 
-            if (file.IsMarkdown() || file.IsHtml())
+            if (file.IsMarkdown() || file.IsHtml() || file.IsJson() || file.IsXml() || file.IsYaml())
             {
                 return await RenderParsedContent(file);
             }
@@ -137,13 +136,30 @@ namespace FlipLeaf.Controllers
             };
 
             // we automatically use the "title" yaml header as the Page Title
-            if (yamlHeader.TryGetValue("title", out var pageTitle) && pageTitle != null)
+            if (yamlHeader.TryGetValue(KnownFields.Title, out var pageTitle) && pageTitle != null)
             {
                 vm.Title = pageTitle.ToString() ?? string.Empty;
                 ViewData["Title"] = vm.Title;
             }
 
-            return View(nameof(Index), vm);
+            if (file.IsMarkdown() || file.IsHtml())
+            {
+                return View(nameof(Index), vm);
+            }
+
+            if (yamlHeader.TryGetValue(KnownFields.ContentType, out var contentTypeObj) && contentTypeObj is string contentType)
+            {
+                // explicit content type found
+            }
+            else if (_contentTypeProvider.TryGetContentType(file.Extension, out contentType))
+            {
+            }
+            else
+            {
+                contentType = "text/plain";
+            }
+
+            return Content(content, contentType);
         }
     }
 }

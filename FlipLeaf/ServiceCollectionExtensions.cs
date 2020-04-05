@@ -25,7 +25,7 @@ namespace FlipLeaf
 
             if (useDefaultWebsite)
             {
-                services.AddSingleton<IWebsite, DefaultWebsite>();
+                services.AddSingleton<Website.IWebsiteIdentity, Website.DefaultWebsiteIdentity>();
             }
         }
     }

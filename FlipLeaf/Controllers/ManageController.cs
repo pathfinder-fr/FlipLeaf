@@ -19,7 +19,7 @@ namespace FlipLeaf.Controllers
         private readonly Rendering.IFormTemplateParser _formTemplate;
         private readonly IFileSystem _fileSystem;
         private readonly IGitRepository _git;
-        private readonly IWebsite _website;
+        private readonly Website.IWebsiteIdentity _website;
 
         public ManageController(
             ILogger<ManageController> logger,
@@ -28,7 +28,7 @@ namespace FlipLeaf.Controllers
             Rendering.IFormTemplateParser formTemplate,
             IFileSystem fileSystem,
             IGitRepository git,
-            IWebsite website)
+            Website.IWebsiteIdentity website)
         {
             _logger = logger;
             _git = git;
@@ -306,7 +306,7 @@ namespace FlipLeaf.Controllers
         private bool TryLoadTemplate(
             string? templateName,
             IStorageItem file,
-            out IDictionary<string, object> yamlHeader,
+            out HeaderFieldDictionary yamlHeader,
             out string? loadedTemplateName,
             out FormTemplate? formTemplate,
             out string content)
@@ -330,7 +330,7 @@ namespace FlipLeaf.Controllers
             }
             else
             {
-                yamlHeader = new Dictionary<string, object>();
+                yamlHeader = new HeaderFieldDictionary();
             }
 
             if (templateName == null)

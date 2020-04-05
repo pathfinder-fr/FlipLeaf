@@ -1,7 +1,7 @@
 ﻿using System;
-using FlipLeaf;
+using FlipLeaf.Website;
 
-namespace PathfinderFr
+namespace PathfinderFr.Website
 {
     public sealed class PathfinderFrUser : IUser
     {

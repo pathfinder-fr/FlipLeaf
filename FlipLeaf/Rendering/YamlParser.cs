@@ -14,7 +14,7 @@ namespace FlipLeaf.Rendering
     {
         void WriteHeaderValue(TextWriter writer, string name, StringValues values, string? defaultValue);
 
-        IDictionary<string, object> ParseHeader(string content, out string newContent);
+        HeaderFieldDictionary ParseHeader(string content, out string newContent);
     }
 
     public class YamlParser : IYamlParser
@@ -81,12 +81,12 @@ namespace FlipLeaf.Rendering
             }
         }
 
-        public IDictionary<string, object> ParseHeader(string content, out string newContent)
+        public HeaderFieldDictionary ParseHeader(string content, out string newContent)
         {
-            IDictionary<string, object> items;
+            HeaderFieldDictionary items;
             newContent = content;
             bool parsed;
-            Dictionary<string, object>? pageContext;
+            HeaderFieldDictionary? pageContext;
             try
             {
                 parsed = this.ParseHeader(ref newContent, out pageContext);
@@ -96,7 +96,7 @@ namespace FlipLeaf.Rendering
                 throw new ParseException($"The YAML header of the page is invalid", see);
             }
 
-            items = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            items = new HeaderFieldDictionary();
 
             if (parsed && pageContext != null)
             {
@@ -109,7 +109,7 @@ namespace FlipLeaf.Rendering
             return items;
         }
 
-        public bool ParseHeader(ref string source, out Dictionary<string, object>? pageContext)
+        public bool ParseHeader(ref string source, out HeaderFieldDictionary? pageContext)
         {
             pageContext = null;
             if (!source.StartsWith("---", StringComparison.Ordinal))
@@ -146,7 +146,7 @@ namespace FlipLeaf.Rendering
                 return false;
             }
 
-            pageContext = ConvertDoc(doc) as Dictionary<string, object>;
+            pageContext = ConvertDoc(doc) as HeaderFieldDictionary;
             if (pageContext == null)
             {
                 return false;
@@ -211,7 +211,15 @@ namespace FlipLeaf.Rendering
                     switch (doc)
                     {
                         case IDictionary<object, object> objectDict:
-                            return objectDict.ToDictionary(p => p.Key.ToString(), p => ConvertDoc(p.Value));
+                            var result = new HeaderFieldDictionary();
+                            foreach (var pair in objectDict)
+                            {
+                                var key = pair.Key?.ToString() ?? string.Empty;
+                                var value = ConvertDoc(pair.Value);
+                                result[key] = value;
+                            }
+                            return objectDict
+                                .ToDictionary(p => p.Key.ToString(), p => ConvertDoc(p.Value));
 
                         case IList<object> objectList:
                             return objectList.Select(o => ConvertDoc(o)).ToList();

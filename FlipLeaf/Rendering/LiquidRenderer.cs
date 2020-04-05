@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using FlipLeaf.Rendering.Liquid;
@@ -13,7 +12,7 @@ namespace FlipLeaf.Rendering
 {
     public interface ILiquidRenderer
     {
-        ValueTask<string> RenderAsync(string content, IDictionary<string, object> pageContext, out TemplateContext templateContext);
+        ValueTask<string> RenderAsync(string content, HeaderFieldDictionary pageContext, out TemplateContext templateContext);
 
         ValueTask<string> ApplyLayoutAsync(string source, TemplateContext sourceContext);
     }
@@ -34,7 +33,7 @@ namespace FlipLeaf.Rendering
             _fileProvider = new FlipLeafFileProvider(settings);
         }
 
-        public ValueTask<string> RenderAsync(string content, IDictionary<string, object> yamlHeader, out TemplateContext templateContext)
+        public ValueTask<string> RenderAsync(string content, HeaderFieldDictionary yamlHeader, out TemplateContext templateContext)
         {
             // parse content as template
             var template = PageTemplate.Parse(content);
@@ -116,7 +115,7 @@ namespace FlipLeaf.Rendering
 
             var layoutText = _fileSystem.ReadAllText(layoutItem);
 
-            IDictionary<string, object>? yamlHeader;
+            HeaderFieldDictionary? yamlHeader;
             try
             {
                 yamlHeader = _yaml.ParseHeader(layoutText, out layoutText);
@@ -169,13 +168,13 @@ namespace FlipLeaf.Rendering
 
         private class LayoutCache
         {
-            public LayoutCache(LayoutTemplate viewTemplate, IDictionary<string, object> yamlHeader)
+            public LayoutCache(LayoutTemplate viewTemplate, HeaderFieldDictionary yamlHeader)
             {
                 ViewTemplate = viewTemplate;
                 YamlHeader = yamlHeader;
             }
 
-            public IDictionary<string, object> YamlHeader { get; }
+            public HeaderFieldDictionary YamlHeader { get; }
 
             public LayoutTemplate ViewTemplate { get; }
         }

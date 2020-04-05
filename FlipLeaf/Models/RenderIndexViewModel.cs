@@ -11,7 +11,7 @@ namespace FlipLeaf.Models
 
         public string Title { get; set; } = string.Empty;
 
-        public IDictionary<string, object>? Items { get; set; }
+        public HeaderFieldDictionary? Items { get; set; }
 
         public string Html { get; set; } = string.Empty;
 

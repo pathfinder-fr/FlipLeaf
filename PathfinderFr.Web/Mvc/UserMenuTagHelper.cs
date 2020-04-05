@@ -7,9 +7,9 @@ namespace PathfinderFr.Mvc
     [HtmlTargetElement("user-menu")]
     public class UserMenuTagHelper : TagHelper
     {
-        private readonly IPathfinderFrWebsite _websitePlatform;
+        private readonly Website.IPathfinderFrWebsiteIdentity _websitePlatform;
 
-        public UserMenuTagHelper(IPathfinderFrWebsite websitePlatform)
+        public UserMenuTagHelper(Website.IPathfinderFrWebsiteIdentity websitePlatform)
         {
             this._websitePlatform = websitePlatform;
         }
