@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using FlipLeaf.Models;
 using FlipLeaf.Storage;
@@ -62,7 +63,15 @@ namespace FlipLeaf.Controllers
             // we don't want to keep .md file in url, so we redirect to the html representation
             if (file.IsMarkdown())
             {
-                return RedirectToAction(nameof(Index), new { path = _fileSystem.ReplaceExtension(file, ".html").RelativePath });
+                var htmlItem = _fileSystem.ReplaceExtension(file, ".html");
+
+                // if the md file exists, redirect
+                if (_fileSystem.FileExists(file) || _fileSystem.FileExists(htmlItem))
+                {
+                    return RedirectToAction(nameof(Index), new { path = htmlItem.RelativePath });
+                }
+
+                return RedirectToAction(nameof(ManageController.Edit), "Manage", new { path = file.RelativePath });
             }
 
             // .html => .md
@@ -123,6 +132,7 @@ namespace FlipLeaf.Controllers
                 Html = content,
                 Items = yamlHeader,
                 Path = file.RelativePath,
+                ManagePath = _fileSystem.GetDirectoryItem(file).RelativePath,
                 LastUpdate = commit?.Authored ?? DateTimeOffset.Now
             };
 

@@ -7,6 +7,8 @@ namespace FlipLeaf.Models
     {
         public string Path { get; set; } = string.Empty;
 
+        public string ManagePath { get; set; } = string.Empty;
+
         public string Title { get; set; } = string.Empty;
 
         public IDictionary<string, object>? Items { get; set; }

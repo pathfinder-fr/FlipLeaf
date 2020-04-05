@@ -1,4 +1,4 @@
-@model ManageBrowseViewModel
+﻿@model ManageBrowseViewModel
 
 @{ ViewData["Title"] = "Content Manager"; }
 
@@ -34,7 +34,14 @@
         {
             <tr>
                 <td>
-                    <i class="fa fa-folder-o text-primary" aria-hidden="true"></i>
+                    @if (item.Path.Name.StartsWith('_'))
+                    {
+                        <i class="fa fa-cog text-primary" aria-hidden="true"></i>
+                    }
+                    else
+                    {
+                        <i class="fa fa-folder-o text-primary" aria-hidden="true"></i>
+                    }
                     <a asp-action="Browse" asp-route-path="@item.Path.RelativePath">@item.Path.Name</a>
                 </td>
                 <td></td>
@@ -52,7 +59,10 @@
                 </td>
                 <td>
                     <span class="hover-link">
+                        <a asp-action="Index" asp-controller="Render" asp-route-path="@item.Path.RelativePath">View</a>
+                        <a asp-action="Edit" asp-route-path="@item.Path.RelativePath">Edit</a>
                         <a asp-action="EditRaw" asp-route-path="@item.Path.RelativePath">Raw</a>
+                        <a asp-action="DeleteFile" asp-route-path="@item.Path.RelativePath">Delete</a>
                     </span>
                 </td>
                 <td>
@@ -62,3 +72,19 @@
         }
     </tbody>
 </table>
+
+<h4>Actions</h4>
+
+<form asp-action="CreateFile" class="form-inline">
+    <input type="hidden" name="path" value="@Model.Path" />
+    <label for="file_create_name" class="mb-2 mr-sm-2">New file: </label>
+    <input id="file_create_name" name="name" class="form-control mb-2 mr-sm-2" placeholder="ex: index.md" />
+    <button type="submit" class="btn btn-primary mb-2">Create file</button>
+</form>
+
+<form asp-action="CreateDirectory" class="form-inline">
+    <input type="hidden" name="path" value="@Model.Path" />
+    <label for="directory_create_name" class="mb-2 mr-sm-2">New folder: </label>
+    <input id="directory_create_name" name="name" class="form-control mb-2 mr-sm-2" placeholder="ex: articles" />
+    <button type="submit" class="btn btn-primary mb-2">Create directory</button>
+</form>

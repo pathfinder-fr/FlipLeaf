@@ -31,6 +31,15 @@ namespace FlipLeaf.Storage
         IStorageItem ReplaceExtension(IStorageItem item, string newExtension);
 
         string ReadAllText(IStorageItem file, Encoding? encoding = null);
+
+        /// <summary>
+        /// Returns the directory containing the file <paramref name="file"/>.
+        /// </summary>
+        IStorageItem GetDirectoryItem(IStorageItem file);
+
+        void EnsureDirectory(IStorageItem directory);
+
+        bool DeleteFile(IStorageItem file);
     }
 
     public class FileSystem : IFileSystem
@@ -54,6 +63,16 @@ namespace FlipLeaf.Storage
         public IStorageItem? GetItem(string relativePath)
         {
             if (string.IsNullOrEmpty(relativePath))
+            {
+                return _baseDir;
+            }
+
+            while (relativePath.Length > 1 && relativePath[0] == '/')
+            {
+                relativePath = relativePath.Substring(1);
+            }
+
+            if (relativePath.Length > 0 && relativePath[0] == '/')
             {
                 return _baseDir;
             }
@@ -289,8 +308,13 @@ namespace FlipLeaf.Storage
             }
 
             var l = _basePath.Length;
-            if (fullPath[l] == '/' || fullPath[l] == '\\')
-                l++;
+            if (fullPath.Length > l)
+            {
+                if (fullPath[l] == '/' || fullPath[l] == '\\')
+                {
+                    l++;
+                }
+            }
 
             var relativePath = fullPath.Substring(l);
 
@@ -308,6 +332,46 @@ namespace FlipLeaf.Storage
             {
                 throw new ArgumentException($"Invalid file name : {fileName}", nameof(fileName));
             }
+        }
+
+        public IStorageItem GetDirectoryItem(IStorageItem file)
+        {
+            var directoryPath = Path.GetDirectoryName(file.FullPath);
+            if (directoryPath == null)
+            {
+                throw new InvalidOperationException($"Unable to get directory for file {file}");
+            }
+
+            return GetItemFromFullPathUnsafe(directoryPath);
+        }
+
+        public void EnsureDirectory(IStorageItem directory)
+        {
+            if (directory == null)
+            {
+                throw new ArgumentOutOfRangeException(nameof(directory), directory, $"Invalid directory name");
+            }
+
+            if (FileExists(directory))
+            {
+                throw new ArgumentOutOfRangeException(nameof(directory), directory, $"Unable to create sub directory : a file with the same name alread exists");
+            }
+
+            if (!DirectoryExists(directory))
+            {
+                Directory.CreateDirectory(directory.FullPath);
+            }
+        }
+
+        public bool DeleteFile(IStorageItem file)
+        {
+            if (!FileExists(file))
+            {
+                return false;
+            }
+
+            File.Delete(file.FullPath);
+            return true;
         }
 
         private class StorageItem : IStorageItem
@@ -334,6 +398,8 @@ namespace FlipLeaf.Storage
             private string GetName() => Path.GetFileName(FullPath);
 
             private string GetExtension() => Path.GetExtension(FullPath).ToLowerInvariant();
+
+            public override string ToString() => RelativePath;
         }
     }
 }

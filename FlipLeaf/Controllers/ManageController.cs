@@ -39,10 +39,10 @@ namespace FlipLeaf.Controllers
             _website = website;
         }
 
-        [Route("")]
+        [HttpGet("")]
         public IActionResult Index() => Browse(string.Empty);
 
-        [Route("browse/{**path}")]
+        [HttpGet("browse/{**path}")]
         public IActionResult Browse(string path)
         {
             var directory = _fileSystem.GetItem(path);
@@ -73,7 +73,63 @@ namespace FlipLeaf.Controllers
             return View(nameof(Browse), vm);
         }
 
-        [Route("edit/{**path}")]
+        [HttpPost("directory/create")]
+        public IActionResult CreateDirectory(string path, string name)
+        {
+            var directory = _fileSystem.GetItem(path);
+            if (directory == null || !_fileSystem.DirectoryExists(directory))
+            {
+                return BadRequest();
+            }
+
+            var subDirectory = _fileSystem.Combine(directory, name);
+
+            _fileSystem.EnsureDirectory(subDirectory);
+
+            return RedirectToAction(nameof(Browse), new { path = subDirectory.RelativePath });
+        }
+
+        [HttpPost("file/create")]
+        public IActionResult CreateFile(string path, string name)
+        {
+            var directory = _fileSystem.GetItem(path);
+            if (directory == null || !_fileSystem.DirectoryExists(directory))
+            {
+                return BadRequest();
+            }
+
+            var file = _fileSystem.Combine(directory, name);
+
+            if (_fileSystem.DirectoryExists(file))
+            {
+                return BadRequest("A folder with the same name already exists");
+            }
+
+            return RedirectToAction(nameof(Edit), new { path = file.RelativePath });
+        }
+
+        [HttpGet("file/delete")]
+        public IActionResult DeleteFile(string path)
+        {
+            var file = _fileSystem.GetItem(path);
+            if (file == null)
+            {
+                return BadRequest();
+            }
+
+            if (_fileSystem.FileExists(file))
+            {
+                _git.Commit(_website.GetCurrentUser(), _website.GetWebsiteUser(), path, $"Delete {path}", remove: true);
+
+                _fileSystem.DeleteFile(file);
+            }
+
+            var dir = _fileSystem.GetDirectoryItem(file);
+
+            return RedirectToAction(nameof(Browse), new { path = dir.RelativePath });
+        }
+
+        [HttpGet("edit/{**path}")]
         public IActionResult Edit(string path, bool form = false, string? template = null)
         {
             var file = _fileSystem.GetItem(path);
@@ -100,13 +156,13 @@ namespace FlipLeaf.Controllers
             }
 
             var formValues = new Dictionary<string, StringValues>();
-            foreach(var yamlItem in yamlHeader)
+            foreach (var yamlItem in yamlHeader)
             {
-                if(yamlItem.Value is string yamlString)
+                if (yamlItem.Value is string yamlString)
                 {
                     formValues[yamlItem.Key] = new StringValues(yamlString);
                 }
-                else if(yamlItem.Value is List<object> yamlArray)
+                else if (yamlItem.Value is List<object> yamlArray)
                 {
                     formValues[yamlItem.Key] = new StringValues(yamlArray.Select(x => x.ToString()).ToArray());
                 }
@@ -123,7 +179,7 @@ namespace FlipLeaf.Controllers
             return View(nameof(Edit), fvm);
         }
 
-        [Route("edit/{**path}"), HttpPost]
+        [HttpPost("edit/{**path}")]
         public IActionResult Edit(string path, ManageEditFormPostViewModel model)
         {
             var user = _website.GetCurrentUser();
@@ -186,7 +242,7 @@ namespace FlipLeaf.Controllers
             return this.RedirectToAction(nameof(Edit), new { path });
         }
 
-        [Route("edit-raw/{**path}")]
+        [HttpGet("edit-raw/{**path}")]
         public IActionResult EditRaw(string path)
         {
             var file = _fileSystem.GetItem(path);
@@ -216,7 +272,7 @@ namespace FlipLeaf.Controllers
             return View(vm);
         }
 
-        [Route("edit-raw/{**path}"), HttpPost]
+        [HttpPost("edit-raw/{**path}")]
         public IActionResult EditRaw(string path, ManageEditRawViewModel model)
         {
             var user = _website.GetCurrentUser();

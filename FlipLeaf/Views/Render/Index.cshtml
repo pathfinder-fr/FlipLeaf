@@ -8,7 +8,7 @@
 <footer>
     <a asp-action="Edit" asp-controller="Manage" asp-route-path="@Model.Path">Edit</a>
     −
-    <a asp-action="Index" asp-controller="Manage">Manager</a>
+    <a asp-action="Browse" asp-controller="Manage" asp-route-path="@Model.ManagePath">Manager</a>
     −
     Last updated <span title="@Model.LastUpdate">@Model.LastUpdate.ToRelativeTime()</span>
 </footer>

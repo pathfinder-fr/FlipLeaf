@@ -14,7 +14,7 @@ namespace FlipLeaf.Storage
 
         void PullPush(IUser merger);
 
-        void Commit(IUser author, IUser committer, string path, string? comment);
+        void Commit(IUser author, IUser committer, string path, string? comment, bool remove = false);
     }
 
     public class GitRepository : IGitRepository
@@ -154,7 +154,7 @@ namespace FlipLeaf.Storage
             }
         }
 
-        public void Commit(IUser author, IUser committer, string path, string? comment)
+        public void Commit(IUser author, IUser committer, string path, string? comment, bool remove = false)
         {
             if (string.IsNullOrWhiteSpace(comment))
             {
@@ -168,7 +168,15 @@ namespace FlipLeaf.Storage
             {
                 using (var repo = OpenRepositoryCore())
                 {
-                    repo.Index.Add(path);
+                    if (!remove)
+                    {
+                        repo.Index.Add(path);
+                    }
+                    else
+                    {
+                        repo.Index.Remove(path);
+                    }
+
                     repo.Index.Write();
 
                     try
