@@ -25,7 +25,7 @@ namespace FlipLeaf.TagHelpers
 
         public string Home { get; set; } = "(Home)";
 
-        public string[] PathParts { get; set; } = Array.Empty<string>();
+        public string Path { get; set; }
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
@@ -41,12 +41,14 @@ namespace FlipLeaf.TagHelpers
 
             output.Content.AppendHtml($"<li class=\"breadcrumb-item\"><a href=\"{urlHelper.Action("Browse", new { path = string.Empty })}\">{Home}</a></li>");
 
-            for (int i = 0; i < PathParts.Length; i++)
+            var parts = this.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i < parts.Length; i++)
             {
-                var item = PathParts[i];
-                if (i < PathParts.Length - 1)
+                var item = parts[i];
+                if (i < parts.Length - 1)
                 {
-                    var url = urlHelper.Action("Browse", new { path = string.Join('/', PathParts, 0, i + 1) });
+                    var url = urlHelper.Action("Browse", new { path = string.Join('/', parts, 0, i + 1) });
                     output.Content.AppendHtml($"<li class=\"breadcrumb-item\"><a href=\"{url}\">{item}</a></li>");
                 }
                 else

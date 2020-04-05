@@ -2,17 +2,19 @@
 
 namespace FlipLeaf.Models
 {
-    public class ManageEditRawViewModel : ManageDirectoryViewModelBase
+    public class ManageEditRawViewModel
     {
         public ManageEditRawViewModel()
-            :base(string.Empty)
+            : this(string.Empty)
         {
         }
 
         public ManageEditRawViewModel(string path)
-            : base(path)
         {
+            this.Path = path;
         }
+
+        public string Path { get; set; }
 
         [Display]
         public string? Content { get; set; }

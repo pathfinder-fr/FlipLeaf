@@ -4,17 +4,19 @@ using Microsoft.Extensions.Primitives;
 
 namespace FlipLeaf.Models
 {
-    public class ManageEditFormViewModel : ManageDirectoryViewModelBase
+    public class ManageEditFormViewModel
     {
         public ManageEditFormViewModel()
-            : base(string.Empty)
+            : this(string.Empty)
         {
         }
 
         public ManageEditFormViewModel(string path)
-            : base(path)
         {
+            this.Path = path;
         }
+
+        public string Path { get; set; }
 
         [Display]
         public string? Content { get; set; }

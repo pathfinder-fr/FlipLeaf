@@ -2,14 +2,16 @@
 
 namespace FlipLeaf.Models
 {
-    public class ManageBrowseViewModel : ManageDirectoryViewModelBase
+    public class ManageBrowseViewModel
     {
         public ManageBrowseViewModel(string path, List<ManageBrowseItem> directories, List<ManageBrowseItem> files)
-            : base(path)
         {
+            this.Path = path;
             Directories = directories;
             Files = files;
         }
+
+        public string Path { get; set; }
 
         public List<ManageBrowseItem> Directories { get; }
 
