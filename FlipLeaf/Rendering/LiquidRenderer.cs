@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using FlipLeaf.Rendering.Liquid;
 using FlipLeaf.Storage;
+using FlipLeaf.Website;
 using Fluid;
 using Fluid.Filters;
 using Fluid.Values;
@@ -24,32 +25,35 @@ namespace FlipLeaf.Rendering
         private readonly IYamlParser _yaml;
         private readonly FlipLeafFileProvider _fileProvider;
         private readonly IFileSystem _fileSystem;
+        private readonly IWebsite _website;
 
-        public LiquidRenderer(FlipLeafSettings settings, IYamlParser yaml, IFileSystem fileSystem)
+        public LiquidRenderer(FlipLeafSettings settings, IYamlParser yaml, IFileSystem fileSystem, Website.IWebsite website)
         {
             _settings = settings;
             _yaml = yaml;
             _fileSystem = fileSystem;
+            _website = website;
             _fileProvider = new FlipLeafFileProvider(settings);
         }
 
-        public ValueTask<string> RenderAsync(string content, HeaderFieldDictionary yamlHeader, out TemplateContext templateContext)
+        public ValueTask<string> RenderAsync(string content, HeaderFieldDictionary yamlHeader, out TemplateContext pageContext)
         {
             // parse content as template
-            var template = PageTemplate.Parse(content);
+            var pageTemplate = PageTemplate.Parse(content);
 
             // prepare context
-            templateContext = CreateTemplateContext();
-            templateContext.SetValue("page", yamlHeader);
+            pageContext = CreateTemplateContext();
+            pageContext.SetValue(KnownVariables.Page, yamlHeader);
+            pageContext.SetValue(KnownVariables.Site, _website);
 
             // render content
-            return template.RenderAsync(templateContext);
+            return pageTemplate.RenderAsync(pageContext);
         }
 
         public async ValueTask<string> ApplyLayoutAsync(string source, TemplateContext sourceContext)
         {
-            var pageItem = sourceContext.GetValue("page");
-            var layout = await pageItem.GetValueAsync("layout", sourceContext).ConfigureAwait(false);
+            var pageItem = sourceContext.GetValue(KnownVariables.Page);
+            var layout = await pageItem.GetValueAsync(KnownVariables.Layout, sourceContext).ConfigureAwait(false);
             var layoutFile = layout.ToStringValue();
             if (string.IsNullOrEmpty(layoutFile))
             {
@@ -81,14 +85,16 @@ namespace FlipLeaf.Rendering
 
             // create new TemplateContext for the layout
             var layoutContext = CreateTemplateContext();
-            layoutContext.SetValue("page", sourceContext.GetValue("page"));
-            layoutContext.SetValue("layout", layoutCache.YamlHeader);
+            layoutContext.SetValue(KnownVariables.Page, sourceContext.GetValue(KnownVariables.Page));
+            layoutContext.SetValue(KnownVariables.Layout, layoutCache.YamlHeader);
+            layoutContext.SetValue(KnownVariables.Site, _website);
+
             layoutContext.AmbientValues.Add(LayoutTemplate.BodyAmbientValueKey, source);
 
             // render layout
             source = await layoutCache.ViewTemplate.RenderAsync(layoutContext).ConfigureAwait(false);
 
-            if (!layoutCache.YamlHeader.TryGetValue("layout", out var outerLayoutObject) || !(outerLayoutObject is string outerLayoutFile))
+            if (!layoutCache.YamlHeader.TryGetValue(KnownVariables.Layout, out var outerLayoutObject) || !(outerLayoutObject is string outerLayoutFile))
             {
                 // no recusrive layout, we stop here
                 return source;
@@ -106,7 +112,7 @@ namespace FlipLeaf.Rendering
 
         private LayoutCache? CreateLayout(string fileName)
         {
-            var layoutPath = Path.Combine("_layouts", fileName);
+            var layoutPath = Path.Combine(KnownFolders.Layouts, fileName);
             var layoutItem = _fileSystem.GetItem(layoutPath);
             if (layoutItem == null || !_fileSystem.FileExists(layoutItem))
             {
@@ -130,7 +136,7 @@ namespace FlipLeaf.Rendering
             {
                 layoutTemplate = LayoutTemplate.Parse(layoutText);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new ArgumentException($"Layout {fileName} in invalid: Liquid errors", nameof(fileName), ex);
             }
@@ -149,6 +155,10 @@ namespace FlipLeaf.Rendering
                 }
             };
 
+            templateContext.MemberAccessStrategy.Register(typeof(Website.IWebsite));
+            templateContext.MemberAccessStrategy.Register(typeof(Website.DefaultWebsite));
+            templateContext.MemberAccessStrategy.Register(typeof(Website.Template));
+            templateContext.MemberAccessStrategy.Register(typeof(Website.Layout));
             templateContext.Filters.AddFilter("relative_url", RelativeUrlFilter);
             templateContext.FileProvider = _fileProvider;
 

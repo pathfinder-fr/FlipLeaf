@@ -44,8 +44,6 @@ namespace FlipLeaf.Storage
 
     public class FileSystem : IFileSystem
     {
-        private const string TemplatesFolder = "_templates";
-        private const string LayoutsFolder = "_layouts";
         private readonly char[] _invalidFileNameChars;
         private readonly char[] _invalidPathChars;
         private readonly string _basePath;
@@ -101,7 +99,7 @@ namespace FlipLeaf.Storage
             if (Path.GetExtension(name) != ".")
                 throw new ArgumentException($"The layout name must not include the file extension. Use {Path.GetFileNameWithoutExtension(name)} instead of {name}", nameof(name));
 
-            return GetExistingItemUnsafe($"{LayoutsFolder}/{name}.html");
+            return GetExistingItemUnsafe($"{KnownFolders.Layouts}/{name}.html");
         }
 
         public IStorageItem? GetTemplate(string name)
@@ -121,21 +119,21 @@ namespace FlipLeaf.Storage
             IStorageItem? item;
 
             // json first
-            item = GetExistingItemUnsafe($"{TemplatesFolder}/{name}.json");
+            item = GetExistingItemUnsafe($"{KnownFolders.Templates}/{name}.json");
             if (item != null)
             {
                 return item;
             }
 
             // yaml then
-            item = GetExistingItemUnsafe($"{TemplatesFolder}/{name}.yaml");
+            item = GetExistingItemUnsafe($"{KnownFolders.Templates}/{name}.yaml");
             if (item != null)
             {
                 return item;
             }
 
             // yaml then
-            item = GetExistingItemUnsafe($"{TemplatesFolder}/{name}.yml");
+            item = GetExistingItemUnsafe($"{KnownFolders.Templates}/{name}.yml");
             if (item != null)
             {
                 return item;

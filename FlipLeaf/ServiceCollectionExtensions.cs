@@ -9,7 +9,7 @@ namespace FlipLeaf
             this IServiceCollection services,
             IConfiguration configuration,
             string section = "FlipLeaf",
-            bool useDefaultWebsite = false)
+            bool useDefaultWebsiteIdentity = false)
         {
 
             var settings = configuration.GetSection(section).Get<FlipLeafSettings>() ?? new FlipLeafSettings();
@@ -23,7 +23,9 @@ namespace FlipLeaf
             services.AddSingleton<Rendering.IYamlParser, Rendering.YamlParser>();
             services.AddSingleton<Rendering.IFormTemplateParser, Rendering.FormTemplateParser>();
 
-            if (useDefaultWebsite)
+            services.AddSingleton<Website.IWebsite, Website.DefaultWebsite>();
+
+            if (useDefaultWebsiteIdentity)
             {
                 services.AddSingleton<Website.IWebsiteIdentity, Website.DefaultWebsiteIdentity>();
             }

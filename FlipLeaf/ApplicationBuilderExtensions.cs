@@ -24,6 +24,10 @@ namespace FlipLeaf
             }
 
             settings.SourcePath = sourcePath;
+
+            // initialize website
+            var website = (Website.DefaultWebsite)app.ApplicationServices.GetService(typeof(Website.IWebsite));
+            website.Populate(settings.SourcePath);
         }
     }
 }

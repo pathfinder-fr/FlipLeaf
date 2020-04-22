@@ -10,7 +10,8 @@ namespace FlipLeaf.Controllers
 {
     public class RenderController : Controller
     {
-        private const string DefaultDocumentName = "index.md";
+        private const string DefaultDocumentName = "index.html";
+
         private readonly ILogger<ManageController> _logger;
         private readonly Rendering.IYamlParser _yaml;
         private readonly Rendering.ILiquidRenderer _liquid;
@@ -19,6 +20,8 @@ namespace FlipLeaf.Controllers
         private readonly IFileSystem _fileSystem;
         private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider =
             new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+
+        private readonly Files.IFileFormat[] _fileFormats;
 
         public RenderController(
             ILogger<ManageController> logger,
@@ -35,6 +38,11 @@ namespace FlipLeaf.Controllers
             _markdown = markdown;
             _git = git;
             _fileSystem = fileSystem;
+            _fileFormats = new Files.IFileFormat[]
+            {
+                new Files.HtmlFile(yaml, liquid, fileSystem),
+                new    Files.MarkdownFile(yaml, liquid, markdown, fileSystem)
+            };
         }
 
         [Route("{**path}", Order = int.MaxValue)]
@@ -58,108 +66,102 @@ namespace FlipLeaf.Controllers
                 file = _fileSystem.Combine(file, DefaultDocumentName);
             }
 
-            // .md => redirect
-            // we don't want to keep .md file in url, so we redirect to the html representation
-            if (file.IsMarkdown())
-            {
-                var htmlItem = _fileSystem.ReplaceExtension(file, ".html");
+            Files.IFileFormat? diskFileFormat = null;
+            IStorageItem? diskFile = null;
 
-                // if the md file exists, redirect
-                if (_fileSystem.FileExists(file) || _fileSystem.FileExists(htmlItem))
+            if (file.IsHtml())
+            {
+                foreach (var format in _fileFormats)
                 {
-                    return RedirectToAction(nameof(Index), new { path = htmlItem.RelativePath });
+                    diskFile = _fileSystem.ReplaceExtension(file, format.Extension);
+                    if (_fileSystem.FileExists(diskFile))
+                    {
+                        diskFileFormat = format;
+                        break;
+                    }
                 }
-
-                return RedirectToAction(nameof(ManageController.Edit), "Manage", new { path = file.RelativePath });
-            }
-
-            // .html => .md
-            // now we want to get the source markdown file from the .html, 
-            // but only if the .html itself does not exist physically on disk
-            if (file.IsHtml() && !_fileSystem.FileExists(file))
-            {
-                file = _fileSystem.ReplaceExtension(file, ".md");
-            }
-
-            // if file does not exists, redirect to page creation
-            if (!_fileSystem.FileExists(file))
-            {
-                return RedirectToAction(nameof(ManageController.Edit), "Manage", new { path });
-            }
-
-            if (file.IsMarkdown() || file.IsHtml() || file.IsJson() || file.IsXml() || file.IsYaml())
-            {
-                return await RenderParsedContent(file);
-            }
-
-            // if the file is a static resource, eg. not a markdown or html file we just return the content
-            // we try to detect the content-type based on the
-            if (!_contentTypeProvider.TryGetContentType(file.Extension, out var contentType))
-            {
-                contentType = "application/octet-stream";
-            }
-
-            return PhysicalFile(file.FullPath, contentType);
-        }
-
-        private async Task<IActionResult> RenderParsedContent(IStorageItem file)
-        {
-            // 1) read all content
-            var content = _fileSystem.ReadAllText(file);
-
-            // 2) parse yaml header
-            var yamlHeader = _yaml.ParseHeader(content, out content);
-
-            // 3) parse liquid
-            content = await _liquid.RenderAsync(content, yamlHeader, out var context).ConfigureAwait(false);
-
-            // 4) parse markdown (if required...)
-            if (file.IsMarkdown())
-            {
-                content = _markdown.Render(content);
-            }
-
-            // 5) apply liquid layout
-            // this call can be recusrive if there are multiple layouts
-            content = await _liquid.ApplyLayoutAsync(content, context).ConfigureAwait(false);
-
-            // GIT: retrieve latest commit
-            var commit = _git.LogFile(file.RelativePath, 1).FirstOrDefault();
-
-            var vm = new RenderIndexViewModel
-            {
-                Html = content,
-                Items = yamlHeader,
-                Path = file.RelativePath,
-                ManagePath = _fileSystem.GetDirectoryItem(file).RelativePath,
-                LastUpdate = commit?.Authored ?? DateTimeOffset.Now
-            };
-
-            // we automatically use the "title" yaml header as the Page Title
-            if (yamlHeader.TryGetValue(KnownFields.Title, out var pageTitle) && pageTitle != null)
-            {
-                vm.Title = pageTitle.ToString() ?? string.Empty;
-                ViewData["Title"] = vm.Title;
-            }
-
-            if (file.IsMarkdown() || file.IsHtml())
-            {
-                return View(nameof(Index), vm);
-            }
-
-            if (yamlHeader.TryGetValue(KnownFields.ContentType, out var contentTypeObj) && contentTypeObj is string contentType)
-            {
-                // explicit content type found
-            }
-            else if (_contentTypeProvider.TryGetContentType(file.Extension, out contentType))
-            {
             }
             else
             {
-                contentType = "text/plain";
+                if (!_fileSystem.FileExists(file))
+                {
+                    return RedirectToAction(nameof(ManageController.Edit), "Manage", new { path });
+                }
+
+                foreach (var format in _fileFormats.Where(f => f.RawAllowed))
+                {
+                    diskFile = _fileSystem.ReplaceExtension(file, format.Extension);
+                    if (_fileSystem.FileExists(diskFile))
+                    {
+                        diskFileFormat = format;
+                        break;
+                    }
+                }
             }
 
-            return Content(content, contentType);
+            if (diskFileFormat == null || diskFile == null)
+            {
+                if (diskFile == null)
+                {
+                    return NotFound();
+                }
+
+                // if the file is a static resource, eg. not a markdown or html file we just return the content
+                // we try to detect the content-type based on the extension
+                if (!_contentTypeProvider.TryGetContentType(file.Extension, out var staticContentType))
+                {
+                    staticContentType = "application/octet-stream";
+                }
+
+                return PhysicalFile(diskFile.FullPath, staticContentType);
+            }
+
+            // if (file.IsMarkdown() || file.IsHtml() || file.IsJson() || file.IsXml() || file.IsYaml())
+            var parsedFile = await diskFileFormat.RenderAsync(diskFile);
+
+            // GIT: retrieve latest commit
+            var commit = _git.LogFile(diskFile.RelativePath, 1).FirstOrDefault();
+
+            if (parsedFile.ContentType == "text/html")
+            {
+                var vm = new RenderIndexViewModel
+                {
+                    Html = parsedFile.Content,
+                    Items = parsedFile.Headers,
+                    Path = diskFile.RelativePath,
+                    ManagePath = _fileSystem.GetDirectoryItem(diskFile).RelativePath,
+                    LastUpdate = commit?.Authored ?? DateTimeOffset.Now
+                };
+
+                // we automatically use the "title" yaml header as the Page Title
+                if (parsedFile.Headers.TryGetValue(KnownFields.Title, out var pageTitle) && pageTitle != null)
+                {
+                    vm.Title = pageTitle.ToString() ?? string.Empty;
+                    ViewData["Title"] = vm.Title;
+                }
+
+                return View(nameof(Index), vm);
+            }
+
+            var contentType = parsedFile.ContentType;
+
+            // explicit content type found in headers
+            if (parsedFile.Headers.TryGetValue(KnownFields.ContentType, out var contentTypeObj) && contentTypeObj is string headerContentType)
+            {
+                contentType = headerContentType;
+            }
+
+            // if no content-type found, try to detect it based in query path extension
+            // fallback to text/plain
+            if (string.IsNullOrEmpty(contentType))
+            {
+                if (!_contentTypeProvider.TryGetContentType(file.Extension, out contentType))
+                {
+                    contentType = "text/plain";
+                }
+            }
+
+            return Content(parsedFile.Content, contentType);
         }
     }
 }

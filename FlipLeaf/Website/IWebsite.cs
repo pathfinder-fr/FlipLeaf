@@ -4,9 +4,8 @@ namespace FlipLeaf.Website
 {
     public interface IWebsite
     {
-        IEnumerable<Template> Templates { get; }
+        IDictionary<string, Template> Templates { get; }
 
-        IEnumerable<Layout> Layouts { get; }
-
+        IDictionary<string, Layout> Layouts { get; }
     }
 }

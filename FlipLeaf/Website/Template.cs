@@ -2,6 +2,11 @@
 {
     public class Template
     {
-        string Name { get; }
+        public Template(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; }
     }
 }

@@ -14,47 +14,37 @@ namespace FlipLeaf.Rendering.Liquid
             _sourcePath = settings.SourcePath;
         }
 
-        public IDirectoryContents GetDirectoryContents(string subpath)
-        {
-            return NotFoundDirectoryContents.Singleton;
-        }
+        public IDirectoryContents GetDirectoryContents(string subpath) => NotFoundDirectoryContents.Singleton;
 
         public IFileInfo GetFileInfo(string subpath)
         {
-            /*if (subpath.EndsWith(".liquid"))
-            {
-                subpath = subpath.Substring(0, subpath.Length - ".liquid".Length);
-            }*/
-
             var fullPath = Path.Combine(_sourcePath, "_includes", subpath);
 
             if (File.Exists(fullPath))
+            {
                 return new IncludeFileInfo(fullPath);
+            }
 
             return new NotFoundFileInfo(subpath);
         }
 
-        public IChangeToken Watch(string filter)
-        {
-            return NullChangeToken.Singleton;
-        }
+        public IChangeToken Watch(string filter) => NullChangeToken.Singleton;
 
         private class IncludeFileInfo : IFileInfo
         {
-            private readonly string _path;
             private readonly FileInfo _info;
 
             public IncludeFileInfo(string path)
             {
-                _path = path;
+                PhysicalPath = path;
                 _info = new FileInfo(path);
             }
 
-            public bool Exists => File.Exists(_path);
+            public bool Exists => File.Exists(PhysicalPath);
 
             public long Length => _info.Length;
 
-            public string PhysicalPath => _path;
+            public string PhysicalPath { get; }
 
             public string Name => _info.Name;
 

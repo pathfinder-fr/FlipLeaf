@@ -8,7 +8,6 @@ namespace FlipLeaf
         public HeaderFieldDictionary()
             : base(StringComparer.OrdinalIgnoreCase)
         {
-
         }
     }
 }

@@ -27,7 +27,7 @@ namespace FlipLeaf
         {
             services.AddControllersWithViews();
             services.AddHttpContextAccessor();
-            services.AddFlipLeaf(_config, useDefaultWebsite: true);
+            services.AddFlipLeaf(_config, useDefaultWebsiteIdentity: true);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

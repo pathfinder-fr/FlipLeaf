@@ -1,4 +1,7 @@
-﻿namespace FlipLeaf.Storage
+﻿using System.Collections;
+using System.Collections.Generic;
+
+namespace FlipLeaf.Storage
 {
     /// <summary>
     /// Represents an item in the storage disk.
@@ -20,11 +23,14 @@
 
         /// <summary>
         /// Relative path of the file or directory from the base directory.
+        /// Always use url path separator '/'.
+        /// Does not start with '/'.
         /// </summary>
         string RelativePath { get; }
 
         /// <summary>
         /// Full path of the file on disk.
+        /// Always use windows directory separator '\'.
         /// </summary>
         string FullPath { get; }
     }
@@ -40,5 +46,18 @@
         public static bool IsJson(this IStorageItem @this) => @this.Extension == ".json";
 
         public static bool IsXml(this IStorageItem @this) => @this.Extension == ".xml";
+
+        public static IEnumerable<string> RelativeDirectoryParts(this IStorageItem @this)
+        {
+            var relPath = @this.RelativePath;
+            var l = relPath.Length;
+            int i = 0;
+            int j;
+            while ((j = relPath.IndexOf('/', i)) != -1)
+            {
+                yield return relPath.Substring(i, j - i);
+                i = j + 1;
+            }
+        }
     }
 }

@@ -30,7 +30,7 @@ namespace PathfinderFr
             services.AddControllersWithViews();
             services.AddHttpContextAccessor();
             services.AddSingleton(_config.GetSection("PathfinderFr").Get<PathfinderFrSettings>());
-            services.AddFlipLeaf(_config, useDefaultWebsite: true);
+            services.AddFlipLeaf(_config, useDefaultWebsiteIdentity: true);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

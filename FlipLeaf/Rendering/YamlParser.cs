@@ -212,17 +212,19 @@ namespace FlipLeaf.Rendering
                     {
                         case IDictionary<object, object> objectDict:
                             var result = new HeaderFieldDictionary();
+
                             foreach (var pair in objectDict)
                             {
                                 var key = pair.Key?.ToString() ?? string.Empty;
                                 var value = ConvertDoc(pair.Value);
                                 result[key] = value;
                             }
-                            return objectDict
-                                .ToDictionary(p => p.Key.ToString(), p => ConvertDoc(p.Value));
+
+                            return result;
 
                         case IList<object> objectList:
                             return objectList.Select(o => ConvertDoc(o)).ToList();
+
                         default:
                             return doc;
                     }

@@ -208,7 +208,7 @@ namespace FlipLeaf.Controllers
             using (var writer = new StringWriter())
             {
                 writer.WriteLine("---");
-                writer.WriteLine($"template: {model.TemplateName}");
+                writer.WriteLine($"{KnownFields.Template}: {model.TemplateName}");
 
                 foreach (var field in formTemplate.Fields)
                 {
@@ -295,11 +295,11 @@ namespace FlipLeaf.Controllers
 
             if (model.Action == "SaveAndContinue")
             {
-                return RedirectToAction("Edit");
+                return RedirectToAction(nameof(Edit));
             }
             else
             {
-                return RedirectToAction("Index", "Render", new { path });
+                return RedirectToAction(nameof(Index), "Render", new { path });
             }
         }
 
