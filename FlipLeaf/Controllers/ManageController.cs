@@ -2,8 +2,9 @@
 using System.IO;
 using System.Linq;
 using FlipLeaf.Models;
-using FlipLeaf.Rendering.Templating;
+using FlipLeaf.Readers;
 using FlipLeaf.Storage;
+using FlipLeaf.Templating;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
@@ -14,21 +15,23 @@ namespace FlipLeaf.Controllers
     public class ManageController : Controller
     {
         private readonly ILogger<ManageController> _logger;
-        private readonly Rendering.IYamlParser _yaml;
-        private readonly Rendering.ILiquidRenderer _liquid;
-        private readonly Rendering.IFormTemplateParser _formTemplate;
+        private readonly Markup.IYamlMarkup _yaml;
+        private readonly Markup.ILiquidMarkup _liquid;
+        private readonly IFormTemplateParser _formTemplate;
         private readonly IFileSystem _fileSystem;
         private readonly IGitRepository _git;
         private readonly Website.IWebsiteIdentity _website;
+        private readonly IEnumerable<IContentReader> _contentReaders;
 
         public ManageController(
             ILogger<ManageController> logger,
-            Rendering.IYamlParser yaml,
-            Rendering.ILiquidRenderer liquid,
-            Rendering.IFormTemplateParser formTemplate,
+            Markup.IYamlMarkup yaml,
+            Markup.ILiquidMarkup liquid,
+            IFormTemplateParser formTemplate,
             IFileSystem fileSystem,
             IGitRepository git,
-            Website.IWebsiteIdentity website)
+            Website.IWebsiteIdentity website,
+            IEnumerable<Readers.IContentReader> contentReaders)
         {
             _logger = logger;
             _git = git;
@@ -37,6 +40,7 @@ namespace FlipLeaf.Controllers
             _formTemplate = formTemplate;
             _fileSystem = fileSystem;
             _website = website;
+            _contentReaders = contentReaders;
         }
 
         [HttpGet("")]
@@ -71,6 +75,36 @@ namespace FlipLeaf.Controllers
             _git.SetLastCommit(directory.RelativePath, vm.Files.ToDictionary(f => f.Path.Name, f => f), (f, date) => f.WithCommit(date));
 
             return View(nameof(Browse), vm);
+        }
+
+        [HttpGet("Show/{**path}")]
+        public IActionResult Show(string path)
+        {
+            var file = _fileSystem.GetItem(path);
+            if (file == null)
+            {
+                return NotFound();
+            }
+
+            if (!_fileSystem.FileExists(file))
+            {
+                return NotFound();
+            }
+
+            if (file.FamilyFolder != FamilyFolder.None)
+            {
+                return this.RedirectToAction(nameof(RenderController.Index), "Render", new { path });
+            }
+
+            foreach (var reader in _contentReaders)
+            {
+                if (reader.AcceptInverse(file, out var requestFile))
+                {
+                    return this.RedirectToAction(nameof(RenderController.Index), "Render", new { path = requestFile.RelativePath });
+                }
+            }
+
+            return NotFound();
         }
 
         [HttpPost("directory/create")]
@@ -299,7 +333,7 @@ namespace FlipLeaf.Controllers
             }
             else
             {
-                return RedirectToAction(nameof(Index), "Render", new { path });
+                return RedirectToAction(nameof(Show), new { path });
             }
         }
 

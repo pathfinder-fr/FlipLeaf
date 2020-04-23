@@ -15,13 +15,24 @@ namespace FlipLeaf
             var settings = configuration.GetSection(section).Get<FlipLeafSettings>() ?? new FlipLeafSettings();
             services.AddSingleton(settings);
 
+            // storage
             services.AddSingleton<Storage.IFileSystem, Storage.FileSystem>();
             services.AddSingleton<Storage.IGitRepository, Storage.GitRepository>();
 
-            services.AddSingleton<Rendering.IMarkdownRenderer, Rendering.MarkdownRenderer>();
-            services.AddSingleton<Rendering.ILiquidRenderer, Rendering.LiquidRenderer>();
-            services.AddSingleton<Rendering.IYamlParser, Rendering.YamlParser>();
-            services.AddSingleton<Rendering.IFormTemplateParser, Rendering.FormTemplateParser>();
+            // markup
+            services.AddSingleton<Markup.IMarkdownMarkup, Markup.MarkdownMarkup>();
+            services.AddSingleton<Markup.ILiquidMarkup, Markup.LiquidMarkup>();
+            services.AddSingleton<Markup.IYamlMarkup, Markup.YamlMarkup>();
+
+            // templating
+            services.AddSingleton<Templating.IFormTemplateParser, Templating.FormTemplateParser>();
+
+            // readers
+            services.AddSingleton<Readers.IContentReader, Readers.HtmlContentReader>();
+            services.AddSingleton<Readers.IContentReader, Readers.MarkdownContentReader>();
+            services.AddSingleton<Readers.IContentReader, Readers.JsonContentReader>();
+
+            services.AddSingleton<Readers.IDataReader, Readers.JsonDataReader>();
 
             services.AddSingleton<Website.IWebsite, Website.DefaultWebsite>();
 

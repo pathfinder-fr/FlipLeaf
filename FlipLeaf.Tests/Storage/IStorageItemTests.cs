@@ -1,9 +1,8 @@
 ﻿using System.IO;
 using System.Linq;
-using FlipLeaf.Storage;
 using Xunit;
 
-namespace FlipLeaf.Tests.Storage
+namespace FlipLeaf.Storage
 {
     public class IStorageItemTests
     {
@@ -52,5 +51,7 @@ namespace FlipLeaf.Tests.Storage
         public string RelativePath { get; }
 
         public string FullPath { get; }
+
+        public FamilyFolder FamilyFolder => FamilyFolder.None;
     }
 }

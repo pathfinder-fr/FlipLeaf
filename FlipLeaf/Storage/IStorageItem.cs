@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace FlipLeaf.Storage
 {
@@ -11,6 +10,8 @@ namespace FlipLeaf.Storage
     /// </summary>
     public interface IStorageItem
     {
+        FamilyFolder FamilyFolder { get; }
+
         /// <summary>
         /// Name of file or directory.
         /// </summary>
@@ -50,12 +51,11 @@ namespace FlipLeaf.Storage
         public static IEnumerable<string> RelativeDirectoryParts(this IStorageItem @this)
         {
             var relPath = @this.RelativePath;
-            var l = relPath.Length;
             int i = 0;
             int j;
             while ((j = relPath.IndexOf('/', i)) != -1)
             {
-                yield return relPath.Substring(i, j - i);
+                yield return relPath[i..j];
                 i = j + 1;
             }
         }

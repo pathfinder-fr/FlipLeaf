@@ -17,7 +17,7 @@ namespace FlipLeaf.TagHelpers
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Rendering.ViewContext"/> for the current request.
+        /// Gets or sets the <see cref="Markup.ViewContext"/> for the current request.
         /// </summary>
         [HtmlAttributeNotBound]
         [ViewContext]

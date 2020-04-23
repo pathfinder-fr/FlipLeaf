@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FlipLeaf.Storage
 {
@@ -22,15 +23,21 @@ namespace FlipLeaf.Storage
 
         bool DirectoryExists(IStorageItem directory);
 
-        IEnumerable<IStorageItem> GetSubDirectories(IStorageItem directory, bool prefixDotIncluded, bool prefixUnderscoreIncluded);
+        IEnumerable<IStorageItem> GetSubDirectories(IStorageItem directory, bool prefixDotIncluded = false, bool prefixUnderscoreIncluded = false);
 
-        IEnumerable<IStorageItem> GetFiles(IStorageItem directory, bool prefixDotIncluded, bool prefixUnderscoreIncluded, string? pattern = null);
+        IEnumerable<IStorageItem> GetFiles(IStorageItem directory, bool prefixDotIncluded = false, bool prefixUnderscoreIncluded = false, string? pattern = null);
 
         void WriteAllText(IStorageItem file, string text, Encoding? encoding = null);
 
         IStorageItem ReplaceExtension(IStorageItem item, string newExtension);
 
         string ReadAllText(IStorageItem file, Encoding? encoding = null);
+
+        Task<string> ReadAllTextAsync(IStorageItem file, Encoding? encoding = null);
+
+        TextReader OpenTextReader(IStorageItem file, Encoding? encoding = null);
+
+        Stream OpenRead(IStorageItem file);
 
         /// <summary>
         /// Returns the directory containing the file <paramref name="file"/>.
@@ -163,6 +170,21 @@ namespace FlipLeaf.Storage
         public string ReadAllText(IStorageItem file, Encoding? encoding = null)
         {
             return File.ReadAllText(file.FullPath, encoding ?? Encoding.UTF8);
+        }
+
+        public Task<string> ReadAllTextAsync(IStorageItem file, Encoding? encoding = null)
+        {
+            return File.ReadAllTextAsync(file.FullPath, encoding ?? Encoding.UTF8);
+        }
+
+        public TextReader OpenTextReader(IStorageItem file, Encoding? encoding = null)
+        {
+            return new StreamReader(file.FullPath, encoding ?? Encoding.UTF8);
+        }
+
+        public Stream OpenRead(IStorageItem file)
+        {
+            return new FileStream(file.FullPath, FileMode.Open, FileAccess.Read);
         }
 
         public bool CheckFileExists(string path)
@@ -376,14 +398,19 @@ namespace FlipLeaf.Storage
         {
             private Lazy<string> _getName;
             private Lazy<string> _getExtension;
+            private Lazy<FamilyFolder> _getFamilyFolder;
 
             public StorageItem(string fullPath, string relativePath)
             {
                 FullPath = fullPath.Replace('/', '\\');
                 RelativePath = relativePath.Replace('\\', '/');
+
+                _getFamilyFolder = new Lazy<FamilyFolder>(GetFamilyFolder);
                 _getName = new Lazy<string>(GetName);
                 _getExtension = new Lazy<string>(GetExtension);
             }
+
+            public FamilyFolder FamilyFolder { get; }
 
             public string FullPath { get; }
 
@@ -396,6 +423,24 @@ namespace FlipLeaf.Storage
             private string GetName() => Path.GetFileName(FullPath);
 
             private string GetExtension() => Path.GetExtension(FullPath).ToLowerInvariant();
+
+            private FamilyFolder GetFamilyFolder()
+            {
+                var i = RelativePath.IndexOf('/');
+                if (i == -1 || i == 0)
+                {
+                    return FamilyFolder.None;
+                }
+
+                return RelativePath.Substring(0, i) switch
+                {
+                    KnownFolders.Data => FamilyFolder.Data,
+                    KnownFolders.Includes => FamilyFolder.Includes,
+                    KnownFolders.Layouts => FamilyFolder.Layouts,
+                    KnownFolders.Templates => FamilyFolder.Templates,
+                    _ => FamilyFolder.None,
+                };
+            }
 
             public override string ToString() => RelativePath;
         }

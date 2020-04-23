@@ -25,7 +25,7 @@ namespace FlipLeaf.Models
 
         public IDictionary<string, StringValues> Form { get; set; } = new Dictionary<string, StringValues>();
 
-        public Rendering.Templating.FormTemplate FormTemplate { get; set; } = Rendering.Templating.FormTemplate.Default;
+        public Templating.FormTemplate FormTemplate { get; set; } = Templating.FormTemplate.Default;
 
         [Display]
         public string? Comment { get; set; }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FlipLeaf.Models;
@@ -10,39 +11,25 @@ namespace FlipLeaf.Controllers
 {
     public class RenderController : Controller
     {
-        private const string DefaultDocumentName = "index.html";
-
         private readonly ILogger<ManageController> _logger;
-        private readonly Rendering.IYamlParser _yaml;
-        private readonly Rendering.ILiquidRenderer _liquid;
-        private readonly Rendering.IMarkdownRenderer _markdown;
         private readonly IGitRepository _git;
         private readonly IFileSystem _fileSystem;
         private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider =
             new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
 
-        private readonly Files.IFileFormat[] _fileFormats;
+        private readonly IEnumerable<Readers.IContentReader> _readers;
 
         public RenderController(
             ILogger<ManageController> logger,
-            Rendering.IYamlParser yaml,
-            Rendering.ILiquidRenderer liquid,
-            Rendering.IMarkdownRenderer markdown,
+            IEnumerable<Readers.IContentReader> readers,
             IGitRepository git,
             IFileSystem fileSystem
             )
         {
             _logger = logger;
-            _yaml = yaml;
-            _liquid = liquid;
-            _markdown = markdown;
+            _readers = readers.ToArray();
             _git = git;
             _fileSystem = fileSystem;
-            _fileFormats = new Files.IFileFormat[]
-            {
-                new Files.HtmlFile(yaml, liquid, fileSystem),
-                new    Files.MarkdownFile(yaml, liquid, markdown, fileSystem)
-            };
         }
 
         [Route("{**path}", Order = int.MaxValue)]
@@ -63,44 +50,31 @@ namespace FlipLeaf.Controllers
             // if the full path designates a directory, we change the fullpath to the default document
             if (_fileSystem.DirectoryExists(file))
             {
-                file = _fileSystem.Combine(file, DefaultDocumentName);
+                file = _fileSystem.Combine(file, KnownFiles.DefaultDocument);
             }
 
-            Files.IFileFormat? diskFileFormat = null;
+            // try to determine if a reader accepts this request
+            Readers.IContentReader? diskFileReader = null;
             IStorageItem? diskFile = null;
-
-            if (file.IsHtml())
+            foreach (var reader in _readers)
             {
-                foreach (var format in _fileFormats)
+                if (reader.Accept(file, out diskFile))
                 {
-                    diskFile = _fileSystem.ReplaceExtension(file, format.Extension);
-                    if (_fileSystem.FileExists(diskFile))
-                    {
-                        diskFileFormat = format;
-                        break;
-                    }
+                    diskFileReader = reader;
+                    break;
                 }
             }
-            else
+
+            // if there is no reader accepting this file...
+            if (diskFileReader == null || diskFile == null)
             {
-                if (!_fileSystem.FileExists(file))
+                // if the file is HTML we redirect to the editor (if enabled)
+                if (file.IsHtml())
                 {
                     return RedirectToAction(nameof(ManageController.Edit), "Manage", new { path });
                 }
 
-                foreach (var format in _fileFormats.Where(f => f.RawAllowed))
-                {
-                    diskFile = _fileSystem.ReplaceExtension(file, format.Extension);
-                    if (_fileSystem.FileExists(diskFile))
-                    {
-                        diskFileFormat = format;
-                        break;
-                    }
-                }
-            }
-
-            if (diskFileFormat == null || diskFile == null)
-            {
+                // if the file does not exists, 404
                 if (diskFile == null)
                 {
                     return NotFound();
@@ -116,10 +90,10 @@ namespace FlipLeaf.Controllers
                 return PhysicalFile(diskFile.FullPath, staticContentType);
             }
 
-            // if (file.IsMarkdown() || file.IsHtml() || file.IsJson() || file.IsXml() || file.IsYaml())
-            var parsedFile = await diskFileFormat.RenderAsync(diskFile);
+            // ok, now we engage the reader
+            var parsedFile = await diskFileReader.ReadAsync(diskFile);
 
-            // GIT: retrieve latest commit
+            // git: retrieve latest commit
             var commit = _git.LogFile(diskFile.RelativePath, 1).FirstOrDefault();
 
             if (parsedFile.ContentType == "text/html")

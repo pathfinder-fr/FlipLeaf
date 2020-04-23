@@ -1,64 +1,51 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.TagHelpers;
+using FlipLeaf.Readers;
+using FlipLeaf.Storage;
 
 namespace FlipLeaf.Website
 {
     public class DefaultWebsite : IWebsite, IWebsiteEventHandler
     {
-        private readonly ConcurrentDictionary<string, Template> _templates = new ConcurrentDictionary<string, Template>(StringComparer.OrdinalIgnoreCase);
+        private readonly IFileSystem _fileSystem;
+        private readonly IEnumerable<IDataReader> _readers;
 
-        private readonly ConcurrentDictionary<string, Layout> _layouts = new ConcurrentDictionary<string, Layout>(StringComparer.OrdinalIgnoreCase);
-
-        private readonly ConcurrentDictionary<string, Page> _pages = new ConcurrentDictionary<string, Page>(StringComparer.OrdinalIgnoreCase);
-
-        private readonly ConcurrentDictionary<string, object> _data = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-
-        private readonly FlipLeafSettings _settings;
-
-        public DefaultWebsite(FlipLeafSettings settings)
+        public DefaultWebsite(IFileSystem fileSystem, IEnumerable<IDataReader> readers)
         {
-            _settings = settings;
+            _fileSystem = fileSystem;
+            _readers = readers;
         }
 
-        public IDictionary<string, Template> Templates => _templates;
+        public IDictionary<string, object> Data { get; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-        public IDictionary<string, Layout> Layouts => _layouts;
-
-        public IEnumerable<Page> Pages => _pages.Values;
-
-        public IDictionary<string, object> Data => _data;
-
-        public void Populate(string sourcePath)
+        public void Populate()
         {
-            foreach (var directory in Directory.GetDirectories(sourcePath))
+            // populate Data
+            var dataDirItem = _fileSystem.GetItem(KnownFolders.Data);
+            if (dataDirItem != null && _fileSystem.DirectoryExists(dataDirItem))
             {
-                switch (Path.GetFileName(directory))
+                PopulateDataDirectory(dataDirItem);
+            }
+
+        }
+
+        private void PopulateDataDirectory(IStorageItem directory)
+        {
+            foreach (var file in _fileSystem.GetFiles(directory))
+            {
+                foreach (var reader in _readers)
                 {
-                    case KnownFolders.Layouts:
-                        foreach (var file in Directory.GetFiles(directory))
-                        {
-                            InvalidateLayout(file);
-                        }
-                        break;
-
-                    case KnownFolders.Templates:
-                        foreach (var file in Directory.GetFiles(directory))
-                        {
-                            InvalidateTemplate(file);
-                        }
-                        break;
-
-                    case KnownFolders.Data:
-                        PopulateSpecialDirectory(directory, InvalidateData);
-                        break;
+                    if (reader.Accept(file))
+                    {
+                        reader.ParseData(file, Data);
+                    }
                 }
+            }
+
+            foreach (var subDirectory in _fileSystem.GetSubDirectories(directory))
+            {
+                PopulateDataDirectory(subDirectory);
             }
         }
 
@@ -110,7 +97,7 @@ namespace FlipLeaf.Website
             var name = Path.GetFileNameWithoutExtension(path);
             if (name != null)
             {
-                _layouts[name] = new Layout(name);
+                //_layouts[name] = new Layout(name);
             }
         }
 
@@ -119,7 +106,7 @@ namespace FlipLeaf.Website
             var name = Path.GetFileNameWithoutExtension(path);
             if (name != null)
             {
-                _templates[name] = new Template(name);
+                //_templates[name] = new Template(name);
             }
         }
 
