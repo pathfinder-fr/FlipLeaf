@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FlipLeaf\FlipLeaf.csproj" />
+    <ProjectReference Include="../../src/FlipLeaf/FlipLeaf.csproj" />
   </ItemGroup>
 
 </Project>
