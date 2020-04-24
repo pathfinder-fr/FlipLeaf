@@ -9,6 +9,8 @@ namespace FlipLeaf.Website
     {
         IEnumerable<T> GetAll<T>() where T : class, IDocument;
 
+        T? Get<T>(string name) where T : class, IDocument;
+
         void Add<T>(T document) where T : class, IDocument;
     }
 

@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using FlipLeaf.Models;
-using FlipLeaf.Readers;
 using FlipLeaf.Storage;
 using FlipLeaf.Templating;
 using Microsoft.AspNetCore.Mvc;
@@ -17,29 +16,29 @@ namespace FlipLeaf.Controllers
         private readonly ILogger<ManageController> _logger;
         private readonly Markup.IYamlMarkup _yaml;
         private readonly Markup.ILiquidMarkup _liquid;
-        private readonly IFormTemplateParser _formTemplate;
         private readonly IFileSystem _fileSystem;
         private readonly IGitRepository _git;
         private readonly Website.IWebsiteIdentity _website;
-        private readonly IEnumerable<IContentReader> _contentReaders;
+        private readonly Website.IDocumentStore _docStore;
+        private readonly IEnumerable<Readers.IContentReader> _contentReaders;
 
         public ManageController(
             ILogger<ManageController> logger,
             Markup.IYamlMarkup yaml,
             Markup.ILiquidMarkup liquid,
-            IFormTemplateParser formTemplate,
             IFileSystem fileSystem,
             IGitRepository git,
             Website.IWebsiteIdentity website,
+            Website.IDocumentStore docStore,
             IEnumerable<Readers.IContentReader> contentReaders)
         {
             _logger = logger;
             _git = git;
             _yaml = yaml;
             _liquid = liquid;
-            _formTemplate = formTemplate;
             _fileSystem = fileSystem;
             _website = website;
+            _docStore = docStore;
             _contentReaders = contentReaders;
         }
 
@@ -373,15 +372,15 @@ namespace FlipLeaf.Controllers
             }
 
             // try load template
-            var templateFile = _fileSystem.GetTemplate(templateName);
-            if (templateFile == null)
+            var templateDoc = _docStore.Get<Docs.Template>(templateName);
+            if (templateDoc == null)
             {
                 return false;
             }
 
             // parse template
-            loadedTemplateName = templateName;
-            formTemplate = _formTemplate.ParseTemplate(templateFile.FullPath);
+            formTemplate = templateDoc.FormTemplate;
+            loadedTemplateName = templateDoc.Name;
             return true;
         }
     }

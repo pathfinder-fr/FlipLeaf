@@ -24,7 +24,7 @@ namespace FlipLeaf
             services.AddSingleton<Markup.IYamlMarkup, Markup.YamlMarkup>();
 
             // templating
-            services.AddSingleton<Templating.IFormTemplateParser, Templating.FormTemplateParser>();
+            services.AddSingleton<Website.IWebsiteComponent, Templating.FormTemplateManager>();
 
             // content readers
             services.AddSingleton<Readers.IContentReader, Readers.HtmlContentReader>();
