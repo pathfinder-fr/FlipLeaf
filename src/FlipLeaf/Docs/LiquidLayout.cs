@@ -15,12 +15,16 @@ namespace FlipLeaf.Docs
             Template = template;
         }
 
-        public string Name { get; }
+        public override string Name { get; }
 
         public HeaderFieldDictionary YamlHeader { get; }
 
         public LayoutTemplate Template { get; }
 
+        public override int GetHashCode() => Name.GetHashCode();
+
         public override string ToString() => Name;
+
+
     }
 }

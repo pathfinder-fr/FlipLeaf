@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace FlipLeaf.Docs
+﻿namespace FlipLeaf.Docs
 {
     public interface IDocument
     {
+        string Name { get; }
     }
 }

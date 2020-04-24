@@ -2,17 +2,13 @@
 
 namespace FlipLeaf.Templating
 {
-    public class FormTemplateField
+    public class FormField
     {
         public string? Id { get; set; }
 
         public string? Name { get; set; }
 
         public FormTemplateFieldType Type { get; set; }
-
-        public FormTemplateFieldVisibility Visibility { get; set; }
-
-        public int Cols { get; set; } = 12;
 
         public string? Description { get; set; }
 

@@ -10,6 +10,8 @@ namespace FlipLeaf.Docs
             File = file ?? throw new ArgumentNullException(nameof(file));
         }
 
+        public virtual string Name => File.RelativePath;
+
         protected IStorageItem File { get; }
 
         public override int GetHashCode() => File.GetHashCode();

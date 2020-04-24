@@ -23,7 +23,7 @@ namespace FlipLeaf.Website
 
         public IReadOnlyDictionary<string, object> Data => _data;
 
-        public void OnLoad(IFileSystem fileSystem, DocumentStore docs)
+        public void OnLoad(IFileSystem fileSystem, IDocumentStore docs)
         {
             IStorageItem? dirItem;
 

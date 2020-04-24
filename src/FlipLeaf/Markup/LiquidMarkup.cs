@@ -35,7 +35,7 @@ namespace FlipLeaf.Markup
             _yaml = yaml;
         }
 
-        public void OnLoad(IFileSystem fileSystem, DocumentStore docs)
+        public void OnLoad(IFileSystem fileSystem, IDocumentStore docs)
         {
             IStorageItem? dirItem;
 

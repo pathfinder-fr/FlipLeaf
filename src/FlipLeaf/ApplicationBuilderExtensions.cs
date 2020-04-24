@@ -28,7 +28,7 @@ namespace FlipLeaf
 
             // initialize website
             var fileSystem = app.ApplicationServices.GetService<Storage.IFileSystem>();
-            var docStore = new Website.DocumentStore();
+            var docStore = app.ApplicationServices.GetService<Website.IDocumentStore>();
             foreach (var component in app.ApplicationServices.GetServices<Website.IWebsiteComponent>())
             {
                 component.OnLoad(fileSystem, docStore);
