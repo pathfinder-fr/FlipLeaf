@@ -58,7 +58,7 @@ namespace FlipLeaf.Controllers
             IStorageItem? diskFile = null;
             foreach (var reader in _readers)
             {
-                if (reader.Accept(file, out diskFile))
+                if (reader.AcceptAsRequest(file, out diskFile))
                 {
                     diskFileReader = reader;
                     break;

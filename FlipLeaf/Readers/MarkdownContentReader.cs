@@ -22,7 +22,7 @@ namespace FlipLeaf.Readers
             _fileSystem = fileSystem;
         }
 
-        public bool Accept(IStorageItem requestFile, out IStorageItem diskFile)
+        public bool AcceptAsRequest(IStorageItem requestFile, out IStorageItem diskFile)
         {
             diskFile = requestFile;
             if (!requestFile.IsHtml())
@@ -34,7 +34,7 @@ namespace FlipLeaf.Readers
             return _fileSystem.FileExists(diskFile);
         }
 
-        public bool AcceptInverse(IStorageItem diskfile, out IStorageItem requestFile)
+        public bool AcceptForRequest(IStorageItem diskfile, out IStorageItem requestFile)
         {
             if (diskfile.IsMarkdown())
             {

@@ -20,7 +20,7 @@ namespace FlipLeaf.Readers
             this._fileSystem = fileSystem;
         }
 
-        public bool AcceptInverse(IStorageItem diskfile, out IStorageItem requestFile)
+        public bool AcceptForRequest(IStorageItem diskfile, out IStorageItem requestFile)
         {
             requestFile = diskfile;
 
@@ -37,7 +37,7 @@ namespace FlipLeaf.Readers
             return false;
         }
 
-        public bool Accept(IStorageItem requestFile, out IStorageItem diskFile)
+        public bool AcceptAsRequest(IStorageItem requestFile, out IStorageItem diskFile)
         {
             diskFile = requestFile;
 

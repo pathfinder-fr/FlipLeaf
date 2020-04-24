@@ -5,9 +5,9 @@ namespace FlipLeaf.Readers
 {
     public interface IContentReader
     {
-        bool AcceptInverse(IStorageItem diskfile, out IStorageItem requestFile);
+        bool AcceptForRequest(IStorageItem diskfile, out IStorageItem requestFile);
 
-        bool Accept(IStorageItem requestFile, out IStorageItem diskFile);
+        bool AcceptAsRequest(IStorageItem requestFile, out IStorageItem diskFile);
 
         Task<HeaderFieldDictionary?> ReadHeaderAsync(IStorageItem file);
 
