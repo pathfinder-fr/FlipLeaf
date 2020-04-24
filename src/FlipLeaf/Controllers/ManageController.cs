@@ -98,7 +98,7 @@ namespace FlipLeaf.Controllers
 
             foreach (var reader in _contentReaders)
             {
-                if (reader.AcceptForRequest(file, out var requestFile))
+                if (reader.AcceptFileAsRequest(file, out var requestFile))
                 {
                     return this.RedirectToAction(nameof(RenderController.Index), "Render", new { path = requestFile.RelativePath });
                 }

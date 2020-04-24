@@ -25,7 +25,7 @@ namespace FlipLeaf.TagHelpers
 
         public string Home { get; set; } = "(Home)";
 
-        public string Path { get; set; }
+        public string Path { get; set; } = string.Empty;
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {

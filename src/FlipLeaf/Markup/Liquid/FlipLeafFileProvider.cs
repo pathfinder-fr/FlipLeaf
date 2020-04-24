@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using FlipLeaf.Docs;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
 
@@ -7,22 +9,20 @@ namespace FlipLeaf.Markup.Liquid
 {
     public class FlipLeafFileProvider : IFileProvider
     {
-        private readonly string _sourcePath;
+        private readonly IDictionary<string, LiquidInclude> _includes;
 
-        public FlipLeafFileProvider(FlipLeafSettings settings)
+        public FlipLeafFileProvider(IDictionary<string, LiquidInclude> includes)
         {
-            _sourcePath = settings.SourcePath;
+            _includes = includes;
         }
 
         public IDirectoryContents GetDirectoryContents(string subpath) => NotFoundDirectoryContents.Singleton;
 
         public IFileInfo GetFileInfo(string subpath)
         {
-            var fullPath = Path.Combine(_sourcePath, "_includes", subpath);
-
-            if (File.Exists(fullPath))
+            if (_includes.TryGetValue(subpath, out var include))
             {
-                return new IncludeFileInfo(fullPath);
+                return new IncludeFileInfo(include);
             }
 
             return new NotFoundFileInfo(subpath);
@@ -32,27 +32,28 @@ namespace FlipLeaf.Markup.Liquid
 
         private class IncludeFileInfo : IFileInfo
         {
-            private readonly FileInfo _info;
+            private readonly byte[] _content;
 
-            public IncludeFileInfo(string path)
+            public IncludeFileInfo(LiquidInclude include)
             {
-                PhysicalPath = path;
-                _info = new FileInfo(path);
+                PhysicalPath = include.File.FullPath;
+                Name = include.File.Name;
+                _content = include.Content;
             }
 
-            public bool Exists => File.Exists(PhysicalPath);
+            public bool Exists => true;
 
-            public long Length => _info.Length;
+            public long Length => 0;
 
             public string PhysicalPath { get; }
 
-            public string Name => _info.Name;
+            public string Name { get; }
 
-            public DateTimeOffset LastModified => _info.LastWriteTime;
+            public DateTimeOffset LastModified => DateTime.MinValue;
 
             public bool IsDirectory => false;
 
-            public Stream CreateReadStream() => _info.OpenRead();
+            public Stream CreateReadStream() => new MemoryStream(_content);
         }
     }
 }

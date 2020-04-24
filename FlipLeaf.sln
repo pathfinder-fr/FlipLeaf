@@ -1,21 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30021.99
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9A6C3990-9C51-448D-9282-B0D582CD1ED2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlipLeaf", "src\FlipLeaf\FlipLeaf.csproj", "{27BBB1C7-EAB3-427D-906E-EB28DBB62C3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlipLeaf", "src\FlipLeaf\FlipLeaf.csproj", "{27BBB1C7-EAB3-427D-906E-EB28DBB62C3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlipLeaf.Web", "src\FlipLeaf.Web\FlipLeaf.Web.csproj", "{520604ED-9E34-4F7F-95E1-E84003255F19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlipLeaf.Web", "src\FlipLeaf.Web\FlipLeaf.Web.csproj", "{520604ED-9E34-4F7F-95E1-E84003255F19}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{2E7DF610-2554-4C7C-808A-DAAF2B77F9D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PathfinderFr.Web", "samples\PathfinderFr.Web\PathfinderFr.Web.csproj", "{EEDF6951-D4D9-424B-9001-58321EF59634}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PathfinderFr.Web", "samples\PathfinderFr.Web\PathfinderFr.Web.csproj", "{EEDF6951-D4D9-424B-9001-58321EF59634}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{53B857B8-452D-476B-9360-5EF89E9B8D10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlipLeaf.Tests", "tests\FlipLeaf.Tests\FlipLeaf.Tests.csproj", "{058B886F-4EB4-4326-A6EF-7CF75789D25B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlipLeaf.Tests", "tests\FlipLeaf.Tests\FlipLeaf.Tests.csproj", "{058B886F-4EB4-4326-A6EF-7CF75789D25B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,9 +25,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{27BBB1C7-EAB3-427D-906E-EB28DBB62C3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -79,10 +76,16 @@ Global
 		{058B886F-4EB4-4326-A6EF-7CF75789D25B}.Release|x86.ActiveCfg = Release|Any CPU
 		{058B886F-4EB4-4326-A6EF-7CF75789D25B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{27BBB1C7-EAB3-427D-906E-EB28DBB62C3D} = {9A6C3990-9C51-448D-9282-B0D582CD1ED2}
 		{520604ED-9E34-4F7F-95E1-E84003255F19} = {9A6C3990-9C51-448D-9282-B0D582CD1ED2}
 		{EEDF6951-D4D9-424B-9001-58321EF59634} = {2E7DF610-2554-4C7C-808A-DAAF2B77F9D9}
 		{058B886F-4EB4-4326-A6EF-7CF75789D25B} = {53B857B8-452D-476B-9360-5EF89E9B8D10}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3C452132-3B90-4D6B-89C1-D4BA4EEFE03B}
 	EndGlobalSection
 EndGlobal

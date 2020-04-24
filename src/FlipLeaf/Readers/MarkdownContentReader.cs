@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using FlipLeaf.Storage;
+using FlipLeaf.Website;
 
 namespace FlipLeaf.Readers
 {
@@ -9,20 +10,24 @@ namespace FlipLeaf.Readers
         private readonly Markup.ILiquidMarkup _liquid;
         private readonly Markup.IMarkdownMarkup _markdown;
         private readonly IFileSystem _fileSystem;
+        private readonly IWebsite _website;
 
         public MarkdownContentReader(
             Markup.IYamlMarkup yaml,
             Markup.ILiquidMarkup liquid,
             Markup.IMarkdownMarkup markdown,
-            IFileSystem fileSystem)
+            IFileSystem fileSystem,
+            IWebsite website
+            )
         {
             _yaml = yaml;
             _liquid = liquid;
             _markdown = markdown;
             _fileSystem = fileSystem;
+            _website = website;
         }
 
-        public bool AcceptAsRequest(IStorageItem requestFile, out IStorageItem diskFile)
+        public bool AcceptRequest(IStorageItem requestFile, out IStorageItem diskFile)
         {
             diskFile = requestFile;
             if (!requestFile.IsHtml())
@@ -34,7 +39,7 @@ namespace FlipLeaf.Readers
             return _fileSystem.FileExists(diskFile);
         }
 
-        public bool AcceptForRequest(IStorageItem diskfile, out IStorageItem requestFile)
+        public bool AcceptFileAsRequest(IStorageItem diskfile, out IStorageItem requestFile)
         {
             if (diskfile.IsMarkdown())
             {
@@ -67,14 +72,14 @@ namespace FlipLeaf.Readers
             var yamlHeader = _yaml.ParseHeader(content, out content);
 
             // 3) parse liquid
-            content = await _liquid.RenderAsync(content, yamlHeader, out var context).ConfigureAwait(false);
+            content = await _liquid.RenderAsync(content, yamlHeader, _website, out var context).ConfigureAwait(false);
 
             // 4) parse markdown (if required...)
             content = _markdown.Render(content);
 
             // 5) apply liquid layout
             // this call can be recusrive if there are multiple layouts
-            content = await _liquid.ApplyLayoutAsync(content, context).ConfigureAwait(false);
+            content = await _liquid.ApplyLayoutAsync(content, context, _website).ConfigureAwait(false);
 
             return new ReadResult(content, yamlHeader, "text/html");
         }

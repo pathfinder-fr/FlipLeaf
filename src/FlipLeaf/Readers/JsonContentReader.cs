@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using FlipLeaf.Markup;
 using FlipLeaf.Storage;
+using FlipLeaf.Website;
 
 namespace FlipLeaf.Readers
 {
@@ -8,19 +9,22 @@ namespace FlipLeaf.Readers
     {
         private readonly IYamlMarkup _yaml;
         private readonly ILiquidMarkup _liquid;
+        private readonly IWebsite _website;
         private readonly IFileSystem _fileSystem;
 
         public JsonContentReader(
             IYamlMarkup yaml,
             ILiquidMarkup liquid,
+            IWebsite website,
             IFileSystem fileSystem)
         {
             _yaml = yaml;
             _liquid = liquid;
-            this._fileSystem = fileSystem;
+            _website = website;
+            _fileSystem = fileSystem;
         }
 
-        public bool AcceptForRequest(IStorageItem diskfile, out IStorageItem requestFile)
+        public bool AcceptFileAsRequest(IStorageItem diskfile, out IStorageItem requestFile)
         {
             requestFile = diskfile;
 
@@ -37,7 +41,7 @@ namespace FlipLeaf.Readers
             return false;
         }
 
-        public bool AcceptAsRequest(IStorageItem requestFile, out IStorageItem diskFile)
+        public bool AcceptRequest(IStorageItem requestFile, out IStorageItem diskFile)
         {
             diskFile = requestFile;
 
@@ -73,11 +77,11 @@ namespace FlipLeaf.Readers
             var yamlHeader = _yaml.ParseHeader(content, out content);
 
             // 3) parse liquid
-            content = await _liquid.RenderAsync(content, yamlHeader, out var context).ConfigureAwait(false);
+            content = await _liquid.RenderAsync(content, yamlHeader, _website, out var context).ConfigureAwait(false);
 
             // 5) apply liquid layout
             // this call can be recusrive if there are multiple layouts
-            content = await _liquid.ApplyLayoutAsync(content, context).ConfigureAwait(false);
+            content = await _liquid.ApplyLayoutAsync(content, context, _website).ConfigureAwait(false);
 
             return new ReadResult(content, yamlHeader, "text/javascript");
         }

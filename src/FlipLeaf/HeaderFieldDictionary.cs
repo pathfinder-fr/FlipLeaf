@@ -6,7 +6,7 @@ namespace FlipLeaf
     public sealed class HeaderFieldDictionary : Dictionary<string, object?>
     {
         public HeaderFieldDictionary()
-            : base(StringComparer.OrdinalIgnoreCase)
+            : base(StringComparer.Ordinal)
         {
         }
     }

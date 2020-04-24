@@ -402,6 +402,9 @@ namespace FlipLeaf.Storage
 
             public StorageItem(string fullPath, string relativePath)
             {
+                if (fullPath == null) throw new ArgumentNullException(nameof(fullPath));
+                if (relativePath == null) throw new ArgumentNullException(nameof(relativePath));
+
                 FullPath = fullPath.Replace('/', '\\');
                 RelativePath = relativePath.Replace('\\', '/');
 
@@ -443,6 +446,18 @@ namespace FlipLeaf.Storage
             }
 
             public override string ToString() => RelativePath;
+
+            public override int GetHashCode() => RelativePath.GetHashCode(StringComparison.Ordinal);
+
+            public override bool Equals(object? obj)
+            {
+                if (obj is IStorageItem item)
+                {
+                    return item.RelativePath.EqualsOrdinal(this.FullPath);
+                }
+
+                return base.Equals(obj);
+            }
         }
     }
 }

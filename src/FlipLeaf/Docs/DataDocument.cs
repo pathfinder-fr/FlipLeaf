@@ -1,21 +1,17 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using FlipLeaf.Readers;
 using FlipLeaf.Storage;
 
 namespace FlipLeaf.Docs
 {
-    public class DataDocument : Document
+    public class DataDocument : FileDocument
     {
-        public DataDocument(IStorageItem item)
+        public DataDocument(IStorageItem item, IDataReader reader)
             : base(item)
         {
+            Reader = reader ?? throw new ArgumentNullException(nameof(reader));
         }
-    }
 
-    public interface IDataDictionary
-    {
-        object? this[string key] { get; }
-
-        bool TryGetValue(string key, out object? value);
+        public IDataReader Reader { get; }
     }
 }

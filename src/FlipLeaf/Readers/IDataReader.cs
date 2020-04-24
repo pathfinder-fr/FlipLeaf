@@ -7,6 +7,6 @@ namespace FlipLeaf.Readers
     {
         bool Accept(IStorageItem file);
 
-        void ParseData(IStorageItem file, IDictionary<string, object> data);
+        void Read(IStorageItem file, IDictionary<string, object> data);
     }
 }

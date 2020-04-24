@@ -2,6 +2,7 @@
 using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FlipLeaf
 {
@@ -26,8 +27,12 @@ namespace FlipLeaf
             settings.SourcePath = sourcePath;
 
             // initialize website
-            var website = (Website.DefaultWebsite)app.ApplicationServices.GetService(typeof(Website.IWebsite));
-            website.Populate();
+            var fileSystem = app.ApplicationServices.GetService<Storage.IFileSystem>();
+            var docStore = new Website.DocumentStore();
+            foreach (var component in app.ApplicationServices.GetServices<Website.IWebsiteComponent>())
+            {
+                component.OnLoad(fileSystem, docStore);
+            }
         }
     }
 }

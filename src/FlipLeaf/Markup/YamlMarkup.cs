@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Fluid;
 using Microsoft.Extensions.Primitives;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
@@ -97,7 +96,7 @@ namespace FlipLeaf.Markup
             }
             catch (SyntaxErrorException see)
             {
-                throw new ParseException($"The YAML header of the page is invalid", see);
+                throw new InvalidOperationException($"The YAML header of the page is invalid", see);
             }
 
             items = new HeaderFieldDictionary();

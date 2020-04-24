@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FlipLeaf.Website
+﻿namespace FlipLeaf.Website
 {
     public interface IWebsite
     {

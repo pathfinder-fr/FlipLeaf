@@ -17,7 +17,7 @@ namespace FlipLeaf.Readers
 
         public bool Accept(IStorageItem file) => file.IsJson();
 
-        public void ParseData(IStorageItem file, IDictionary<string, object> data)
+        public void Read(IStorageItem file, IDictionary<string, object> data)
         {
             JsonDocument jsonDoc;
             using (var fs = _fileSystem.OpenRead(file))

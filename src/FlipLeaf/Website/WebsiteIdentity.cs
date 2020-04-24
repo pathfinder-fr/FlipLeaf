@@ -1,7 +1,7 @@
 ﻿namespace FlipLeaf.Website
 {
 
-    public sealed class DefaultWebsiteIdentity : IWebsiteIdentity
+    public sealed class WebsiteIdentity : IWebsiteIdentity
     {
         public IUser GetCurrentUser() => DefaultUser.Anonymous;
 
