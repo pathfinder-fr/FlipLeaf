@@ -39,7 +39,7 @@ namespace FlipLeaf.TagHelpers
             output.TagName = "ol";
             output.Attributes.Add("class", "breadcrumb");
 
-            output.Content.AppendHtml($"<li class=\"breadcrumb-item\"><a href=\"{urlHelper.Action("Browse", new { path = string.Empty })}\">{Home}</a></li>");
+            output.Content.AppendHtml($"<li class=\"breadcrumb-item\"><a href=\"{urlHelper.Page("Browse", new { path = string.Empty })}\">{Home}</a></li>");
 
             var parts = this.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
@@ -48,7 +48,7 @@ namespace FlipLeaf.TagHelpers
                 var item = parts[i];
                 if (i < parts.Length - 1)
                 {
-                    var url = urlHelper.Action("Browse", new { path = string.Join('/', parts, 0, i + 1) });
+                    var url = urlHelper.Page("Browse", new { path = string.Join('/', parts, 0, i + 1) });
                     output.Content.AppendHtml($"<li class=\"breadcrumb-item\"><a href=\"{url}\">{item}</a></li>");
                 }
                 else
