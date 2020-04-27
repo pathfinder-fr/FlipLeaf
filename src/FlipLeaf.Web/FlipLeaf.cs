@@ -25,7 +25,7 @@ namespace FlipLeaf
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services.AddRazorPages();
             services.AddHttpContextAccessor();
             services.AddFlipLeaf(_config, useDefaultWebsiteIdentity: true);
         }
@@ -41,7 +41,7 @@ namespace FlipLeaf
             app.UseStaticFiles();
             app.UseRouting();
             app.UseAuthorization();
-            app.UseEndpoints(endpoints => endpoints.MapControllers());
+            app.UseEndpoints(endpoints => endpoints.MapRazorPages());
         }
     }
 }

@@ -9,14 +9,13 @@ namespace PathfinderFr
 {
     public class PathfinderFr
     {
-        public static void Main(string[] args) => CreateHostBuilder(args).Build().Run();
-
-        public static IHostBuilder CreateHostBuilder(string[] args)
-            => Host.CreateDefaultBuilder(args)
+        public static void Main(string[] args) => Host
+            .CreateDefaultBuilder(args)
             .ConfigureAppConfiguration((hostingContext, config) => config.AddEnvironmentVariables())
-            .ConfigureWebHostDefaults(wb
-                => wb.UseWebRoot(@".static").UseStartup<Startup>()
-            );
+            .ConfigureWebHostDefaults(builder => builder.UseWebRoot(@".static").UseStartup<Startup>())
+            .Build()
+            .Run()
+            ;
     }
 
     public class Startup
@@ -27,10 +26,11 @@ namespace PathfinderFr
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services.AddRazorPages();
             services.AddHttpContextAccessor();
-            services.AddSingleton(_config.GetSection("PathfinderFr").Get<PathfinderFrSettings>());
             services.AddFlipLeaf(_config, useDefaultWebsiteIdentity: true);
+
+            services.AddSingleton(_config.GetSection("PathfinderFr").Get<PathfinderFrSettings>());
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -44,7 +44,7 @@ namespace PathfinderFr
             app.UseStaticFiles();
             app.UseRouting();
             app.UseAuthorization();
-            app.UseEndpoints(endpoints => endpoints.MapControllers());
+            app.UseEndpoints(endpoints => endpoints.MapRazorPages());
         }
     }
 }

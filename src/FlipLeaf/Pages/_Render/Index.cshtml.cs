@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FlipLeaf.Models;
 using FlipLeaf.Storage;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace FlipLeaf.Controllers
+namespace FlipLeaf.Pages._Render
 {
-    public class RenderController : Controller
+    public class IndexModel : PageModel
     {
-        private readonly ILogger<ManageController> _logger;
         private readonly IGitRepository _git;
         private readonly IFileSystem _fileSystem;
         private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider =
@@ -19,21 +17,31 @@ namespace FlipLeaf.Controllers
 
         private readonly IEnumerable<Readers.IContentReader> _readers;
 
-        public RenderController(
-            ILogger<ManageController> logger,
+        public IndexModel(
             IEnumerable<Readers.IContentReader> readers,
             IGitRepository git,
             IFileSystem fileSystem
             )
         {
-            _logger = logger;
             _readers = readers.ToArray();
             _git = git;
             _fileSystem = fileSystem;
         }
 
-        [Route("{**path}", Order = int.MaxValue)]
-        public async Task<IActionResult> Index(string path)
+        public string Path { get; set; } = string.Empty;
+
+        public string ManagePath { get; set; } = string.Empty;
+
+        public string Title { get; set; } = string.Empty;
+
+        public HeaderFieldDictionary? Items { get; set; }
+
+        public string Html { get; set; } = string.Empty;
+
+        public DateTimeOffset LastUpdate { get; set; }
+
+
+        public async Task<IActionResult> OnGetAsync(string path)
         {
             var file = _fileSystem.GetItem(path);
             if (file == null)
@@ -71,7 +79,7 @@ namespace FlipLeaf.Controllers
                 // if the file is HTML we redirect to the editor (if enabled)
                 if (file.IsHtml())
                 {
-                    return RedirectToAction(nameof(ManageController.Edit), "Manage", new { path });
+                    return Redirect($"/_manage/edit/{path}");
                 }
 
                 // if the file does not exists, 404
@@ -98,23 +106,19 @@ namespace FlipLeaf.Controllers
 
             if (parsedFile.ContentType == "text/html")
             {
-                var vm = new RenderIndexViewModel
-                {
-                    Html = parsedFile.Content,
-                    Items = parsedFile.Headers,
-                    Path = diskFile.RelativePath,
-                    ManagePath = _fileSystem.GetDirectoryItem(diskFile).RelativePath,
-                    LastUpdate = commit?.Authored ?? DateTimeOffset.Now
-                };
+                this.Html = parsedFile.Content;
+                this.Items = parsedFile.Headers;
+                this.Path = diskFile.RelativePath;
+                this.ManagePath = _fileSystem.GetDirectoryItem(diskFile).RelativePath;
+                this.LastUpdate = commit?.Authored ?? DateTimeOffset.Now;
 
                 // we automatically use the "title" yaml header as the Page Title
                 if (parsedFile.Headers.TryGetValue(KnownFields.Title, out var pageTitle) && pageTitle != null)
                 {
-                    vm.Title = pageTitle.ToString() ?? string.Empty;
-                    ViewData["Title"] = vm.Title;
+                    this.Title = pageTitle.ToString() ?? string.Empty;
                 }
 
-                return View(nameof(Index), vm);
+                return Page();
             }
 
             var contentType = parsedFile.ContentType;

@@ -1,0 +1,16 @@
+﻿@page "/{**path}"
+@model FlipLeaf.Pages._Render.IndexModel
+
+@{ Layout = "_Layout"; }
+
+<div class="content">
+    @Html.Raw(Model.Html)
+</div>
+
+<footer>
+    <a asp-page="/_manage/edit" asp-route-path="@Model.Path">Modifier</a>
+    −
+    <a asp-page="/_manage/browse" asp-route-path="@Model.ManagePath">Administration</a>
+    −
+    Dernière mise à jour <span title="@Model.LastUpdate">@Model.LastUpdate.ToRelativeTime()</span>
+</footer>

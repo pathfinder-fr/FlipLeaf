@@ -1,4 +1,7 @@
-﻿@model ManageBrowseViewModel
+﻿@page "{**path}"
+@model FlipLeaf.Pages._Manage.BrowseModel
+@{
+}
 
 @{ ViewData["Title"] = "Content Manager"; }
 
@@ -42,7 +45,7 @@
                     {
                         <i class="fa fa-folder-o text-primary" aria-hidden="true"></i>
                     }
-                    <a asp-action="Browse" asp-route-path="@item.Path.RelativePath">@item.Path.Name</a>
+                    <a asp-route-path="@item.Path.RelativePath">@item.Path.Name</a>
                 </td>
                 <td></td>
                 <td></td>
@@ -55,14 +58,14 @@
             <tr>
                 <td>
                     <i class="fa fa-file-o text-primary" aria-hidden="true"></i>
-                    <a asp-action="Edit" asp-route-path="@item.Path.RelativePath">@item.Path.Name</a>
+                    <a asp-page="Edit" asp-route-path="@item.Path.RelativePath">@item.Path.Name</a>
                 </td>
                 <td>
                     <span class="hover-link">
-                        <a asp-action="Show" asp-route-path="@item.Path.RelativePath">View</a>
-                        <a asp-action="Edit" asp-route-path="@item.Path.RelativePath">Edit</a>
-                        <a asp-action="EditRaw" asp-route-path="@item.Path.RelativePath">Raw</a>
-                        <a asp-action="DeleteFile" asp-route-path="@item.Path.RelativePath">Delete</a>
+                        <a asp-page="Show" asp-route-path="@item.Path.RelativePath">View</a>
+                        <a asp-page="Edit" asp-route-path="@item.Path.RelativePath">Edit</a>
+                        <a asp-page="EditRaw" asp-route-path="@item.Path.RelativePath">Raw</a>
+                        <a asp-page-handler="DeleteFile" asp-route-path="@item.Path.RelativePath">Delete</a>
                     </span>
                 </td>
                 <td>
@@ -75,14 +78,14 @@
 
 <h4>Actions</h4>
 
-<form asp-action="CreateFile" class="form-inline">
+<form method="post" asp-page-handler="CreateFile" class="form-inline">
     <input type="hidden" name="path" value="@Model.Path" />
     <label for="file_create_name" class="mb-2 mr-sm-2">New file: </label>
     <input id="file_create_name" name="name" class="form-control mb-2 mr-sm-2" placeholder="ex: index.md" />
     <button type="submit" class="btn btn-primary mb-2">Create file</button>
 </form>
 
-<form asp-action="CreateDirectory" class="form-inline">
+<form method="post" asp-page-handler="CreateDirectory" class="form-inline">
     <input type="hidden" name="path" value="@Model.Path" />
     <label for="directory_create_name" class="mb-2 mr-sm-2">New folder: </label>
     <input id="directory_create_name" name="name" class="form-control mb-2 mr-sm-2" placeholder="ex: articles" />
