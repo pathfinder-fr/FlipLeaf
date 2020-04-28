@@ -10,13 +10,17 @@ namespace FlipLeaf.Pages._Manage
     {
         private readonly IFileSystem _fileSystem;
         private readonly IEnumerable<IContentReader> _contentReaders;
+        private readonly FlipLeafSettings _settings;
 
         public ShowModel(
             IFileSystem fileSystem,
-            IEnumerable<IContentReader> contentReaders)
+            IEnumerable<IContentReader> contentReaders,
+            FlipLeafSettings settings
+            )
         {
             _fileSystem = fileSystem;
             _contentReaders = contentReaders;
+            _settings = settings;
         }
 
         public IActionResult OnGet(string path)
@@ -41,7 +45,7 @@ namespace FlipLeaf.Pages._Manage
             {
                 if (reader.AcceptFileAsRequest(file, out var requestFile))
                 {
-                    return this.Redirect("/" + requestFile.RelativePath);
+                    return this.Redirect($"{_settings.BaseUrl}/" + requestFile.RelativePath);
                 }
             }
 

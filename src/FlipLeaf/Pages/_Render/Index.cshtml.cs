@@ -13,6 +13,7 @@ namespace FlipLeaf.Pages._Render
     {
         private readonly IGitRepository _git;
         private readonly IFileSystem _fileSystem;
+        private readonly FlipLeafSettings _settings;
         private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider =
             new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
 
@@ -21,12 +22,14 @@ namespace FlipLeaf.Pages._Render
         public IndexModel(
             IEnumerable<Readers.IContentReader> readers,
             IGitRepository git,
-            IFileSystem fileSystem
+            IFileSystem fileSystem,
+            FlipLeafSettings settings
             )
         {
             _readers = readers.ToArray();
             _git = git;
             _fileSystem = fileSystem;
+            _settings = settings;
         }
 
         public string Path { get; set; } = string.Empty;
@@ -52,7 +55,7 @@ namespace FlipLeaf.Pages._Render
 
             if (file.RelativePath.StartsWith('.') || file.RelativePath.StartsWith('_'))
             {
-                return Redirect("/");
+                return Redirect($"{_settings.BaseUrl}/");
             }
 
             // default file
@@ -80,7 +83,7 @@ namespace FlipLeaf.Pages._Render
                 // if the file is HTML we redirect to the editor (if enabled)
                 if (file.IsHtml())
                 {
-                    return Redirect($"/_manage/edit/{path}");
+                    return Redirect( $"{_settings.BaseUrl}/_manage/edit/{path}");
                 }
 
                 // if the file does not exists, 404

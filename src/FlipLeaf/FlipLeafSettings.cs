@@ -8,7 +8,7 @@
         /// </summary>
         public string SourcePath { get; set; } = ".content";
 
-        public string BaseUrl { get; set; } = "http://localhost:5000/";
+        public string BaseUrl { get; set; } = string.Empty;
 
         public bool GitEnabled { get; set; } = true;
 

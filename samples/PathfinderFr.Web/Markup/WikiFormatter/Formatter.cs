@@ -1825,9 +1825,13 @@ namespace PathfinderFr.Markup.WikiFormatter
                     {
                         UrlTools.BuildUrl(sb, "++", targetUrl);
                     }
-                    else
+                    else if (!string.IsNullOrEmpty(info.Name.Namespace))
                     {
                         UrlTools.BuildUrl(sb, info.Name.Namespace, ".", targetUrl);
+                    }
+                    else
+                    {
+                        UrlTools.BuildUrl(sb, targetUrl);
                     }
 
                     sb.Append(@""" title=""");
