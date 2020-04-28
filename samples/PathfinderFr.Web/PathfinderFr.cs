@@ -1,4 +1,5 @@
 ﻿using FlipLeaf;
+using FlipLeaf.Readers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,9 @@ namespace PathfinderFr
             services.AddRazorPages();
             services.AddHttpContextAccessor();
             services.AddFlipLeaf(_config, useDefaultWebsiteIdentity: true);
+
+            services.AddSingletonAllInterfaces<Markup.WikiMarkup>();
+            services.AddSingleton<IContentReader, Readers.WikiContentReader>();
 
             services.AddSingleton(_config.GetSection("PathfinderFr").Get<PathfinderFrSettings>());
         }

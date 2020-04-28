@@ -263,6 +263,11 @@ namespace FlipLeaf.Storage
 
         public IEnumerable<IStorageItem> GetFiles(IStorageItem directory, bool prefixDotIncluded, bool prefixUnderscoreIncluded, string? pattern = null)
         {
+            if (!Directory.Exists(directory.FullPath))
+            {
+                return Enumerable.Empty<IStorageItem>();
+            }
+
             IEnumerable<IStorageItem> dirs = Directory
                 .GetFiles(directory.FullPath, pattern ?? "*.*")
                 .Where(f => f != null)
