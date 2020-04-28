@@ -87,6 +87,7 @@ namespace PathfinderFr.Docs
                 Name = name.Substring(i + 1);
             }
         }
+
         public WikiName(string @namespace, string name)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
@@ -95,11 +96,13 @@ namespace PathfinderFr.Docs
             {
                 Namespace = string.Empty;
                 Name = name;
+                FullName = name;
             }
             else
             {
                 Namespace = @namespace;
                 Name = name;
+                FullName = $"{Namespace}.{Name}";
             }
         }
 
@@ -112,6 +115,19 @@ namespace PathfinderFr.Docs
         public string Fragment { get; }
 
         public override string ToString() => FullName;
+
+
+        public override int GetHashCode() => FullName.GetHashCode(StringComparison.OrdinalIgnoreCase);
+
+        public override bool Equals(object obj)
+        {
+            if (obj is WikiName name)
+            {
+                return string.Equals(FullName, name.FullName, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return base.Equals(obj);
+        }
 
         public static implicit operator string(WikiName name) => name.FullName;
         public static explicit operator WikiName(string name) => new WikiName(name);

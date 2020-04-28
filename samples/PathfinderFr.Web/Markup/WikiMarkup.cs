@@ -16,6 +16,10 @@ namespace PathfinderFr.Markup
     {
         WikiPage GetPage(WikiName name);
 
+        IEnumerable<WikiName> GetAllCategories();
+
+        IEnumerable<WikiName> GetCategoryPages(WikiName category);
+
         WikiPage GetPage(IStorageItem file, HeaderFieldDictionary headers);
 
         WikiSnippet GetSnippet(string name);
@@ -158,5 +162,17 @@ namespace PathfinderFr.Markup
 
             return content;
         }
+
+        public IEnumerable<WikiName> GetCategoryPages(WikiName category)
+        {
+            if (!_categories.TryGetValue(category, out var pages))
+            {
+                return Enumerable.Empty<WikiName>();
+            }
+
+            return pages;
+        }
+
+        public IEnumerable<WikiName> GetAllCategories() => _categories.Keys;
     }
 }

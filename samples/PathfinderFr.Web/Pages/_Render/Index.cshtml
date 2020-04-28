@@ -1,8 +1,23 @@
 ﻿@page "/{**path}"
 @using FlipLeaf
+@inject FlipLeaf.FlipLeafSettings settings
 @model FlipLeaf.Pages._Render.IndexModel
 
-@{ Layout = "_Layout"; }
+@{
+    Layout = "_Layout";
+    DateTimeOffset? lastModified = null;
+    var lastModifiedText = Model.Items["LastModified"] as string;
+    if (lastModifiedText != null)
+    {
+        lastModified = DateTimeOffset.ParseExact(lastModifiedText, "yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    var categories = Model.Items.GetArray<string>("Categories");
+
+    var name = (string)Model.Items["Name"];
+    var wikiName = new PathfinderFr.Docs.WikiName(name);
+
+}
 
 <div id="PageHeaderDiv">
     <h1 class="pagetitle">
@@ -19,18 +34,24 @@
     −
     <a asp-page="/_manage/browse" asp-route-path="@Model.ManagePath">Administration</a>
     −
-    @if (Model.LastUpdate != DateTimeOffset.MinValue)
+    @if (lastModified != null)
+    {
+        <text>Dernière mise à jour <span title="@lastModified">@lastModified.ToRelativeTime()</span></text>
+    }
+    else if (Model.LastUpdate != DateTimeOffset.MinValue)
     {
         <text>Dernière mise à jour <span title="@Model.LastUpdate">@Model.LastUpdate.ToRelativeTime()</span></text>
     }
-    else if (Model.Items["LastModified"] != null)
-    {
-        var lastModifiedText = Model.Items["LastModified"] as string;
-        if (lastModifiedText != null)
-        {
-            var lastModified = DateTimeOffset.ParseExact(lastModifiedText, "yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture);
-            <text>Dernière mise à jour <span title="@lastModified">@lastModified.ToRelativeTime()</span></text>
-        }
 
+    @if (categories != null && categories.Length != 0)
+    {
+        <span>
+            - catégories :
+            @foreach (var category in categories)
+            {
+                <a href="@settings.BaseUrl/category.html?name=@category">@category</a>
+            }
+        </span>
     }
+
 </footer>

@@ -1727,7 +1727,8 @@ namespace PathfinderFr.Markup.WikiFormatter
                 //sb.Append(@"<a href=""AllPages.aspx?Cat=");
                 //sb.Append(UrlTools.UrlEncode(a.Substring(2)));
                 sb.Append(@"<a href=""");
-                UrlTools.BuildUrl(sb, "AllPages.aspx?Cat=", UrlTools.UrlEncode(targetUrl.Substring(2)));
+                UrlTools.BuildUrl(sb, "category.html?name=", UrlTools.UrlEncode(targetUrl.Substring(2)));
+
                 sb.Append(@""" class=""systemlink"" title=""");
                 if (!isImage && title.Length > 0) sb.Append(nstripped);
                 else if (isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
