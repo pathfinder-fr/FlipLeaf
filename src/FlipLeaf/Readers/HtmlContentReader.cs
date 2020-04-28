@@ -54,7 +54,7 @@ namespace FlipLeaf.Readers
             return Task.FromResult(header);
         }
 
-        public async Task<ReadResult> ReadAsync(IStorageItem file)
+        public async Task<IReadResult> ReadAsync(IStorageItem file)
         {
             // 1) read all content
             var content = _fileSystem.ReadAllText(file);
@@ -69,7 +69,7 @@ namespace FlipLeaf.Readers
             // this call can be recusrive if there are multiple layouts
             content = await _liquid.ApplyLayoutAsync(content, context, _website).ConfigureAwait(false);
 
-            return new ReadResult(content, yamlHeader, "text/html");
+            return new ContentReadResult(content, yamlHeader, "text/html");
         }
     }
 }

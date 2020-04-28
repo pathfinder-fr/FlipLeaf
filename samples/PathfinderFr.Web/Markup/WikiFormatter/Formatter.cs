@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using PathfinderFr.Docs;
 
 namespace PathfinderFr.Markup.WikiFormatter
 {
@@ -107,39 +109,17 @@ namespace PathfinderFr.Markup.WikiFormatter
         /// <param name="forIndexing">A value indicating whether the formatting is being done for content indexing.</param>
         /// <param name="context">The formatting context.</param>
         /// <param name="current">The current Page (can be null).</param>
-        /// <returns>The formatted text.</returns>
-        public string Format(string raw, bool forIndexing, FormattingContext context, PageInfo current)
-        {
-            return Format(raw, forIndexing, context, current, out var tempLinks);
-        }
-
-        /// <summary>
-        /// Formats WikiMarkup, converting it into XHTML.
-        /// </summary>
-        /// <param name="raw">The raw WikiMarkup text.</param>
-        /// <param name="forIndexing">A value indicating whether the formatting is being done for content indexing.</param>
-        /// <param name="context">The formatting context.</param>
-        /// <param name="current">The current Page (can be null).</param>
         /// <param name="linkedPages">The linked pages, both existent and inexistent.</param>
         /// <returns>The formatted text.</returns>
-        public string Format(string raw, bool forIndexing, FormattingContext context, PageInfo current, out IList<string> linkedPages)
+        public string Format(
+            string raw,
+            bool forIndexing,
+            FormattingContext context,
+            PageInfo current,
+            out IList<string> linkedPages,
+            out WikiName redirect)
         {
-            return Format(raw, forIndexing, context, current, out linkedPages, false);
-        }
-
-        /// <summary>
-        /// Formats WikiMarkup, converting it into XHTML.
-        /// </summary>
-        /// <param name="raw">The raw WikiMarkup text.</param>
-        /// <param name="forIndexing">A value indicating whether the formatting is being done for content indexing.</param>
-        /// <param name="context">The formatting context.</param>
-        /// <param name="current">The current Page (can be null).</param>
-        /// <param name="linkedPages">The linked pages, both existent and inexistent.</param>
-        /// <param name="bareBones">A value indicating whether to format in bare-bones mode (for WYSIWYG editor).</param>
-        /// <returns>The formatted text.</returns>
-        public string Format(string raw, bool forIndexing, FormattingContext context, PageInfo current, out IList<string> linkedPages, bool bareBones)
-        {
-            // Bare Bones: Advanced tags, such as tables, toc, special tags, etc. are not formatted - used for Visual editor display
+            redirect = null;
 
             linkedPages = new string[0];
             var tempLinkedPages = new List<string>(10);
@@ -176,6 +156,7 @@ namespace PathfinderFr.Markup.WikiFormatter
             // Remove empty NoWiki and NoBr tags
             sb.Replace("<nowiki></nowiki>", "");
             sb.Replace("<nobr></nobr>", "");
+            sbToString = sb.ToString();
 
             ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
 
@@ -214,7 +195,11 @@ namespace PathfinderFr.Markup.WikiFormatter
                         {
                             destination = destination.Substring(1, destination.Length - 2);
                         }
-                        while (sb[match.Index] == '\n' && match.Index < sb.Length - 1) sb.Remove(match.Index, 1);
+
+                        while (sb[match.Index] == '\n' && match.Index < sb.Length - 1)
+                        {
+                            sb.Remove(match.Index, 1);
+                        }
 
                         if (!destination.StartsWith("++") && !destination.Contains(".") && current.FullName.Contains("."))
                         {
@@ -224,14 +209,18 @@ namespace PathfinderFr.Markup.WikiFormatter
 
                         destination = destination.Trim('+');
 
-                        var dest = _pages.FindPage(destination);
+                        var destinationName = new WikiName(destination);
+
+                        var dest = _pages.FindPage(destinationName.FullName);
                         if (dest != null)
                         {
                             Redirections.AddRedirection(current, dest);
+                            redirect = destinationName;
                         }
 
                         sbToString = sb.ToString();
                     }
+
                     ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
                 }
             }
@@ -244,20 +233,17 @@ namespace PathfinderFr.Markup.WikiFormatter
             ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
 
             // Before Producing HTML
-            if (!bareBones)
+            match = EscRegex.Match(sbToString);
+            while (match.Success)
             {
-                match = EscRegex.Match(sbToString);
-                while (match.Success)
+                if (!IsNoWikied(match.Index, noWikiBegin, noWikiEnd, out end))
                 {
-                    if (!IsNoWikied(match.Index, noWikiBegin, noWikiEnd, out end))
-                    {
-                        sb.Remove(match.Index, match.Length);
-                        sb.Insert(match.Index, match.Value.Substring(5, match.Length - 11).Replace("<", "&lt;").Replace(">", "&gt;"));
-                        sbToString = sb.ToString();
-                    }
-                    ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
-                    match = EscRegex.Match(sbToString, end);
+                    sb.Remove(match.Index, match.Length);
+                    sb.Insert(match.Index, match.Value.Substring(5, match.Length - 11).Replace("<", "&lt;").Replace(">", "&gt;"));
+                    sbToString = sb.ToString();
                 }
+                ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
+                match = EscRegex.Match(sbToString, end);
             }
 
             // Snippets and tables processing was here
@@ -386,33 +372,31 @@ namespace PathfinderFr.Markup.WikiFormatter
                 match = HardLineBreak.Match(sbToString, end);
             }
 
-            if (!bareBones)
+            NamespaceInfo ns = DetectNamespaceInfo(current);
+            match = SpecialTagRegex.Match(sbToString);
+            while (match.Success)
             {
-                NamespaceInfo ns = DetectNamespaceInfo(current);
-                match = SpecialTagRegex.Match(sbToString);
-                while (match.Success)
+                if (!IsNoWikied(match.Index, noWikiBegin, noWikiEnd, out end))
                 {
-                    if (!IsNoWikied(match.Index, noWikiBegin, noWikiEnd, out end))
+                    sb.Remove(match.Index, match.Length);
+                    if (!forIndexing)
                     {
-                        sb.Remove(match.Index, match.Length);
-                        if (!forIndexing)
+                        switch (match.Value.Substring(1, match.Value.Length - 2).ToUpperInvariant())
                         {
-                            switch (match.Value.Substring(1, match.Value.Length - 2).ToUpperInvariant())
-                            {
 
-                                case "CLEAR":
-                                    sb.Insert(match.Index, @"<div style=""clear: both;""></div>");
-                                    break;
-                                case "TOP":
-                                    sb.Insert(match.Index, @"<a href=""#PageTop"">" + Resources.Top + "</a>");
-                                    break;
-                            }
+                            case "CLEAR":
+                                sb.Insert(match.Index, @"<div style=""clear: both;""></div>");
+                                break;
+                            case "TOP":
+                                sb.Insert(match.Index, @"<a href=""#PageTop"">" + Resources.Top + "</a>");
+                                break;
                         }
-                        sbToString = sb.ToString();
                     }
-                    ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
-                    match = SpecialTagRegex.Match(sbToString, end);
+                    sbToString = sb.ToString();
                 }
+
+                ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
+                match = SpecialTagRegex.Match(sbToString, end);
             }
 
             match = ListRegex.Match(sbToString);
@@ -451,17 +435,10 @@ namespace PathfinderFr.Markup.WikiFormatter
                     }
                     catch
                     {
-                        if (!bareBones)
-                        {
-                            sb.Insert(match.Index,
-                                @"<b style=""color: #FF0000;"">FORMATTER ERROR (Malformed List)</b><br />");
-                        }
-                        else
-                        {
-                            sb.Insert(match.Index, match);
-                            end = match.Index + match.Length;
-                        }
+                        sb.Insert(match.Index,
+                            @"<b style=""color: #FF0000;"">FORMATTER ERROR (Malformed List)</b><br />");
                     }
+
                     sbToString = sb.ToString();
                 }
                 ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
@@ -501,14 +478,23 @@ namespace PathfinderFr.Markup.WikiFormatter
                 if (match.Value.Equals("[]") || match.Value.Equals("[[]]") || match.Value.Equals("[[]"))
                 {
                     sb.Remove(match.Index, match.Length);
-                    match = CurrentLinkRegex.Match(sb.ToString(), end);
+                    sbToString = sb.ToString();
+                    match = CurrentLinkRegex.Match(sbToString, end);
                     continue; // Prevents formatting emtpy links
                 }
 
-                var done = false;
-                if (match.Value.StartsWith("[[")) tmp = match.Value.Substring(2, match.Length - 4).Trim();
-                else tmp = match.Value.Substring(1, match.Length - 2).Trim();
                 sb.Remove(match.Index, match.Length);
+
+                var done = false;
+                if (match.Value.StartsWith("[["))
+                {
+                    tmp = match.Value.Substring(2, match.Length - 4).Trim();
+                }
+                else
+                {
+                    tmp = match.Value.Substring(1, match.Length - 2).Trim();
+                }
+
                 a = "";
                 n = "";
                 if (tmp.IndexOf("|") != -1)
@@ -569,7 +555,7 @@ namespace PathfinderFr.Markup.WikiFormatter
                                 if (title.Length > 0) dummy.Append(StripWikiMarkup(StripHtml(title.TrimStart('#'))));
                                 else dummy.Append(Resources.Image);
                                 dummy.Append(@""" />");
-                                img.Append(BuildLink(bigUrl, dummy.ToString(), true, title, forIndexing, bareBones, context, null, tempLinkedPages));
+                                img.Append(BuildLink(bigUrl, dummy.ToString(), true, title, forIndexing, false, context, null, tempLinkedPages));
                             }
                             else
                             {
@@ -613,7 +599,7 @@ namespace PathfinderFr.Markup.WikiFormatter
                                 if (title.Length > 0) dummy.Append(StripWikiMarkup(StripHtml(title.TrimStart('#'))));
                                 else dummy.Append(Resources.Image);
                                 dummy.Append(@""" />");
-                                img.Append(BuildLink(bigUrl, dummy.ToString(), true, title, forIndexing, bareBones, context, null, tempLinkedPages));
+                                img.Append(BuildLink(bigUrl, dummy.ToString(), true, title, forIndexing, false, context, null, tempLinkedPages));
                             }
                             else
                             {
@@ -628,12 +614,8 @@ namespace PathfinderFr.Markup.WikiFormatter
                         }
                         else
                         {
-                            if (!bareBones) sb.Insert(match.Index, @"<b style=""color: #FF0000;"">FORMATTER ERROR (Malformed Image Tag)</b>");
-                            else
-                            {
-                                sb.Insert(match.Index, match);
-                                end = match.Index + match.Length;
-                            }
+                            sb.Insert(match.Index, @"<b style=""color: #FF0000;"">FORMATTER ERROR (Malformed Image Tag)</b>");
+
                             done = true;
                         }
                     }
@@ -659,8 +641,9 @@ namespace PathfinderFr.Markup.WikiFormatter
                 }
                 if (!done)
                 {
-                    sb.Insert(match.Index, BuildLink(a, n, false, "", forIndexing, bareBones, context, current, tempLinkedPages));
+                    sb.Insert(match.Index, BuildLink(a, n, false, "", forIndexing, false, context, current, tempLinkedPages));
                 }
+
                 sbToString = sb.ToString();
                 ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
                 match = LinkRegex.Match(sbToString, end);
@@ -830,7 +813,7 @@ namespace PathfinderFr.Markup.WikiFormatter
                     dummy = new StringBuilder(200);
                     dummy.Append(@"<h4 class=""separator"">");
                     dummy.Append(h);
-                    if (!bareBones && !forIndexing)
+                    if (!forIndexing)
                     {
                         var id = BuildHAnchor(h, count.ToString());
                         BuildHeaderAnchor(dummy, id);
@@ -852,10 +835,10 @@ namespace PathfinderFr.Markup.WikiFormatter
                     sb.Remove(match.Index, match.Length);
                     h = match.Value.Substring(4, match.Value.Length - 8 - (match.Value.EndsWith("\n") ? 1 : 0));
                     dummy = new StringBuilder(200);
-                    if (current != null && !bareBones && !forIndexing) dummy.Append(BuildEditSectionLink(count, current.FullName));
+                    if (current != null && !forIndexing) dummy.Append(BuildEditSectionLink(count, current.FullName));
                     dummy.Append(@"<h3 class=""separator"">");
                     dummy.Append(h);
-                    if (!bareBones && !forIndexing)
+                    if (!forIndexing)
                     {
                         var id = BuildHAnchor(h, count.ToString());
                         BuildHeaderAnchor(dummy, id);
@@ -877,10 +860,10 @@ namespace PathfinderFr.Markup.WikiFormatter
                     sb.Remove(match.Index, match.Length);
                     h = match.Value.Substring(3, match.Value.Length - 6 - (match.Value.EndsWith("\n") ? 1 : 0));
                     dummy = new StringBuilder(200);
-                    if (current != null && !bareBones && !forIndexing) dummy.Append(BuildEditSectionLink(count, current.FullName));
+                    if (current != null && !forIndexing) dummy.Append(BuildEditSectionLink(count, current.FullName));
                     dummy.Append(@"<h2 class=""separator"">");
                     dummy.Append(h);
-                    if (!bareBones && !forIndexing)
+                    if (!forIndexing)
                     {
                         var id = BuildHAnchor(h, count.ToString());
                         BuildHeaderAnchor(dummy, id);
@@ -902,10 +885,10 @@ namespace PathfinderFr.Markup.WikiFormatter
                     sb.Remove(match.Index, match.Length);
                     h = match.Value.Substring(2, match.Value.Length - 4 - (match.Value.EndsWith("\n") ? 1 : 0));
                     dummy = new StringBuilder(200);
-                    if (current != null && !bareBones && !forIndexing) dummy.Append(BuildEditSectionLink(count, current.FullName));
+                    if (current != null && !forIndexing) dummy.Append(BuildEditSectionLink(count, current.FullName));
                     dummy.Append(@"<h1 class=""separator"">");
                     dummy.Append(h);
-                    if (!bareBones && !forIndexing)
+                    if (!forIndexing)
                     {
                         var id = BuildHAnchor(h, count.ToString());
                         BuildHeaderAnchor(dummy, id);
@@ -937,7 +920,7 @@ namespace PathfinderFr.Markup.WikiFormatter
 
             var tocString = BuildToc(hPos);
 
-            if (!bareBones && current != null)
+            if (current != null)
             {
                 match = TocRegex.Match(sbToString);
                 while (match.Success)
@@ -953,76 +936,79 @@ namespace PathfinderFr.Markup.WikiFormatter
                 }
             }
 
-            if (!bareBones)
+            match = SnippetRegex.Match(sbToString);
+            while (match.Success)
             {
-                match = SnippetRegex.Match(sbToString);
-                while (match.Success)
+                if (!IsNoWikied(match.Index, noWikiBegin, noWikiEnd, out end))
                 {
-                    if (!IsNoWikied(match.Index, noWikiBegin, noWikiEnd, out end))
+                    string? balanced = null;
+                    try
                     {
-                        string? balanced = null;
-                        try
-                        {
-                            // If the snippet is malformed this can explode
-                            balanced = ExpandToBalanceBrackets(sbToString, match.Index, match.Value);
-                        }
-                        catch { }
-
-                        if (balanced == null)
-                        {
-                            // Replace brackets with escaped values so that the snippets regex does not trigger anymore
-                            sb.Replace("{", "&#123;", match.Index, match.Length);
-                            sb.Replace("}", "&#125;", match.Index, match.Length);
-                            break; // Give up
-                        }
-                        else
-                        {
-                            sb.Remove(match.Index, balanced.Length);
-                        }
-
-                        if (balanced.IndexOf("}") == balanced.Length - 1)
-                        {
-                            // Single-level snippet
-                            sb.Insert(match.Index,
-                                Format(FormatSnippet(balanced, tocString), forIndexing, context, current, out var temp, bareBones).Trim('\n'));
-                            if (temp != null) tempLinkedPages.AddRange(temp);
-                        }
-                        else
-                        {
-                            // Nested snippet
-                            int lastOpen;
-                            do
-                            {
-                                lastOpen = balanced.LastIndexOf("{");
-                                var firstClosedAfterLastOpen = balanced.IndexOf("}", lastOpen + 1);
-
-                                if (lastOpen < 0 || firstClosedAfterLastOpen <= lastOpen) break; // Give up
-
-                                var internalSnippet = balanced.Substring(lastOpen, firstClosedAfterLastOpen - lastOpen + 1);
-                                balanced = balanced.Remove(lastOpen, firstClosedAfterLastOpen - lastOpen + 1);
-
-                                // This check allows to ignore special tags (especially Phase3)
-                                if (!internalSnippet.ToLowerInvariant().StartsWith("{s:"))
-                                {
-                                    internalSnippet = internalSnippet.Replace("{", "$$$$$$$$OPEN$$$$$$$$").Replace("}", "$$$$$$$$CLOSE$$$$$$$$");
-                                    balanced = balanced.Insert(lastOpen, internalSnippet);
-                                    continue;
-                                }
-
-                                var formattedInternalSnippet = FormatSnippet(internalSnippet, tocString);
-                                formattedInternalSnippet = Format(formattedInternalSnippet, forIndexing, context, current, out var temp, bareBones).Trim('\n');
-                                if (temp != null) tempLinkedPages.AddRange(temp);
-
-                                balanced = balanced.Insert(lastOpen, formattedInternalSnippet);
-                            } while (lastOpen != -1);
-
-                            sb.Insert(match.Index, balanced.Replace("$$$$$$$$OPEN$$$$$$$$", "{").Replace("$$$$$$$$CLOSE$$$$$$$$", "}"));
-                        }
-                        sbToString = sb.ToString();
+                        // If the snippet is malformed this can explode
+                        balanced = ExpandToBalanceBrackets(sbToString, match.Index, match.Value);
                     }
-                    ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
-                    match = SnippetRegex.Match(sbToString, end);
+                    catch { }
+
+                    if (balanced == null)
+                    {
+                        // Replace brackets with escaped values so that the snippets regex does not trigger anymore
+                        sb.Replace("{", "&#123;", match.Index, match.Length);
+                        sb.Replace("}", "&#125;", match.Index, match.Length);
+                        sbToString = sb.ToString();
+                        break; // Give up
+                    }
+                    else
+                    {
+                        sb.Remove(match.Index, balanced.Length);
+                    }
+
+                    if (balanced.IndexOf("}") == balanced.Length - 1)
+                    {
+                        // Single-level snippet
+                        var snippet = FormatSnippet(balanced, tocString);
+                        snippet = Format(snippet, forIndexing, context, current, out var innerLinkedPages, out var _);
+                        snippet = snippet.Trim('\n');
+                        sb.Insert(match.Index, snippet);
+                        if (innerLinkedPages != null) tempLinkedPages.AddRange(innerLinkedPages);
+                    }
+                    else
+                    {
+                        // Nested snippet
+                        int lastOpen;
+                        do
+                        {
+                            lastOpen = balanced.LastIndexOf("{");
+                            var firstClosedAfterLastOpen = balanced.IndexOf("}", lastOpen + 1);
+
+                            if (lastOpen < 0 || firstClosedAfterLastOpen <= lastOpen) break; // Give up
+
+                            var internalSnippet = balanced.Substring(lastOpen, firstClosedAfterLastOpen - lastOpen + 1);
+                            balanced = balanced.Remove(lastOpen, firstClosedAfterLastOpen - lastOpen + 1);
+
+                            // This check allows to ignore special tags (especially Phase3)
+                            if (!internalSnippet.ToLowerInvariant().StartsWith("{s:"))
+                            {
+                                internalSnippet = internalSnippet.Replace("{", "$$$$$$$$OPEN$$$$$$$$").Replace("}", "$$$$$$$$CLOSE$$$$$$$$");
+                                balanced = balanced.Insert(lastOpen, internalSnippet);
+                                sbToString = sb.ToString();
+                                continue;
+                            }
+
+                            var formattedInternalSnippet = FormatSnippet(internalSnippet, tocString);
+                            formattedInternalSnippet = Format(formattedInternalSnippet, forIndexing, context, current, out var innerLinkedPages, out _).Trim('\n');
+                            if (innerLinkedPages != null) tempLinkedPages.AddRange(innerLinkedPages);
+
+                            balanced = balanced.Insert(lastOpen, formattedInternalSnippet);
+                        } while (lastOpen != -1);
+
+                        sb.Insert(match.Index, balanced.Replace("$$$$$$$$OPEN$$$$$$$$", "{").Replace("$$$$$$$$CLOSE$$$$$$$$", "}"));
+                    }
+
+                    sbToString = sb.ToString();
                 }
+
+                ComputeNoWiki(sbToString, ref noWikiBegin, ref noWikiEnd);
+                match = SnippetRegex.Match(sbToString, end);
             }
 
             match = TableRegex.Match(sbToString);
@@ -1039,25 +1025,19 @@ namespace PathfinderFr.Markup.WikiFormatter
             }
 
             // Strip out all comments
-            if (!bareBones)
+            match = CommentRegex.Match(sbToString);
+            while (match.Success)
             {
-                match = CommentRegex.Match(sbToString);
-                while (match.Success)
-                {
-                    sb.Remove(match.Index, match.Length);
-                    sb.Insert(match.Index, " "); // This prevents the creation of additional blank lines
-                    match = CommentRegex.Match(sbToString, match.Index + 1);
-                }
+                sb.Remove(match.Index, match.Length);
+                sb.Insert(match.Index, " "); // This prevents the creation of additional blank lines
+                match = CommentRegex.Match(sbToString, match.Index + 1);
             }
 
             // Remove <nowiki> tags
-            if (!bareBones)
-            {
-                sb.Replace("<nowiki>", "");
-                sb.Replace("</nowiki>", "");
-            }
+            sb.Replace("<nowiki>", "");
+            sb.Replace("</nowiki>", "");
 
-            ProcessLineBreaks(sb, bareBones);
+            ProcessLineBreaks(sb, false);
 
             if (addedNewLineAtEnd)
             {
@@ -1068,7 +1048,7 @@ namespace PathfinderFr.Markup.WikiFormatter
             }
 
             // Append Attachments
-            if (!bareBones && attachments.Count > 0)
+            if (attachments.Count > 0)
             {
                 sb.Append(@"<div id=""AttachmentsDiv"">");
                 for (var i = 0; i < attachments.Count; i++)
@@ -1705,8 +1685,15 @@ namespace PathfinderFr.Markup.WikiFormatter
                 if (blank) sb.Append(@" target=""_blank""");
                 sb.Append(@" href=""");
                 //sb.Append(a);
-                if (targetUrl.ToLowerInvariant().StartsWith("getfile.aspx")) sb.Append(targetUrl);
-                else UrlTools.BuildUrl(sb, targetUrl);
+                if (targetUrl.ToLowerInvariant().StartsWith("getfile.aspx"))
+                {
+                    sb.Append(targetUrl);
+                }
+                else
+                {
+                    UrlTools.BuildUrl(sb, targetUrl);
+                }
+
                 sb.Append(@""" title=""");
                 if (!isImage && title.Length > 0) sb.Append(nstripped);
                 else if (isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
@@ -1716,164 +1703,176 @@ namespace PathfinderFr.Markup.WikiFormatter
                 else sb.Append(targetUrl);
                 sb.Append("</a>");
             }
+            else if (targetUrl.IndexOf(".aspx") != -1)
+            {
+                // The link points to a "system" page
+                sb.Append(@"<a");
+                if (!isImage) sb.Append(@" class=""systemlink""");
+                if (blank) sb.Append(@" target=""_blank""");
+                sb.Append(@" href=""");
+                //sb.Append(a);
+                UrlTools.BuildUrl(sb, targetUrl);
+                sb.Append(@""" title=""");
+                if (!isImage && title.Length > 0) sb.Append(nstripped);
+                else if (isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
+                else sb.Append(targetUrl);
+                sb.Append(@""">");
+                if (title.Length > 0) sb.Append(title);
+                else sb.Append(targetUrl);
+                sb.Append("</a>");
+            }
+            else if (targetUrl.StartsWith("c:") || targetUrl.StartsWith("C:"))
+            {
+                // Category link
+                //sb.Append(@"<a href=""AllPages.aspx?Cat=");
+                //sb.Append(UrlTools.UrlEncode(a.Substring(2)));
+                sb.Append(@"<a href=""");
+                UrlTools.BuildUrl(sb, "AllPages.aspx?Cat=", UrlTools.UrlEncode(targetUrl.Substring(2)));
+                sb.Append(@""" class=""systemlink"" title=""");
+                if (!isImage && title.Length > 0) sb.Append(nstripped);
+                else if (isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
+                else sb.Append(targetUrl.Substring(2));
+                sb.Append(@""">");
+                if (title.Length > 0) sb.Append(title);
+                else sb.Append(targetUrl.Substring(2));
+                sb.Append("</a>");
+            }
+            else if (targetUrl.Contains(":") || targetUrl.ToLowerInvariant().Contains("%3a") || targetUrl.Contains("&") || targetUrl.Contains("%26"))
+            {
+                sb.Append(@"<b style=""color: #FF0000;"">FORMATTER ERROR ("":"" and ""&"" not supported in Page Names)</b>");
+            }
             else
             {
-                if (targetUrl.IndexOf(".aspx") != -1)
+                // The link points to a wiki page
+                var explicitNamespace = false;
+                var tempLink = targetUrl;
+                if (tempLink.StartsWith("++"))
                 {
-                    // The link points to a "system" page
+                    tempLink = tempLink.Substring(2);
+                    targetUrl = targetUrl.Substring(2);
+                    explicitNamespace = true;
+                }
+
+                if (targetUrl.IndexOf("#") != -1)
+                {
+                    tempLink = targetUrl.Substring(0, targetUrl.IndexOf("#"));
+                    targetUrl = UrlTools.UrlEncode(targetUrl.Substring(0, targetUrl.IndexOf("#"))) + Settings.PageExtension + targetUrl.Substring(targetUrl.IndexOf("#"));
+                }
+                else
+                {
+                    targetUrl += Settings.PageExtension;
+                    // #468: Preserve ++ for ReverseFormatter
+                    targetUrl = (bareBones && explicitNamespace ? "++" : "") + UrlTools.UrlEncode(targetUrl);
+                }
+
+                var fullName = "";
+                if (!explicitNamespace)
+                {
+                    fullName = currentPage != null ?
+                         NameTools.GetFullName(NameTools.GetNamespace(currentPage.FullName), NameTools.GetLocalName(tempLink)) :
+                         tempLink;
+                }
+                else
+                {
+                    fullName = tempLink;
+                }
+
+                // Add linked page without repetitions
+                //linkedPages.Add(fullName);
+                var info = _pages.FindPage(fullName);
+                if (info != null)
+                {
+                    if (!linkedPages.Contains(info.Name.FullName))
+                    {
+                        linkedPages.Add(info.Name.FullName);
+                    }
+                }
+                else
+                {
+                    var lowercaseFullName = fullName.ToLowerInvariant();
+                    if (linkedPages.Find(p => { return p.ToLowerInvariant() == lowercaseFullName; }) == null)
+                    {
+                        linkedPages.Add(fullName);
+                    }
+                }
+
+                if (info == null)
+                {
                     sb.Append(@"<a");
-                    if (!isImage) sb.Append(@" class=""systemlink""");
+                    if (!isImage) sb.Append(@" class=""unknownlink""");
                     if (blank) sb.Append(@" target=""_blank""");
                     sb.Append(@" href=""");
                     //sb.Append(a);
-                    UrlTools.BuildUrl(sb, targetUrl);
+                    UrlTools.BuildUrl(sb, explicitNamespace ? "++" : "", targetUrl);
                     sb.Append(@""" title=""");
-                    if (!isImage && title.Length > 0) sb.Append(nstripped);
-                    else if (isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
-                    else sb.Append(targetUrl);
+                    /*if(!isImage && title.Length > 0) sb.Append(nstripped);
+                    else if(isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
+                    else sb.Append(tempLink);*/
+                    sb.Append(fullName);
                     sb.Append(@""">");
                     if (title.Length > 0) sb.Append(title);
-                    else sb.Append(targetUrl);
+                    else sb.Append(tempLink);
                     sb.Append("</a>");
                 }
                 else
                 {
-                    if (targetUrl.StartsWith("c:") || targetUrl.StartsWith("C:"))
+                    sb.Append(@"<a");
+                    if (!isImage) sb.Append(@" class=""pagelink""");
+                    if (blank) sb.Append(@" target=""_blank""");
+                    sb.Append(@" href=""");
+                    //sb.Append(a);
+                    if (explicitNamespace)
                     {
-                        // Category link
-                        //sb.Append(@"<a href=""AllPages.aspx?Cat=");
-                        //sb.Append(UrlTools.UrlEncode(a.Substring(2)));
-                        sb.Append(@"<a href=""");
-                        UrlTools.BuildUrl(sb, "AllPages.aspx?Cat=", UrlTools.UrlEncode(targetUrl.Substring(2)));
-                        sb.Append(@""" class=""systemlink"" title=""");
-                        if (!isImage && title.Length > 0) sb.Append(nstripped);
-                        else if (isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
-                        else sb.Append(targetUrl.Substring(2));
-                        sb.Append(@""">");
-                        if (title.Length > 0) sb.Append(title);
-                        else sb.Append(targetUrl.Substring(2));
-                        sb.Append("</a>");
-                    }
-                    else if (targetUrl.Contains(":") || targetUrl.ToLowerInvariant().Contains("%3a") || targetUrl.Contains("&") || targetUrl.Contains("%26"))
-                    {
-                        sb.Append(@"<b style=""color: #FF0000;"">FORMATTER ERROR ("":"" and ""&"" not supported in Page Names)</b>");
+                        UrlTools.BuildUrl(sb, "++", targetUrl);
                     }
                     else
                     {
-                        // The link points to a wiki page
-                        var explicitNamespace = false;
-                        var tempLink = targetUrl;
-                        if (tempLink.StartsWith("++"))
-                        {
-                            tempLink = tempLink.Substring(2);
-                            targetUrl = targetUrl.Substring(2);
-                            explicitNamespace = true;
-                        }
+                        UrlTools.BuildUrl(sb, info.Name.Namespace, ".", targetUrl);
+                    }
 
-                        if (targetUrl.IndexOf("#") != -1)
+                    sb.Append(@""" title=""");
+                    /*if(!isImage && title.Length > 0) sb.Append(nstripped);
+                    else if(isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
+                    else sb.Append(FormattingPipeline.PrepareTitle(Content.GetPageContent(info, false).Title, context, currentPage));*/
+
+                    if (forIndexing)
+                    {
+                        // When saving a page, the SQL Server provider calls IHost.PrepareContentForIndexing
+                        // If the content contains a reference to the page being saved, the formatter will call GetPageContent on SQL Server,
+                        // resulting in a transaction deadlock (the save transaction waits for the read transaction, while the latter
+                        // waits the the locks on the PageContent table being released)
+                        // See also Content.GetPageContent
+
+                        if (currentPage != null && currentPage.FullName == info.Name.FullName)
                         {
-                            tempLink = targetUrl.Substring(0, targetUrl.IndexOf("#"));
-                            targetUrl = UrlTools.UrlEncode(targetUrl.Substring(0, targetUrl.IndexOf("#"))) + Settings.PageExtension + targetUrl.Substring(targetUrl.IndexOf("#"));
+                            // Do not format title
+                            sb.Append(info.Name.FullName);
                         }
                         else
                         {
-                            targetUrl += Settings.PageExtension;
-                            // #468: Preserve ++ for ReverseFormatter
-                            targetUrl = (bareBones && explicitNamespace ? "++" : "") + UrlTools.UrlEncode(targetUrl);
-                        }
-
-                        var fullName = "";
-                        if (!explicitNamespace)
-                        {
-                            fullName = currentPage != null ?
-                                 NameTools.GetFullName(NameTools.GetNamespace(currentPage.FullName), NameTools.GetLocalName(tempLink)) :
-                                 tempLink;
-                        }
-                        else fullName = tempLink;
-
-                        // Add linked page without repetitions
-                        //linkedPages.Add(fullName);
-                        var info = _pages.FindPage(fullName);
-                        if (info != null)
-                        {
-                            if (!linkedPages.Contains(info.FullName)) linkedPages.Add(info.FullName);
-                        }
-                        else
-                        {
-                            var lowercaseFullName = fullName.ToLowerInvariant();
-                            if (linkedPages.Find(p => { return p.ToLowerInvariant() == lowercaseFullName; }) == null) linkedPages.Add(fullName);
-                        }
-
-                        if (info == null)
-                        {
-                            sb.Append(@"<a");
-                            if (!isImage) sb.Append(@" class=""unknownlink""");
-                            if (blank) sb.Append(@" target=""_blank""");
-                            sb.Append(@" href=""");
-                            //sb.Append(a);
-                            UrlTools.BuildUrl(sb, explicitNamespace ? "++" : "", targetUrl);
-                            sb.Append(@""" title=""");
-                            /*if(!isImage && title.Length > 0) sb.Append(nstripped);
-                            else if(isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
-                            else sb.Append(tempLink);*/
-                            sb.Append(fullName);
-                            sb.Append(@""">");
-                            if (title.Length > 0) sb.Append(title);
-                            else sb.Append(tempLink);
-                            sb.Append("</a>");
-                        }
-                        else
-                        {
-                            sb.Append(@"<a");
-                            if (!isImage) sb.Append(@" class=""pagelink""");
-                            if (blank) sb.Append(@" target=""_blank""");
-                            sb.Append(@" href=""");
-                            //sb.Append(a);
-                            UrlTools.BuildUrl(sb, explicitNamespace ? "++" : "", targetUrl);
-                            sb.Append(@""" title=""");
-                            /*if(!isImage && title.Length > 0) sb.Append(nstripped);
-                            else if(isImage && imageTitle.Length > 0) sb.Append(imageTitleStripped);
-                            else sb.Append(FormattingPipeline.PrepareTitle(Content.GetPageContent(info, false).Title, context, currentPage));*/
-
-                            if (forIndexing)
+                            // Try to format title
+                            var titleText = _pages.GetPageTitle(info, false);
+                            if (!string.IsNullOrEmpty(titleText))
                             {
-                                // When saving a page, the SQL Server provider calls IHost.PrepareContentForIndexing
-                                // If the content contains a reference to the page being saved, the formatter will call GetPageContent on SQL Server,
-                                // resulting in a transaction deadlock (the save transaction waits for the read transaction, while the latter
-                                // waits the the locks on the PageContent table being released)
-                                // See also Content.GetPageContent
-
-                                if (currentPage != null && currentPage.FullName == info.FullName)
-                                {
-                                    // Do not format title
-                                    sb.Append(info.FullName);
-                                }
-                                else
-                                {
-                                    // Try to format title
-                                    var titleText = _pages.GetPageTitle(info, false);
-                                    if (!string.IsNullOrEmpty(titleText))
-                                    {
-                                        sb.Append(PrepareItemTitle(titleText));
-                                    }
-                                    else sb.Append(info.FullName);
-                                }
+                                sb.Append(PrepareItemTitle(titleText));
                             }
-                            else
-                            {
-                                var titleText = _pages.GetPageTitle(info, false);
-                                titleText = PrepareItemTitle(titleText);
-                                sb.Append(titleText);
-                            }
-
-                            sb.Append(@""">");
-                            if (title.Length > 0) sb.Append(title);
-                            else sb.Append(tempLink);
-                            sb.Append("</a>");
+                            else sb.Append(info.Name.FullName);
                         }
                     }
+                    else
+                    {
+                        var titleText = _pages.GetPageTitle(info, false);
+                        titleText = PrepareItemTitle(titleText);
+                        sb.Append(titleText);
+                    }
+
+                    sb.Append(@""">");
+                    if (title.Length > 0) sb.Append(title);
+                    else sb.Append(tempLink);
+                    sb.Append("</a>");
                 }
             }
+
             return sb.ToString();
         }
 

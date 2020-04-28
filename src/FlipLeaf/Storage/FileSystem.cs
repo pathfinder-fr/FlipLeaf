@@ -458,7 +458,7 @@ namespace FlipLeaf.Storage
             {
                 if (obj is IStorageItem item)
                 {
-                    return item.RelativePath.EqualsOrdinal(this.FullPath);
+                    return item.RelativePath.EqualsOrdinal(this.RelativePath);
                 }
 
                 return base.Equals(obj);

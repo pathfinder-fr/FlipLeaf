@@ -2,7 +2,7 @@
 using System.IO;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
-namespace PathfinderFr.Mvc
+namespace PathfinderFr.TagHelpers
 {
     [HtmlTargetElement("user-menu")]
     public class UserMenuTagHelper : TagHelper

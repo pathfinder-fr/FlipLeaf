@@ -1,8 +1,25 @@
-﻿namespace FlipLeaf.Readers
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace FlipLeaf.Readers
 {
-    public class ReadResult
+    public interface IReadResult
     {
-        public ReadResult(string content, HeaderFieldDictionary headers, string contentType)
+
+    }
+
+    public class MvcActionReadResult : IReadResult
+    {
+        public MvcActionReadResult(IActionResult actionResult)
+        {
+            ActionResult = actionResult;
+        }
+
+        public IActionResult ActionResult { get; }
+    }
+
+    public class ContentReadResult : IReadResult
+    {
+        public ContentReadResult(string content, HeaderFieldDictionary headers, string contentType)
         {
             Content = content;
             Headers = headers;

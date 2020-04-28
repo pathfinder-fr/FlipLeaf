@@ -29,7 +29,8 @@ namespace PathfinderFr
         {
             services.AddRazorPages();
             services.AddHttpContextAccessor();
-            services.AddFlipLeaf(_config, useDefaultWebsiteIdentity: true);
+            services.AddFlipLeaf(_config, useDefaultWebsiteIdentity: false);
+            services.AddSingletonAllInterfaces<Website.PathfinderFrWebsiteIdentity>();
 
             services.AddSingletonAllInterfaces<Markup.WikiMarkup>();
             services.AddSingleton<IContentReader, Readers.WikiContentReader>();

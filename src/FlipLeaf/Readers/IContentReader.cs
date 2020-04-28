@@ -23,6 +23,6 @@ namespace FlipLeaf.Readers
 
         Task<HeaderFieldDictionary?> ReadHeaderAsync(IStorageItem file);
 
-        Task<ReadResult> ReadAsync(IStorageItem file);
+        Task<IReadResult> ReadAsync(IStorageItem file);
     }
 }

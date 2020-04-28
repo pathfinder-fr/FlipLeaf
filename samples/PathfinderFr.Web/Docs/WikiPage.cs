@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using FlipLeaf.Storage;
 
 namespace PathfinderFr.Docs
 {
+    [DebuggerDisplay("{Name} - {Title}")]
     public class WikiPage
     {
         private readonly IStorageItem _file;
@@ -10,13 +12,13 @@ namespace PathfinderFr.Docs
         public WikiPage(IStorageItem file, string fullName, string title, DateTimeOffset lastModified, string[] categories)
         {
             _file = file;
-            FullName = fullName;
+            Name = new WikiName(fullName);
             Title = title;
             LastModified = lastModified;
             Categories = categories;
         }
 
-        public string FullName { get; }
+        public WikiName Name { get; }
 
         public string Title { get; }
 
@@ -35,12 +37,35 @@ namespace PathfinderFr.Docs
         public string Content { get; }
     }
 
+    [DebuggerDisplay("{FullName}")]
     public class WikiName
     {
         public WikiName(string name)
         {
+            var i = name.IndexOf('#');
+            if (i != -1)
+            {
+                if (i == name.Length - 1)
+                {
+                    name = name.TrimEnd('#');
+                    Fragment = "#";
+                }
+                else if (i == 0)
+                {
+                    Fragment = name;
+                    name = string.Empty;
+                }
+                else
+                {
+                    Fragment = name.Substring(i);
+                    name = name.Substring(0, i);
+                }
+            }
+
             FullName = name ?? throw new ArgumentNullException(nameof(name));
-            var i = name.IndexOf('.');
+
+
+            i = name.IndexOf('.');
             if (i == -1)
             {
                 Namespace = string.Empty;
@@ -62,10 +87,30 @@ namespace PathfinderFr.Docs
                 Name = name.Substring(i + 1);
             }
         }
+        public WikiName(string @namespace, string name)
+        {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+
+            if (string.IsNullOrEmpty(@namespace))
+            {
+                Namespace = string.Empty;
+                Name = name;
+            }
+            else
+            {
+                Namespace = @namespace;
+                Name = name;
+            }
+        }
 
         public string FullName { get; }
+
         public string Namespace { get; }
+
         public string Name { get; }
+
+        public string Fragment { get; }
+
         public override string ToString() => FullName;
 
         public static implicit operator string(WikiName name) => name.FullName;

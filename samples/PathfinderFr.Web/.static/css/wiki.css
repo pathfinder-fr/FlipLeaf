@@ -1,0 +1,181 @@
+﻿@import url(contenteditor.css);
+
+/***********/
+/* TOOLBAR */
+/***********/
+
+#PageToolbarDiv { }
+#PageToolbarDiv a,
+#PageToolbarDiv input {
+    display: block;
+    float: right;
+    width: 18px;
+    height: 0 !important;
+    height /**/: 18px;
+    
+    margin-left: 2px;
+    padding: 18px 0 0 0;
+    overflow: hidden;
+    
+    border: solid 1px #fff;
+    color: #fff;
+    background: #fff none no-repeat center center;
+}
+
+#PageToolbarDiv a:hover,
+#PageToolbarDiv input:hover {
+    border: solid 1px #C7B9B3;
+}
+
+#PageToolbarDiv div { display: inline; }
+
+#DiscussLink, #EditLink, #HistoryLink, #ViewCodeLink, #BackLink, #PrintLink { font-size: 0; line-height: 16px; color: transparent; height: 16px; display: block; }
+
+#EditHistoryLinkDiv { margin-right: 44px; }
+
+#EditHistoryLinkDiv a {
+    float: right;
+    display: block;
+    margin: 0 1px;
+    padding: 2px 2px 2px 20px;
+
+    border: solid 1px #fff;
+    background: #fff none no-repeat 2px center;
+
+}
+
+#EditHistoryLinkDiv a:hover {
+    border: solid 1px #C7B9B3;
+}
+
+#DiscussLinkDiv a, a#DiscussLink { background-image: url(theme/wiki/balloon-light.png); }
+    #DiscussLinkDiv a:hover, a#DiscussLink:hover { background-image: url(theme/wiki/balloon.png); }
+
+
+#EditLinkDiv a, a#EditLink { background-image: url(theme/wiki/pencil-light.png); }
+    #EditLinkDiv a:hover, a#EditLink:hover { background-image: url(theme/wiki/pencil.png); }
+
+#ViewCodeLinkDiv a, a#ViewCodeLink { background-image: url(theme/wiki/edit-code-light.png); }
+    #ViewCodeLinkDiv a:hover, a#ViewCodeLink:hover { background-image: url(theme/wiki/edit-code.png); }
+
+#HistoryLinkDiv a, a#HistoryLink { background-image: url(theme/wiki/clock-history-light.png); }
+    #HistoryLinkDiv a:hover, a#HistoryLink:hover { background-image: url(theme/wiki/clock-history.png); }
+
+#AttachmentsLinkDiv a#AttachmentsLink { background-image: url(theme/wiki/paper-clip-light.png); }
+    #AttachmentsLinkDiv a:hover, a#AttachmentsLink:hover { background-image: url(theme/wiki/paper-clip.png); }
+
+#BackLinkDiv a, a#BackLink { background-image: url(theme/wiki/arrow-180-light.png); }
+    #BackLinkDiv a:hover, a#BackLink:hover { background-image: url(theme/wiki/arrow-180.png); }
+
+#PostMessageLinkDiv a, a#PostMessageLink { background-image: url(theme/wiki/balloon-plus-light.png); }
+    #PostMessageLinkDiv a:hover, a#PostMessageLink:hover { background-image: url(theme/wiki/balloon-plus.png); }
+
+#RssLinkDiv a { background-image: url(theme/wiki/feed-light.png); display: none; }
+    #RssLinkDiv a:hover { background-image: url(theme/wiki/feed.png); }
+
+#PrintLinkDiv { float: right; position: relative; top:-38px; }
+#PrintLinkDiv a { background: transparent url(theme/wiki/printer-light.png) no-repeat left center; padding: 2px 2px 2px 20px; }
+    #PrintLinkDiv a:hover { background-image: url(theme/wiki/printer.png); }
+
+#EmailNotificationDiv { float: right; position: relative; top:-38px; }
+#EmailNotificationDiv input { padding: 0; margin-right: 6px; }
+#EmailNotificationDiv input.inactivenotification { background: transparent url(theme/wiki/mail-plus-light.png) no-repeat center center; width: 16px; }
+    #EmailNotificationDiv input.inactivenotification:hover { background-image: url(theme/wiki/mail-plus.png); }
+#EmailNotificationDiv input.activenotification { background: transparent url(theme/wiki/mail-minus-light.png) no-repeat center center; width: 16px; }
+    #EmailNotificationDiv input.activenotification:hover { background-image: url(theme/wiki/mail-minus.png); }
+
+
+/***********/
+/* SIDEBAR */
+/***********/
+
+#sidebar .headeranchor { display: none; }
+
+/***********/
+/* CONTENT */
+/***********/
+
+#PageContentDiv { text-align: justify; margin-top: 18px; }
+
+#PageContentDiv, #PageContentDiv table { font-size: 13px; }
+
+#PageContentDiv img { border: 0; }
+
+#PageContentDiv a.editsectionlink {
+    display: block;
+    float: right;
+    width: 18px;
+    height: 0 !important;
+    height /**/: 18px;
+    
+    margin-top: 2px;
+    padding: 18px 0 0 0;
+    overflow: hidden;
+    background: #fff url(theme/wiki/pencil-small-light.png) no-repeat center center;
+}
+
+#PageContentDiv a.editsectionlink:hover {
+    background-image: url(theme/wiki/pencil-small.png);
+}
+
+#PageContentDiv h2 { margin: .5em 0; color: #4b3124; font-size: 13.5pt; }
+#PageContentDiv h2.separator { border-bottom: solid 1px #4b3124; }
+
+#PageContentDiv h3 { color: #4b3124; }
+
+#PageContentDiv h4 { color: #4b3124; }
+
+#PageContentDiv a { text-decoration: none; }
+#PageContentDiv a:hover { text-decoration: underline; }
+#PageContentDiv a.pagelink, #content a.systemlink { color: #24b; }
+#PageContentDiv a.unknownlink { color: #c33; }
+
+#PageContentDiv ul {
+    list-style-image: url(theme/bullet.png);
+    list-style-type: square;
+    padding-left: 17px;
+}
+
+#PageContentDiv table td { vertical-align: top; }
+
+#PageContentDiv .separator .headeranchor { visibility: hidden; text-decoration: none; margin-left: 4px; }
+#PageContentDiv .separator:hover .headeranchor { visibility: visible; }
+
+/*******/
+/* TOC */
+/*******/
+
+#TocContainer { float: right; }
+#TocContainer p.small { margin: 0; }
+#TocContainer #ExpandTocSpan { }
+
+#Toc { border: solid 1px #c7b9b3; background-color: #f3efe2; }
+#Toc p { margin: 0 2px; }
+
+/***************/
+/* PAGE LAYOUT */
+/***************/
+
+#PageInternalFooterDiv { font-size: .9em; margin-top: 4em; }
+    #PageInternalFooterDiv .inline { }
+    #PageInternalFooterDiv .inline ul { list-style: none; list-style-position: inside; padding: 0; margin: 0; display: inline; }
+    #PageInternalFooterDiv .inline ul li { display: inline; padding: 0 4px 0 0; margin: 0; }
+
+/******/
+/* SA */
+/******/
+
+#HeaderSADiv { width: 100%; }
+#NavigationSADiv { width: 100%; }
+#ContainerSADiv { width: 100% }
+
+/**********/
+/* EDITOR */
+/**********/
+
+#PageNameAndTitleDiv { width: 64%; }
+
+#EditorDiv { clear: both; }
+#EditorDiv textarea { border: solid 1px #c7b9b3; width: 100%; font-family: Consolas, Courier New, Sans-Serif; }
+
+#VisualEditorBody { font-family: Arial, Sans-Serif; font-size: 9pt; }

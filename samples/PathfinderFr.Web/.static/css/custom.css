@@ -1,2 +1,711 @@
-﻿/* Désactivation tags */
-div.tagsArea { display: none; }
+/********************/
+/* CLASSES GLOBALES */
+/********************/
+
+#PageContentDiv .right { float: right; }
+#PageContentDiv .left { float: left; }
+#PageContentDiv .txtright { text-align: right; }
+#PageContentDiv .txtleft { text-align: left; }
+#PageContentDiv .txtcenter { text-align: center; }
+#PageContentDiv .fright { float: right; margin: 0 0 8px 8px; }
+#PageContentDiv .fleft { float: left; margin: 0 8px 8px 0; }
+#PageContentDiv .centre { margin-left: auto; margin-right: auto; }
+#PageContentDiv img.centre { display: block; }
+#PageContentDiv .cadre { padding: 8px; border: 1px solid #4b3124; }
+#PageContentDiv .sansmodif .editsectionlink { display: none; }
+#PageContentDiv .espaceul li { padding-bottom: 8px }
+
+#PageContentDiv .blocMain {
+	border: 1px solid #e7dfc6;
+	background-color: #f3efe2;
+	padding: 4px;
+	width: 840px;
+	margin-left: auto;
+	margin-right: auto;
+}
+#PageContentDiv .descBlocMain {
+	padding-bottom: 2px;
+	margin-bottom: 0;
+	font-style: italic;
+	text-transform: uppercase;
+	color: #4b3124;
+}
+
+/**********/
+/* TABLES */
+/**********/
+
+#PageContentDiv table.top td,
+#PageContentDiv table.top th { vertical-align: top; }
+#PageContentDiv table.page { width: 100% }
+#PageContentDiv table.espace-col td { padding: 0 8px; }
+#PageContentDiv table.deuxcol td { width: 50%; }
+#PageContentDiv table.troiscol td { width: 33%; }
+#PageContentDiv table.quatrecol td { width: 25%; }
+
+/************/
+/* ARTICLES */
+/************/
+
+#PageContentDiv div.article_2col,
+#PageContentDiv div.article_3col {
+  text-align: justify;
+  -moz-column-gap: 1.5em;
+  -moz-column-rule: 1px solid #4b3124;
+  -webkit-column-gap: 1.5em;
+  -webkit-column-rule: 1px solid #4b3124;
+  column-gap: 1.5em;
+  column-rule: 1px solid #4b3124;  
+}
+
+#PageContentDiv div.article_2col {
+  -moz-column-count: 2;
+  -webkit-column-count: 2;
+  column-count: 2;
+}
+
+#PageContentDiv div.article_3col {
+  -moz-column-count: 3;
+  -webkit-column-count: 3;
+  column-count: 3;
+}
+
+#PageContentDiv div.chapeau {
+  padding: 8px 12px;
+  border: 0px;
+  background-color: #f3efe2;
+  color: #4b3124;
+  -webkit-box-shadow: 5px 5px 2px #e7dfc6;
+  box-shadow: 5px 5px 2px #e7dfc6;
+}
+
+/**********/
+/* DIVERS */
+/**********/
+
+#PageContentDiv .dit {
+  color: #337733;
+  font-style: italic;
+  font-family:georgia,garamond,serif;
+}
+
+#PageContentDiv .fondclair {
+  background-color: #f3efe2;
+}
+
+/**********************/
+/* QUESTIONS/RÉPONSES */
+/**********************/
+
+#PageContentDiv .question {
+  background-color: #f3efe2;
+  background: -moz-linear-gradient(top,#e7dfc6,#f3efe2);
+  background: -webkit-linear-gradient(linear,center top,center bottom,from(#e7dfc6),to(#f3efe2));
+  font-weight: bold;
+  padding: 6px 2px;
+}
+
+/********************/
+/* Feuille de perso */
+/********************/
+
+#PageContentDiv .fdpdiv {
+  clear: left;
+}
+
+#PageContentDiv .fdpdiv div.fdptab {
+  border: 1px solid #4b3124;
+  padding: 6px 6px 6px 0;
+  margin-bottom: 12px;
+}
+
+#PageContentDiv .fdpdiv div.fdptab table {
+  text-align: left;
+  width: 100%
+}
+
+#PageContentDiv .fdpdiv div.fdptab td {
+  padding: 0px 6px;
+}
+
+#PageContentDiv .fdpdiv p.fdptitre {
+  width:100%;
+  text-align: center;
+  margin-bottom: 6px;
+  padding: 6px 0px;
+  background-color: #4b3124;
+  color: #f3efe2;
+  font-size: 150%;
+  font-weight: bold;
+}
+
+#PageContentDiv .fdpdiv p.fdpst {
+  width: 100%;
+  border-bottom: 3px solid #4b3124;
+  background-color: #f3efe2;
+  padding: 3px;
+  margin: 0 0 3px 0;
+  text-transform: uppercase;
+  font-size: 120%;
+  font-weight: bold;
+}
+
+#PageContentDiv .fdpdiv p.fdpta {
+  width: 100%;
+  background-color: #EFEFEF;
+  padding: 3px;
+  font-family: monospace;
+  font-size: 90%;
+}
+
+#PageContentDiv .fdpdiv ul,
+#PageContentDiv .fdpdiv p {
+  margin-top: 2px;
+  text-align: left;
+}
+
+#PageContentDiv .fdpdiv textarea {
+  border: 0;
+}
+
+#PageContentDiv .fdpdiv a {
+  color: blue;
+}
+
+/*********************/
+/* Blocs descriptifs */
+/*********************/
+
+#PageContentDiv .BD {
+  width: 400px;
+  font-family: corbel, trebuchet ms, verdana, sans-serif;
+  font-size: 13px;
+  text-align: left;
+}
+
+#PageContentDiv .BD .BDtitre {
+  background-color: #4b3124;
+  color: #fff;
+  font-weight: bold;
+  padding: 1px 3px 1px 3px;
+  text-indent: 0;
+  font-size: large;
+}
+
+#PageContentDiv .BD div.box {
+    display: block;
+    border: none;
+}
+
+#PageContentDiv .BD .BDsoustitre,
+#PageContentDiv .BD div.box {
+  background-color: #f3efe2;
+  color: black;
+  padding: 0 1px 0 1px;
+  text-transform: uppercase;
+  font-weight: bold;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  text-indent: 0;
+  margin: 1px 0;
+}
+
+#PageContentDiv .BD .BDtexte {
+  padding: 1px 0 1px 8px;
+  text-indent: -8px;
+  text-align: left;
+}
+
+#PageContentDiv .BD .BDsorts {
+  padding: 1px 0 1px 16px;
+  text-indent: -8px;
+  text-align: left;
+  font-size: 105%
+}
+
+#PageContentDiv .BD ul .BDsoustitre,
+#PageContentDiv .BD ul div.box { margin-left: -8px; }
+
+#PageContentDiv .BD ul ul .BDsoustitre,
+#PageContentDiv .BD ul ul div.box { margin-left: -16px; }
+
+#PageContentDiv .BD ul {
+    list-style: none none inside;
+    margin: 0;
+    padding: 0;
+}
+
+#PageContentDiv .BD li {
+  margin: 0;
+  padding: 1px 0 1px 8px;
+  text-indent: -8px;
+  text-align: left;
+}
+
+#PageContentDiv .BD li p {
+  margin: 0 0 -12px -8px;
+  padding: 0;
+  text-indent: 8px;
+}
+
+/**********/
+/* Listes */
+/**********/
+
+ul.espaceli li {
+  margin: 6px 0;
+}
+
+ul.espaceli li:first-child {
+  margin-top: 0;
+}
+
+ul.espaceli li:last-child {
+  margin-bottom: 0;
+}
+
+
+
+/*************/
+/* Bestiaire */
+/*************/
+
+#PageContentDiv table.Bestiaire td:first-child {
+  padding-right: 12px;
+}
+
+#PageContentDiv table.Bestiaire td:last-child {
+}
+
+#PageContentDiv table.Bestiaire td:last-child div {
+  padding: 8px;
+  border: 1px solid #4b3124;
+  background-color: #f3efe2;
+}
+
+/*********************/
+/* Texte descriptif */
+/********************/
+
+#PageContentDiv .description {
+  color: gray;
+  font-style: italic;
+  font-size: 90%;
+}
+
+#PageContentDiv .descriptionnoir {
+  font-style: italic;
+  font-size: 90%;
+}
+
+/***********/
+/* MENUTOP */
+/***********/
+
+#PageContentDiv .menutop {
+  padding: 8px;
+  border: 1px solid #4b3124;
+  background-color: #f3efe2;
+}
+
+/****************/
+/* PRESENTATION */
+/****************/
+
+#PageContentDiv .presentation {
+  padding: 4px;
+  border: 1px solid #4b3124;
+  background-color: #f3efe2;
+}
+
+#PageContentDiv .presentation.doublePaddingLR{
+  padding: 4px 8px;
+}
+
+#PageContentDiv .navmenu {
+  margin: 0px 0px 12px 0px;
+  /*width: 99%;*/
+  border-radius: 6px;
+  -webkit-border-radius: 6px;
+  text-align: center;
+}
+
+#PageContentDiv .navmenu table {
+  font-size: 90%;
+  width: 100%;
+  text-align: left;
+  margin: 0
+}
+
+#PageContentDiv .navmenudroite {
+  float: right;
+  margin: 0 0 12px 12px;
+  border-radius: 6px;
+  -webkit-border-radius: 6px;
+}
+
+#PageContentDiv .navmenudroite p {
+  margin-top: 6px;
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+#PageContentDiv .navmenudroite ul {
+  font-size: 90%;
+}
+
+#PageContentDiv .arrondi {
+  border-radius: 6px;
+  -webkit-border-radius: 6px;
+}
+
+#PageContentDiv .recentre {
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+#PageContentDiv .ombre {
+  -webkit-box-shadow: 5px 5px 3px #4b3124;
+  box-shadow: 5px 5px 3px #4b3124;
+}
+
+#PageContentDiv .espaceliste li {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+  
+#PageContentDiv .presentation h2,
+#PageContentDiv .presentation h2.separator {
+  background-color: #4b3124;
+  color: #fff;
+  padding: 4px;
+  border: 0;
+  margin: 0;
+  margin-bottom: 4px;
+  text-align: center;
+  font-size: 11pt;
+}
+
+#PageContentDiv .presentation h3 {
+  border-bottom: 3px solid #4b3124;
+  text-align: center;
+}
+
+#PageContentDiv .presentation .editsectionlink { display: none; }
+#PageContentDiv .presentation .headeranchor { display: none; }
+
+/***************/
+/* LISTECACHEE */
+/***************/
+
+#PageContentDiv .cadrebas {
+  background-color: #f3efe2;
+  border-left: 1px solid #4b3124;
+  border-right: 1px solid #4b3124;
+  border-bottom: 1px solid #4b3124;
+  margin-bottom: 6px;
+  font-size: 85%;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  -webkit-border-radius-bottomleft: 8px;
+  -webkit-border-radius-bottomright: 8px;
+}
+
+/********/
+/* BLOC */
+/********/
+
+#PageContentDiv div.bloc {
+  margin: 0 0 10px 10px;
+  padding: 5px;
+  float: right;
+  background-color: #ddd;
+  width: 140px;
+  font-size: 8pt;
+}
+
+/* Utilisé pour masquer le lien "modifier" sur les boites latérales */
+#PageContentDiv div.bloc .editsectionlink { display: none; }
+
+#PageContentDiv div.bloc h3 { 
+  margin: 0 0 3px 0;
+  padding: 3px;
+  background-color: #666;
+  color: #eee;
+  text-align: center;
+}
+
+#PageContentDiv div.bloc ul {
+  list-style-image: none; /* On efface l'image */
+  list-style-type: disc;
+}
+
+#PageContentDiv div.bloc li { }
+
+#PageContentDiv div.bloc hr { }
+
+/**************/
+/* VOIR AUSSI */
+/**************/
+
+#PageContentDiv .voiraussi { }
+#PageContentDiv .voiraussi h4 {
+    line-height: 12px;
+    overflow: hidden;
+    margin: 4px 0 4px 0;
+    padding-left: 16px;
+    
+    font-size: 16px;
+    font-weight: bold;
+    
+    background: transparent url(images/theme/disc.png) no-repeat left center;
+    color: #4b3124;
+}
+
+#PageContentDiv .voiraussi ul {
+    margin: 0;
+    padding: .5em 0 .5em 9px;
+    
+    list-style: none none inside; 
+    
+    border: solid 1px #4b3124;
+    background: #f3efe2 url(images/theme/globe.png) no-repeat right top;
+    color: #4b3124;
+}
+
+#PageContentDiv .voiraussi li {
+    color: #000;
+    background: transparent url(images/theme/square4.png) no-repeat left 6px;
+    padding-left: 10px;
+}
+
+/************/
+/* COLONNES */
+/************/
+
+#PageContentDiv .row * { box-sizing: border-box; }
+#PageContentDiv .row:before, .row:after { display: table; content: " "; box-sizing: border-box; }
+#PageContentDiv .row:after { clear: both }
+#PageContentDiv .row .col { position: relative; padding: 0 10px; float: left; }
+#PageContentDiv .row .col:first-child  { padding-left: 0; }
+#PageContentDiv .row .col:last-child { padding-right: 0; }
+#PageContentDiv .row .col-1 { width: 8.33333333%; }
+#PageContentDiv .row .col-2 { width: 16.66666667%; }
+#PageContentDiv .row .col-3 { width: 25%; }
+#PageContentDiv .row .col-4 { width: 33.33333333%; }
+#PageContentDiv .row .col-5 { width: 41.66666667%; }
+#PageContentDiv .row .col-6 { width: 50%; }
+#PageContentDiv .row .col-7 { width: 58.33333333%; }
+#PageContentDiv .row .col-8 { width: 66.66666667%; }
+#PageContentDiv .row .col-9 { width: 75%; }
+#PageContentDiv .row .col-10 { width: 83.33333333%; }
+#PageContentDiv .row .col-11 { width: 91.66666667%; }
+#PageContentDiv .row .col-12 { width: 100%; }
+
+/************/
+/* TABLEAUX */
+/************/
+
+#PageContentDiv table.tablo {
+  border-collapse: collapse; /* Indispensable pour que les bordures soient "fusionnées" */
+}
+
+/* Titre du tableau */
+/* ---------------- */
+
+#PageContentDiv table.tablo caption {
+  background-color: #4b3124;
+  color: #fff;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 4px;
+  margin-bottom: 6px;
+}
+
+/* Contenu */
+/* ------- */
+
+#PageContentDiv table.tablo tr {
+  vertical-align: top;
+}
+#PageContentDiv table.tablo tr td {
+  border-top: 1px solid #e7dfc6;
+  text-align: center;
+  padding: 4px;
+}
+#PageContentDiv table.toutgauche tr td {
+  text-align: left;
+}
+#PageContentDiv table.tablo tr td:first-child {
+  text-align: left;
+}
+#PageContentDiv table.col1centre tr td:first-child {
+  text-align: center;
+}
+
+/* Titres */
+/* ------ */
+
+#PageContentDiv table.tablo tr.titre td {
+  border-top: 0;
+  background-color: transparent;
+  font-weight: bold;
+  padding: 0 4px 4px 4px;
+  text-align: center;
+}
+#PageContentDiv table.toutgauche tr.titre td {
+  text-align: left;
+}
+#PageContentDiv table.tablo tr.titre td:first-child {
+  text-align: left;
+}
+#PageContentDiv table.col1centre tr.titre td:first-child {
+  text-align: center;
+}
+#PageContentDiv table.tablo tr.titre td.avecsoustitre {
+  padding: 0 4px 0px 4px;
+}
+#PageContentDiv table.tablo tr.soustitre td {
+  border-top: 0;
+  background-color: #FFFFFF;
+  font-weight: normal;
+  text-align: center;
+  font-size: 85%;
+}
+
+/* Exceptions */
+/* ---------- */
+
+#PageContentDiv table.tablo tr td.gauche {
+  text-align: left;
+}
+
+#PageContentDiv table.tablo tr td.centre {
+  text-align: center;
+}
+
+#PageContentDiv table.tablo tr.premier td {
+  border-top: 2px solid black;
+}
+
+#PageContentDiv table.tablo tr.lignesup td {
+  border-top: 1px solid black;
+}
+
+#PageContentDiv table.tablo tr.dernier td {
+  border-bottom: 2px solid black;
+}
+
+#PageContentDiv table.tablo tr.alt {
+  background-color: #f3efe2;
+}
+
+#PageContentDiv table.autoalt tr.alt {
+  background-color: #fff;
+}
+
+#PageContentDiv table.autoalt tr:nth-child(odd) {
+  background-color: #f3efe2;
+}
+
+#PageContentDiv table.autoalt tr.titre td {
+  background-color: #fff;
+}
+
+#PageContentDiv table.tablo tr:hover {
+  background-color: #ffc;
+}
+
+/* Notes */
+/* ----- */
+
+#PageContentDiv table.tablo tr.note td, #PageContentDiv table.tablo td.note {
+  padding: 2px 20px 2px 20px;
+  font-size: x-small;
+  font-style: italic;
+  text-align: left
+}
+
+/**************/
+/* CATEGORIES */
+/**************/
+
+#PageCategoriesDiv { clear: both; }
+
+#PageCategoriesDiv h4 {
+    margin: 4px 0 4px 0;
+    padding-left: 16px;
+    
+    font-size: 16px;
+    font-weight: bold;
+    
+    background: transparent url(images/theme/disc.png) no-repeat left center;
+    color: #4b3124;
+}
+
+#CategoriesSpan {
+    margin: 0;
+    padding: .5em 0 .5em 9px;    
+    border: solid 1px #4b3124;
+    background: #f3efe2 none no-repeat right top;
+    color: #4b3124;
+}
+
+/***************************************/
+/* Blocs descriptifs 2 (pas utilisé ?) */
+/***************************************/
+
+#PageContentDiv .BD2 {
+  width: 400px;
+  font-family: corbel, trebuchet ms, verdana, sans-serif;
+  font-size: 105%;
+}
+
+#PageContentDiv .BD2 .DBtitre,
+#PageContentDiv .BD2 .Titre {
+  background-color: #4b3124;
+  color: #fff;
+  font-weight: bold;
+  padding: 1px 3px 1px 3px;
+  text-indent: 0;
+  font-size: large;
+}
+
+#PageContentDiv .BD2 .FP {
+    float: right;
+}
+
+#PageContentDiv .BD2 .SousTitre,
+#PageContentDiv .BD2 .BDsoustitre {
+  background-color: #f3efe2;
+  color: black;
+  padding: 0 1px 0 1px;
+  text-transform: uppercase;
+  font-weight: bold;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  text-indent: 0;
+  margin: 1px 0;
+}
+
+#PageContentDiv .BD2 ul .BDsoustitre { margin-left: -8px; }
+
+#PageContentDiv .BD2 ul {
+    list-style: none none inside;
+    margin: 0;
+    padding: 0;
+}
+
+#PageContentDiv .BD2 li {
+  margin: 0;
+  padding: 1px 0 1px 8px;
+  text-indent: -8px;
+  text-align: left;
+}
+
+#PageContentDiv .BD2 .BDsorts {
+  padding: 1px 0 1px 16px;
+  text-indent: -8px;
+  text-align: left;
+  font-size: 105%
+}

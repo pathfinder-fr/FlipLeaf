@@ -20,7 +20,7 @@ namespace PathfinderFr.Markup.WikiFormatter
             _wiki = wiki;
         }
 
-        public string GetPageTitle(WikiPage info, bool v) => _wiki.GetPage((WikiName)info.FullName)?.Title;
+        public string GetPageTitle(WikiPage info, bool v) => _wiki.GetPage((WikiName)info.Name.FullName)?.Title;
 
         public WikiPage FindPage(string destination) => _wiki.GetPage((WikiName)destination);
 

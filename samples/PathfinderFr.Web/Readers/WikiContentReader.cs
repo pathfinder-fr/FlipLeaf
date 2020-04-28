@@ -5,6 +5,7 @@ using FlipLeaf.Markup;
 using FlipLeaf.Readers;
 using FlipLeaf.Storage;
 using FlipLeaf.Website;
+using Microsoft.AspNetCore.Mvc;
 using PathfinderFr.Markup;
 
 namespace PathfinderFr.Readers
@@ -48,8 +49,16 @@ namespace PathfinderFr.Readers
                 return false;
             }
 
-            var diskPath = Regex.Replace(requestFile.RelativePath, @"\.(?!html)", "/", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-            diskPath = Regex.Replace(diskPath, ".html$", ".txt", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            // replace default index page by MainPage.html
+            var diskPath = requestFile.RelativePath;
+            if (requestFile.Name == "index.html")
+            {
+                diskPath = Regex.Replace(diskPath, @"index\.html$", "MainPage.html", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            }
+
+            // replace dotted filename by directory : Namespace.Page.html  => Namespace/Page.txt
+            diskPath = Regex.Replace(diskPath, @"\.(?!html$)", "/", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            diskPath = Regex.Replace(diskPath, @"\.html$", ".txt", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
             diskFile = _fileSystem.GetItem(diskPath);
             return _fileSystem.FileExists(diskFile);
@@ -67,7 +76,7 @@ namespace PathfinderFr.Readers
             return Task.FromResult(header);
         }
 
-        public Task<ReadResult> ReadAsync(IStorageItem file)
+        public Task<IReadResult> ReadAsync(IStorageItem file)
         {
             // 1) read all content
             var content = _fileSystem.ReadAllText(file);
@@ -75,13 +84,20 @@ namespace PathfinderFr.Readers
             // 2) parse yaml header
             var yamlHeader = _yaml.ParseHeader(content, out content);
 
+            yamlHeader["title"] = yamlHeader["Title"];
+
             // 3) extract wiki page infos
             var page = _wiki.GetPage(file, yamlHeader);
 
             // 3) parse wiki
-            content = _wiki.Render(content, page);
+            content = _wiki.Render(content, page, out var redirect);
 
-            return Task.FromResult(new ReadResult(content, yamlHeader, "text/html"));
+            if (redirect != null)
+            {
+                return Task.FromResult<IReadResult>(new MvcActionReadResult(new RedirectResult($"{redirect.FullName}.html{redirect.Fragment}")));
+            }
+
+            return Task.FromResult<IReadResult>(new ContentReadResult(content, yamlHeader, "text/html"));
         }
     }
 }

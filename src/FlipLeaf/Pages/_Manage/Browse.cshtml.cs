@@ -84,7 +84,7 @@ namespace FlipLeaf.Pages._Manage
             this.Directories = directories;
             this.Files = files;
 
-            _git.SetLastCommit(directory.RelativePath, this.Files.ToDictionary(f => f.Path.Name, f => f), (f, date) => f.WithCommit(date));
+            //_git.SetLastCommit(directory.RelativePath, this.Files.ToDictionary(f => f.Path.Name, f => f), (f, date) => f.WithCommit(date));
 
             return Page();
         }

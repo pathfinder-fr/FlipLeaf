@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FlipLeaf.Readers;
 using FlipLeaf.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -95,36 +96,48 @@ namespace FlipLeaf.Pages._Render
                     staticContentType = "application/octet-stream";
                 }
 
+                if (!_fileSystem.FileExists(diskFile))
+                {
+                    return NotFound();
+                }
+
                 return PhysicalFile(diskFile.FullPath, staticContentType);
             }
 
             // ok, now we engage the reader
-            var parsedFile = await diskFileReader.ReadAsync(diskFile);
+            var readResult = await diskFileReader.ReadAsync(diskFile);
+
+            if (readResult is MvcActionReadResult actionResult)
+            {
+                return actionResult.ActionResult;
+            }
+
+            var contentResult = (Readers.ContentReadResult)readResult;
 
             // git: retrieve latest commit
             var commit = _git.LogFile(diskFile.RelativePath, 1).FirstOrDefault();
 
-            if (parsedFile.ContentType == "text/html")
+            if (contentResult.ContentType == "text/html")
             {
-                this.Html = parsedFile.Content;
-                this.Items = parsedFile.Headers;
+                this.Html = contentResult.Content;
+                this.Items = contentResult.Headers;
                 this.Path = diskFile.RelativePath;
                 this.ManagePath = _fileSystem.GetDirectoryItem(diskFile).RelativePath;
-                this.LastUpdate = commit?.Authored ?? DateTimeOffset.Now;
+                this.LastUpdate = commit?.Authored ?? DateTimeOffset.MinValue;
 
                 // we automatically use the "title" yaml header as the Page Title
-                if (parsedFile.Headers.TryGetValue(KnownFields.Title, out var pageTitle) && pageTitle != null)
+                if (contentResult.Headers.TryGetValue(KnownFields.Title, out var pageTitle) && pageTitle != null)
                 {
-                    this.Title = pageTitle.ToString() ?? string.Empty;
+                    ViewData["Title"] = this.Title = pageTitle.ToString() ?? string.Empty;
                 }
 
                 return Page();
             }
 
-            var contentType = parsedFile.ContentType;
+            var contentType = contentResult.ContentType;
 
             // explicit content type found in headers
-            if (parsedFile.Headers.TryGetValue(KnownFields.ContentType, out var contentTypeObj) && contentTypeObj is string headerContentType)
+            if (contentResult.Headers.TryGetValue(KnownFields.ContentType, out var contentTypeObj) && contentTypeObj is string headerContentType)
             {
                 contentType = headerContentType;
             }
@@ -139,7 +152,7 @@ namespace FlipLeaf.Pages._Render
                 }
             }
 
-            return Content(parsedFile.Content, contentType);
+            return Content(contentResult.Content, contentType);
         }
     }
 }
