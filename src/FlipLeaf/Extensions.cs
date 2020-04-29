@@ -4,12 +4,12 @@ namespace FlipLeaf
 {
     public static class Extensions
     {
-        public static bool EqualsOrdinal(this string? @this, string? other)
+        public static bool EqualsOrdinal(this string? @this, string? other, bool ignoreCase = false)
         {
             if (@this == null && other == null) return true;
             if (@this == null || other == null) return false;
 
-            return string.Equals(@this, other, StringComparison.Ordinal);
+            return string.Equals(@this, other, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
         public static string ToRelativeTime(this DateTimeOffset? @this)

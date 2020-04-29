@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using FlipLeaf.Storage;
 
@@ -19,48 +20,60 @@ namespace FlipLeaf.Readers
 
         public void Read(IStorageItem file, IDictionary<string, object> data)
         {
+            // read json document
             JsonDocument jsonDoc;
             using (var fs = _fileSystem.OpenRead(file))
             {
                 jsonDoc = JsonDocument.Parse(fs);
             }
 
-            var i = 0;
-            foreach (var part in file.RelativeDirectoryParts())
-            {
-                if (i != 0)
-                {
-                    if (!data.TryGetValue(part, out var partValue) || !(partValue is IDictionary<string, object> partDict))
-                    {
-                        partDict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-                        data[part] = partDict;
-                    }
+            // find valid data position by traversing path and filename
+            // we ignore the first part (folder _data)
+            var parts = file.RelativeDirectoryParts().Skip(1);
 
-                    data = partDict;
+            // we add the filename as a part of the key unless the filename starts with character '_' : 
+            // it will allow creating a directory with multiple files for the same array, if all files starts with _.
+            if (!file.Name.StartsWith("_"))
+            {
+                parts = parts.Append(Path.GetFileNameWithoutExtension(file.Name));
+            }
+
+            // the key for list will be stored in the last part of the path
+            var key = parts.Last();
+
+            // we browse each part to resolve the dictionary where the list must be set
+            foreach (var part in parts.SkipLast(1))
+            {
+                if (!data.TryGetValue(part, out var partValue) || !(partValue is IDictionary<string, object> partDict))
+                {
+                    partDict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                    data[part] = partDict;
                 }
 
-                i++;
+                data = partDict;
             }
 
-            var key = Path.GetFileNameWithoutExtension(file.Name);
 
-            object? value;
-            if (!data.TryGetValue(key, out var dataItem) || dataItem == null)
+            if (data != null)
             {
-                value = Convert(jsonDoc.RootElement);
-            }
-            else
-            {
-                value = Merge(dataItem, jsonDoc.RootElement);
-            }
+                object? value;
+                if (data.TryGetValue(key, out var existingValue) && existingValue != null)
+                {
+                    value = Merge(existingValue, jsonDoc.RootElement);
+                }
+                else
+                {
+                    value = Convert(jsonDoc.RootElement);
+                }
 
-            if (value != null)
-            {
-                data[key] = value;
+                if (value != null)
+                {
+                    data[key] = value;
+                }
             }
         }
 
-        private object? Merge(object source, JsonElement jsonElement)
+        internal static object? Merge(object source, JsonElement jsonElement)
         {
             switch (jsonElement.ValueKind)
             {
@@ -93,7 +106,7 @@ namespace FlipLeaf.Readers
             }
         }
 
-        private object? Convert(JsonElement jsonElement)
+        internal static object? Convert(JsonElement jsonElement)
         {
             switch (jsonElement.ValueKind)
             {

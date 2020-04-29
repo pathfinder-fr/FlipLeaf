@@ -10,10 +10,16 @@ namespace FlipLeaf
     {
         public static void UseFlipLeaf(this IApplicationBuilder app, IWebHostEnvironment environment)
         {
-            var settings = (FlipLeafSettings)app.ApplicationServices.GetService(typeof(FlipLeafSettings));
-
             // SourcePath validation
-            var sourcePath = settings.SourcePath;
+            var settings = (FlipLeafSettings)app.ApplicationServices.GetService(typeof(FlipLeafSettings));
+            settings.SourcePath = ValidateSourcePath(environment, settings.SourcePath);
+
+            // initialize website
+            ExecuteComponentLoad(app);
+        }
+
+        private static string ValidateSourcePath(IWebHostEnvironment environment, string sourcePath)
+        {
             if (!Path.IsPathRooted(sourcePath))
             {
                 sourcePath = new Uri(Path.Combine(environment.ContentRootPath, sourcePath)).LocalPath;
@@ -24,12 +30,16 @@ namespace FlipLeaf
                 Directory.CreateDirectory(sourcePath);
             }
 
-            settings.SourcePath = sourcePath;
+            return sourcePath;
+        }
 
-            // initialize website
+        private static void ExecuteComponentLoad(IApplicationBuilder app)
+        {
             var fileSystem = app.ApplicationServices.GetService<Storage.IFileSystem>();
             var docStore = app.ApplicationServices.GetService<Website.IDocumentStore>();
-            foreach (var component in app.ApplicationServices.GetServices<Website.IWebsiteComponent>())
+            var components = app.ApplicationServices.GetServices<Website.IWebsiteComponent>();
+
+            foreach (var component in components)
             {
                 component.OnLoad(fileSystem, docStore);
             }

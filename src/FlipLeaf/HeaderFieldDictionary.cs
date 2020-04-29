@@ -15,9 +15,10 @@ namespace FlipLeaf
 
         public IEnumerable<T> GetCollection<T>(string name)
         {
-            var objects = this.GetValueOrDefault(name) as IEnumerable<object>;
-            if (objects == null)
+            if (!(this.GetValueOrDefault(name) is IEnumerable<object> objects))
+            {
                 return Enumerable.Empty<T>();
+            }
 
             return objects.Cast<T>();
         }

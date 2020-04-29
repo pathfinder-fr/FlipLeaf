@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FlipLeaf.Readers;
 using FlipLeaf.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -67,7 +66,7 @@ namespace FlipLeaf.Pages._Render
 
             // try to determine if a reader accepts this request
             Readers.IContentReader? diskFileReader = null;
-            IStorageItem? diskFile = null;
+            Storage.IStorageItem? diskFile = null;
             foreach (var reader in _readers)
             {
                 if (reader.AcceptRequest(file, out diskFile))
@@ -83,7 +82,7 @@ namespace FlipLeaf.Pages._Render
                 // if the file is HTML we redirect to the editor (if enabled)
                 if (file.IsHtml())
                 {
-                    return Redirect( $"{_settings.BaseUrl}/_manage/edit/{path}");
+                    return Redirect($"{_settings.BaseUrl}/_manage/edit/{path}");
                 }
 
                 // if the file does not exists, 404
@@ -110,9 +109,9 @@ namespace FlipLeaf.Pages._Render
             // ok, now we engage the reader
             var readResult = await diskFileReader.ReadAsync(diskFile);
 
-            if (readResult is MvcActionReadResult actionResult)
+            if (readResult is Readers.RedirectReadResult actionResult)
             {
-                return actionResult.ActionResult;
+                return Redirect(actionResult.Url);
             }
 
             var contentResult = (Readers.ContentReadResult)readResult;

@@ -7,14 +7,14 @@ namespace FlipLeaf.Readers
 
     }
 
-    public class MvcActionReadResult : IReadResult
+    public class RedirectReadResult : IReadResult
     {
-        public MvcActionReadResult(IActionResult actionResult)
+        public RedirectReadResult(string url)
         {
-            ActionResult = actionResult;
+            this.Url = url;
         }
 
-        public IActionResult ActionResult { get; }
+        public string Url { get; }
     }
 
     public class ContentReadResult : IReadResult

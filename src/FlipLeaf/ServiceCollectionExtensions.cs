@@ -27,12 +27,13 @@ namespace FlipLeaf
             services.AddSingleton<Website.IWebsiteComponent, Templating.FormTemplateManager>();
 
             // content readers
-            services.AddSingleton<Readers.IContentReader, Readers.HtmlContentReader>();
-            services.AddSingleton<Readers.IContentReader, Readers.MarkdownContentReader>();
-            services.AddSingleton<Readers.IContentReader, Readers.JsonContentReader>();
+            services.AddContentReader<Readers.HtmlContentReader>();
+            services.AddContentReader<Readers.MarkdownContentReader>();
+            services.AddContentReader<Readers.JsonContentReader>();
 
             // data readers
-            services.AddSingleton<Readers.IDataReader, Readers.JsonDataReader>();
+            services.AddDataReader<Readers.JsonDataReader>();
+            services.AddDataReader<Readers.JsonLineDataReader>();
 
             // website
             services.AddSingleton<Website.IDocumentStore, Website.DocumentStore>();
@@ -40,6 +41,12 @@ namespace FlipLeaf
 
             if (useDefaultWebsiteIdentity) services.AddSingleton<Website.IWebsiteIdentity, Website.WebsiteIdentity>();
         }
+
+        public static void AddContentReader<T>(this IServiceCollection services) where T : class, Readers.IContentReader
+            => services.AddSingleton<Readers.IContentReader, T>();
+
+        public static void AddDataReader<T>(this IServiceCollection services) where T : class, Readers.IDataReader
+            => services.AddSingleton<Readers.IDataReader, T>();
 
         public static void AddSingletonAllInterfaces<T>(this IServiceCollection services)
             where T : class

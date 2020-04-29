@@ -70,7 +70,7 @@ namespace PathfinderFr.Readers
 
             if (!_yaml.TryParseHeader(reader, out var header, out _))
             {
-                return Task.FromResult<HeaderFieldDictionary?>(null);
+                return Task.FromResult<HeaderFieldDictionary>(null);
             }
 
             return Task.FromResult(header);
@@ -94,7 +94,7 @@ namespace PathfinderFr.Readers
 
             if (redirect != null)
             {
-                return Task.FromResult<IReadResult>(new MvcActionReadResult(new RedirectResult($"{redirect.FullName}.html{redirect.Fragment}")));
+                return Task.FromResult<IReadResult>(new RedirectReadResult($"{redirect.FullName}.html{redirect.Fragment}"));
             }
 
             return Task.FromResult<IReadResult>(new ContentReadResult(content, yamlHeader, "text/html"));

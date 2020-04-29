@@ -20,7 +20,7 @@ namespace PathfinderFr.Pages._Render
 
         public IEnumerable<CategoryPageModel> Pages { get; private set; }
 
-        public IActionResult OnGet(string? name = null)
+        public IActionResult OnGet(string name = null)
         {
             if (string.IsNullOrEmpty(name))
             {
