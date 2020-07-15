@@ -4,6 +4,18 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <Nullable>enable</Nullable>
+    <Version>1.0.0-alpha-002</Version>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Title>FlipLeaf Core Library</Title>
+    <Description>Base library to build lite CMS Website</Description>
+    <Authors>Thomas BOLON</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://gitlab.com/pathfinder-fr/pf2-flipleaf.git</RepositoryUrl>
+    <PackageProjectUrl>https://gitlab.com/pathfinder-fr/flipleaf</PackageProjectUrl>
+
   </PropertyGroup>
 
   <ItemGroup>
