@@ -9,11 +9,11 @@
     <PackageReference Include="LibGit2Sharp" Version="0.26.2" />
     <PackageReference Include="Dapper" Version="2.0.35" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/FlipLeaf/FlipLeaf.csproj" />
+    <!--<ProjectReference Include="../../src/FlipLeaf/FlipLeaf.csproj" />-->
+    <PackageReference Include="FlipLeaf" Version="1.0.0-alpha-003" />
   </ItemGroup>
 
   <ItemGroup>
