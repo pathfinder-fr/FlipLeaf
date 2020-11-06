@@ -30,14 +30,18 @@ namespace FlipLeaf.Pages._Manage
             Path = string.Empty;
         }
 
+        [BindProperty]
         public string Path { get; set; }
 
-        [Display]
+        [Display(Name = "Content")]
+        [BindProperty]
         public string? PageContent { get; set; }
 
         [Display]
+        [BindProperty]
         public string? Comment { get; set; }
 
+        [BindProperty]
         public string? Action { get; set; }
 
         public IActionResult OnGet(string path)
@@ -94,7 +98,7 @@ namespace FlipLeaf.Pages._Manage
             }
             else
             {
-                return RedirectToPage("Show");
+                return RedirectToPage("Show", new { path });
             }
         }
     }

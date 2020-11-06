@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/FlipLeaf.Web/bin/Debug/netcoreapp3.1/FlipLeaf.Web.dll",
+            "program": "${workspaceFolder}/src/FlipLeaf.Web/bin/Debug/net5.0/FlipLeaf.Web.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/FlipLeaf.Web",
+            "cwd": "${workspaceFolder}/src/FlipLeaf.Web",
             "stopAtEntry": false,
             // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
             "serverReadyAction": {
@@ -23,7 +23,7 @@
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
             "sourceFileMap": {
-                "/Views": "${workspaceFolder}/Views"
+                "/Pages": "${workspaceFolder}/src/FlipLeaf.Web/Pages"
             }
         },
         {

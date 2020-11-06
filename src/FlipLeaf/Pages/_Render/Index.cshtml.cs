@@ -59,9 +59,11 @@ namespace FlipLeaf.Pages._Render
 
             // default file
             // if the full path designates a directory, we change the fullpath to the default document
+            var isDefaultFile = false;
             if (_fileSystem.DirectoryExists(file))
             {
                 file = _fileSystem.Combine(file, KnownFiles.DefaultDocument);
+                isDefaultFile = true;
             }
 
             // try to determine if a reader accepts this request
@@ -82,6 +84,14 @@ namespace FlipLeaf.Pages._Render
                 // if the file is HTML we redirect to the editor (if enabled)
                 if (file.IsHtml())
                 {
+                    if (isDefaultFile)
+                    {
+                        var originalFile = _fileSystem.GetItem(path);
+                        // should not happen, we juste made the same call at the beginning of this method
+                        if(originalFile == null) throw new InvalidOperationException($"Unable to get originalFile for {path} despite having resolved it just now");
+                        path = _fileSystem.Combine(originalFile, KnownFiles.DefaultMarkdown).RelativePath;
+                    }
+
                     return Redirect($"{_settings.BaseUrl}/_manage/edit/{path}");
                 }
 

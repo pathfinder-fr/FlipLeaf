@@ -36,5 +36,7 @@
     public static class KnownFiles
     {
         public const string DefaultDocument = "index.html";
+
+        public const string DefaultMarkdown = "index.md";
     }
 }
