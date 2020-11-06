@@ -5,14 +5,28 @@ using Microsoft.Extensions.Hosting;
 
 namespace FlipLeaf
 {
+    /// <summary>
+    /// Contains default program entry point for a FlipLeaf app.
+    /// </summary>
     public static class FlipLeafProgram
     {
-        public static void Main(string[] args) => Host
-            .CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((hostingContext, config) => config.AddEnvironmentVariables())
-            .ConfigureWebHostDefaults(builder => builder.UseWebRoot(@".static").UseStartup<Startup>())
-            .Build()
-            .Run()
-            ;
+        /// <summary>
+        /// Default program entry point for a standard FlipLeaf app.
+        /// </summary>
+        public static void Main(string[] args) => Main<FlipLeafStartup>(args);
+
+        /// <summary>
+        /// Default program entry point for a standard FlipLeaf app, with a custom <typeparamref name="TStartup"/> startup class.
+        /// </summary>
+        public static void Main<TStartup>(string[] args)
+            where TStartup : class
+        {
+            Host
+                .CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((hostingContext, config) => config.AddEnvironmentVariables())
+                .ConfigureWebHostDefaults(builder => builder.UseWebRoot(@".static").UseStartup<TStartup>())
+                .Build()
+                .Run();
+        }
     }
 }

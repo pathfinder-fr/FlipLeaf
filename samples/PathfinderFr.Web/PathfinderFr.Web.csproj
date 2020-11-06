@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!--<ProjectReference Include="../../src/FlipLeaf/FlipLeaf.csproj" />-->
-    <PackageReference Include="FlipLeaf" Version="1.0.0-alpha-003" />
+    <ProjectReference Include="../../src/FlipLeaf/FlipLeaf.csproj" />
+    <!--<PackageReference Include="FlipLeaf" Version="1.0.0-alpha-003" />-->
   </ItemGroup>
 
   <ItemGroup>

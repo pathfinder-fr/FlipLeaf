@@ -6,18 +6,28 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FlipLeaf
 {
-
-    public class Startup
+    /// <summary>
+    /// Contains default startup class for a FlipLeaf app.
+    /// </summary>
+    /// <remarks>
+    /// You can inherit from this class and register your custom services by overriding the <see cref="ConfigureServices(IServiceCollection)"/> method.
+    /// </remarks>
+    public class FlipLeafStartup
     {
         private readonly IConfiguration _config;
 
-        public Startup(IConfiguration config) => _config = config;
+        public FlipLeafStartup(IConfiguration config)
+        {
+            _config = config;
+        }
 
-        public void ConfigureServices(IServiceCollection services)
+        protected IConfiguration Config => _config;
+
+        public virtual void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
             services.AddHttpContextAccessor();
-            services.AddFlipLeaf(_config, useDefaultWebsiteIdentity: true);
+            services.AddFlipLeaf(_config);
             services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
         }
 

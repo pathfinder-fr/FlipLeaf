@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace FlipLeaf
 {
@@ -8,8 +9,7 @@ namespace FlipLeaf
         public static void AddFlipLeaf(
             this IServiceCollection services,
             IConfiguration configuration,
-            string section = "FlipLeaf",
-            bool useDefaultWebsiteIdentity = false)
+            string section = "FlipLeaf")
         {
             var settings = configuration.GetSection(section).Get<FlipLeafSettings>() ?? new FlipLeafSettings();
             services.AddSingleton(settings);
@@ -39,7 +39,15 @@ namespace FlipLeaf
             services.AddSingleton<Website.IDocumentStore, Website.DocumentStore>();
             services.AddSingletonAllInterfaces<Website.Website>();
 
-            if (useDefaultWebsiteIdentity) services.AddSingleton<Website.IWebsiteIdentity, Website.WebsiteIdentity>();
+            // default empty identity
+            services.AddSingleton<Website.IWebsiteIdentity, Website.WebsiteIdentity>();
+        }
+
+        public static void AddCustomIdentity<T>(this IServiceCollection services)
+            where T : class, Website.IWebsiteIdentity
+        {
+            services.RemoveAll<Website.IWebsiteIdentity>();
+            services.AddSingletonAllInterfaces<T>();
         }
 
         public static void AddContentReader<T>(this IServiceCollection services) where T : class, Readers.IContentReader
@@ -55,20 +63,6 @@ namespace FlipLeaf
             foreach (var i in typeof(T).GetInterfaces())
             {
                 services.AddSingleton(i, s => s.GetRequiredService<T>());
-            }
-        }
-
-        public static void AddSingletonAllInterfaces<TPrimaryService, TImplementation>(this IServiceCollection services)
-            where TImplementation : class, TPrimaryService
-            where TPrimaryService : class
-        {
-            services.AddSingleton<TPrimaryService, TImplementation>();
-            foreach (var i in typeof(TImplementation).GetInterfaces())
-            {
-                if (i != typeof(TPrimaryService))
-                {
-                    services.AddSingleton(i, s => s.GetRequiredService<TPrimaryService>());
-                }
             }
         }
     }
