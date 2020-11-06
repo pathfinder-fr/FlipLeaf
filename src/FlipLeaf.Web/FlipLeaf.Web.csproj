@@ -8,10 +8,11 @@
 
   <ItemGroup>
     <ProjectReference Include="../FlipLeaf/FlipLeaf.csproj" />
+    <ProjectReference Include="../FlipLeaf.Manage/FlipLeaf.Manage.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include=".static\**" />
+    <Content Include=".static/**" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">

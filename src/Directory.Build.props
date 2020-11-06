@@ -1,0 +1,12 @@
+<Project>
+ <PropertyGroup>
+   <Deterministic>true</Deterministic>
+ </PropertyGroup>
+
+ <PropertyGroup>
+    <Authors>Thomas BOLON</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://gitlab.com/pathfinder-fr/Flipleaf.git</RepositoryUrl>
+    <PackageProjectUrl>https://gitlab.com/pathfinder-fr/Flipleaf</PackageProjectUrl>
+  </PropertyGroup>
+</Project>
