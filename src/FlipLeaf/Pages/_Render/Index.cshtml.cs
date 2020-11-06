@@ -43,7 +43,6 @@ namespace FlipLeaf.Pages._Render
 
         public DateTimeOffset LastUpdate { get; set; }
 
-
         public async Task<IActionResult> OnGetAsync(string path)
         {
             var file = _fileSystem.GetItem(path);
@@ -52,13 +51,14 @@ namespace FlipLeaf.Pages._Render
                 return NotFound();
             }
 
+            // browsing dot and underscore prefixed directories is not allowed
             if (file.RelativePath.StartsWith('.') || file.RelativePath.StartsWith('_'))
             {
-                return Redirect($"{_settings.BaseUrl}/");
+                return NotFound();
             }
 
             // default file
-            // if the full path designates a directory, we change the fullpath to the default document
+            // if the full path designates a directory, we change the path to the default document
             var isDefaultFile = false;
             if (_fileSystem.DirectoryExists(file))
             {
@@ -68,7 +68,7 @@ namespace FlipLeaf.Pages._Render
 
             // try to determine if a reader accepts this request
             Readers.IContentReader? diskFileReader = null;
-            Storage.IStorageItem? diskFile = null;
+            IStorageItem? diskFile = null;
             foreach (var reader in _readers)
             {
                 if (reader.AcceptRequest(file, out diskFile))
@@ -88,7 +88,7 @@ namespace FlipLeaf.Pages._Render
                     {
                         var originalFile = _fileSystem.GetItem(path);
                         // should not happen, we juste made the same call at the beginning of this method
-                        if(originalFile == null) throw new InvalidOperationException($"Unable to get originalFile for {path} despite having resolved it just now");
+                        if (originalFile == null) throw new InvalidOperationException($"Unable to get originalFile for {path} despite having resolved it just now");
                         path = _fileSystem.Combine(originalFile, KnownFiles.DefaultMarkdown).RelativePath;
                     }
 
@@ -116,7 +116,7 @@ namespace FlipLeaf.Pages._Render
                 return PhysicalFile(diskFile.FullPath, staticContentType);
             }
 
-            // ok, now we engage the reader
+            // ok, now we start using the reader
             var readResult = await diskFileReader.ReadAsync(diskFile);
 
             if (readResult is Readers.RedirectReadResult actionResult)
@@ -131,16 +131,16 @@ namespace FlipLeaf.Pages._Render
 
             if (contentResult.ContentType == "text/html")
             {
-                this.Html = contentResult.Content;
-                this.Items = contentResult.Headers;
-                this.Path = diskFile.RelativePath;
-                this.ManagePath = _fileSystem.GetDirectoryItem(diskFile).RelativePath;
-                this.LastUpdate = commit?.Authored ?? DateTimeOffset.MinValue;
+                Html = contentResult.Content;
+                Items = contentResult.Headers;
+                Path = diskFile.RelativePath;
+                ManagePath = _fileSystem.GetDirectoryItem(diskFile).RelativePath;
+                LastUpdate = commit?.Authored ?? DateTimeOffset.MinValue;
 
                 // we automatically use the "title" yaml header as the Page Title
                 if (contentResult.Headers.TryGetValue(KnownFields.Title, out var pageTitle) && pageTitle != null)
                 {
-                    ViewData["Title"] = this.Title = pageTitle.ToString() ?? string.Empty;
+                    ViewData["Title"] = Title = pageTitle.ToString() ?? string.Empty;
                 }
 
                 return Page();
