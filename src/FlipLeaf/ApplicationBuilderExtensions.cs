@@ -11,7 +11,12 @@ namespace FlipLeaf
         public static void UseFlipLeaf(this IApplicationBuilder app, IWebHostEnvironment environment)
         {
             // SourcePath validation
-            var settings = (FlipLeafSettings)app.ApplicationServices.GetService(typeof(FlipLeafSettings));
+            var settings = (FlipLeafSettings?)app.ApplicationServices.GetService(typeof(FlipLeafSettings));
+            if (settings == null)
+            {
+                throw new InvalidOperationException($"Type FlipLeafSettings must be registered");
+            }
+
             settings.SourcePath = ValidateSourcePath(environment, settings.SourcePath);
 
             // initialize website
@@ -37,6 +42,9 @@ namespace FlipLeaf
         {
             var fileSystem = app.ApplicationServices.GetService<Storage.IFileSystem>();
             var docStore = app.ApplicationServices.GetService<Website.IDocumentStore>();
+
+            if (fileSystem == null || docStore == null) return;
+
             var components = app.ApplicationServices.GetServices<Website.IWebsiteComponent>();
 
             foreach (var component in components)

@@ -42,11 +42,19 @@ namespace FlipLeaf.Templating
         private FormTemplate ParseJsonTemplate(IFileSystem fileSystem, IStorageItem item)
         {
             var templateSource = fileSystem.ReadAllText(item);
-            return JsonSerializer.Deserialize<FormTemplate>(templateSource, new JsonSerializerOptions
+
+            var formTemplate = JsonSerializer.Deserialize<FormTemplate>(templateSource, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
                 Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
             });
+
+            if (formTemplate == null)
+            {
+                throw new ArgumentException($"Unable to load template from json item {item}");
+            }
+
+            return formTemplate;
         }
 
         private FormTemplate ParseYamlTemplate(IFileSystem fileSystem, IStorageItem item)

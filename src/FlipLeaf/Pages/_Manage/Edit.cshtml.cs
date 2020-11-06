@@ -32,6 +32,7 @@ namespace FlipLeaf.Pages._Manage
             _docStore = docStore;
             _fileSystem = fileSystem;
             _yaml = yaml;
+            Path = string.Empty;
         }
 
         public string Path { get; set; }
@@ -42,7 +43,7 @@ namespace FlipLeaf.Pages._Manage
 
         [Display]
         [BindProperty]
-        public string? Content { get; set; }
+        public string? PageContent { get; set; }
 
         [BindProperty]
         public string? TemplateName { get; set; }
@@ -96,7 +97,7 @@ namespace FlipLeaf.Pages._Manage
             this.Form = formValues;
             this.TemplateName = templateName;
             this.FormTemplate = formTemplate;
-            this.Content = content;
+            this.PageContent = content;
 
             return Page();
         }
@@ -151,7 +152,7 @@ namespace FlipLeaf.Pages._Manage
 
                 writer.WriteLine("---");
 
-                writer.Write(this.Content);
+                writer.Write(PageContent);
 
                 _fileSystem.WriteAllText(file, writer.ToString());
             }

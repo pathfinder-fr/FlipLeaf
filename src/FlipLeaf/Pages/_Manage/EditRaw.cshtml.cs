@@ -27,12 +27,13 @@ namespace FlipLeaf.Pages._Manage
             _docStore = docStore;
             _fileSystem = fileSystem;
             _yaml = yaml;
+            Path = string.Empty;
         }
 
         public string Path { get; set; }
 
         [Display]
-        public string? Content { get; set; }
+        public string? PageContent { get; set; }
 
         [Display]
         public string? Comment { get; set; }
@@ -62,7 +63,7 @@ namespace FlipLeaf.Pages._Manage
 
             // handle raw view
             this.Path = path;
-            this.Content = content;
+            this.PageContent = content;
 
             return Page();
         }
@@ -81,7 +82,7 @@ namespace FlipLeaf.Pages._Manage
                 return NotFound();
             }
 
-            _fileSystem.WriteAllText(fileItem, this.Content ?? string.Empty);
+            _fileSystem.WriteAllText(fileItem, this.PageContent ?? string.Empty);
 
             var websiteUser = _website.GetWebsiteUser();
             _git.Commit(user, websiteUser, path, this.Comment);

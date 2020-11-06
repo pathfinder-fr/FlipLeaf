@@ -95,14 +95,14 @@
     </div>
 
     <div class="form-group">
-        <label asp-for="Content">
-            @(Model.FormTemplate.ContentName ?? "Content")
+        <label asp-for="PageContent">
+            @(Model.FormTemplate.ContentName ?? "PageContent")
             @if (!string.IsNullOrWhiteSpace(Model.FormTemplate.ContentDescription))
             {
                 <small class="text-muted mt-1 ml-2">@Model.FormTemplate.ContentDescription</small>
             }
         </label>
-        <textarea asp-for="Content" rows="10" class="form-control"></textarea>
+        <textarea asp-for="PageContent" rows="10" class="form-control"></textarea>
 
     </div>
 

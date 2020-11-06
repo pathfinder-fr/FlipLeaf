@@ -83,16 +83,18 @@ namespace PathfinderFr.Markup.WikiFormatter
         public static bool AreNamespaceEquals(NamespaceInfo ns1, NamespaceInfo ns2) => AreNamespaceEquals(ns1 != NamespaceInfo.Empty ? ns1.Name : null, ns2 != NamespaceInfo.Empty ? ns2.Name : null);
 
         /// <summary />
-        public static bool AreNamespaceEquals(string? ns1, string? ns2)
+        public static bool AreNamespaceEquals(string ns1, string ns2)
         {
             if (ns1 == null)
             {
                 return ns2 == null;
             }
+
             if (ns2 == null)
             {
                 return false;
             }
+            
             return ns1.Equals(ns2, StringComparison.OrdinalIgnoreCase);
         }
     }

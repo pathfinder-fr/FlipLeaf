@@ -941,7 +941,7 @@ namespace PathfinderFr.Markup.WikiFormatter
             {
                 if (!IsNoWikied(match.Index, noWikiBegin, noWikiEnd, out end))
                 {
-                    string? balanced = null;
+                    string balanced = null;
                     try
                     {
                         // If the snippet is malformed this can explode
@@ -1231,7 +1231,7 @@ namespace PathfinderFr.Markup.WikiFormatter
         /// <param name="index">The match start index.</param>
         /// <param name="value">The match value.</param>
         /// <returns>The balanced string, or <c>null</c> if the brackets could not be balanced.</returns>
-        private static string? ExpandToBalanceBrackets(string bigString, int index, string value)
+        private static string ExpandToBalanceBrackets(string bigString, int index, string value)
         {
             var tempIndex = -1;
 

@@ -200,12 +200,17 @@ namespace FlipLeaf.Storage
         public void WriteAllText(string fullPath, string text, Encoding? encoding = null)
         {
             EnsureDirectoryForFile(fullPath);
-            File.WriteAllText(fullPath, text, encoding);
+            File.WriteAllText(fullPath, text, encoding ?? Encoding.UTF8);
         }
 
         private void EnsureDirectoryForFile(string fullPath)
         {
             var dir = Path.GetDirectoryName(fullPath);
+            if (dir == null)
+            {
+                throw new ArgumentException($"Unable to obtain directory for path {fullPath}");
+            }
+
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);

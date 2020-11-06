@@ -102,7 +102,7 @@ namespace PathfinderFr.Markup.WikiFormatter
             ///     Gets the Username of the current User (or <c>null</c>).
             /// </summary>
             /// <remarks>If the Username is not available, the return value is <c>null</c>.</remarks>
-            public string? Username { get; }
+            public string Username { get; }
 
             /// <summary>
             ///     Gets the groups the user is member of (or <c>null</c>).
