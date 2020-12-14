@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using FlipLeaf.Markup;
 using FlipLeaf.Storage;
 using FlipLeaf.Website;
 using Microsoft.AspNetCore.Mvc;
@@ -10,23 +9,17 @@ namespace FlipLeaf.Pages._Manage
     public class EditRawModel : PageModel
     {
         private readonly IGitRepository _git;
-        private readonly IWebsiteIdentity _website;
-        private readonly IDocumentStore _docStore;
+        private readonly IWebsiteIdentity _websiteIdentity;
         private readonly IFileSystem _fileSystem;
-        private readonly IYamlMarkup _yaml;
 
         public EditRawModel(
             IFileSystem fileSystem,
-            IYamlMarkup yaml,
             IGitRepository git,
-            IWebsiteIdentity website,
-            IDocumentStore docStore)
+            IWebsiteIdentity websiteIdentity)
         {
             _git = git;
-            _website = website;
-            _docStore = docStore;
+            _websiteIdentity = websiteIdentity;
             _fileSystem = fileSystem;
-            _yaml = yaml;
             Path = string.Empty;
         }
 
@@ -74,7 +67,7 @@ namespace FlipLeaf.Pages._Manage
 
         public IActionResult OnPost(string path)
         {
-            var user = _website.GetCurrentUser();
+            var user = _websiteIdentity.GetCurrentUser();
             if (user == null)
             {
                 return Unauthorized();
@@ -88,7 +81,7 @@ namespace FlipLeaf.Pages._Manage
 
             _fileSystem.WriteAllText(fileItem, this.PageContent ?? string.Empty);
 
-            var websiteUser = _website.GetWebsiteUser();
+            var websiteUser = _websiteIdentity.GetWebsiteUser();
             _git.Commit(user, websiteUser, path, this.Comment);
             _git.PullPush(websiteUser);
 

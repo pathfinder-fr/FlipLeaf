@@ -36,7 +36,6 @@ namespace FlipLeaf
             services.AddDataReader<Readers.JsonLineDataReader>();
 
             // website
-            services.AddSingleton<Website.IDocumentStore, Website.DocumentStore>();
             services.AddSingletonAllInterfaces<Website.Website>();
 
             // default empty identity

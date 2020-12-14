@@ -41,15 +41,15 @@ namespace FlipLeaf
         private static void ExecuteComponentLoad(IApplicationBuilder app)
         {
             var fileSystem = app.ApplicationServices.GetService<Storage.IFileSystem>();
-            var docStore = app.ApplicationServices.GetService<Website.IDocumentStore>();
+            var website = app.ApplicationServices.GetService<Website.IWebsite>();
 
-            if (fileSystem == null || docStore == null) return;
+            if (fileSystem == null || website == null) return;
 
             var components = app.ApplicationServices.GetServices<Website.IWebsiteComponent>();
 
             foreach (var component in components)
             {
-                component.OnLoad(fileSystem, docStore);
+                component.OnLoad(fileSystem, website);
             }
         }
     }

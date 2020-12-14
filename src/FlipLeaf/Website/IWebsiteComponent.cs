@@ -4,6 +4,6 @@ namespace FlipLeaf.Website
 {
     public interface IWebsiteComponent
     {
-        void OnLoad(IFileSystem fileSystem, IDocumentStore docs);
+        void OnLoad(IFileSystem fileSystem, IWebsite website);
     }
 }

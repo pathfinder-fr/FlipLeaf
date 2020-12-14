@@ -15,8 +15,8 @@ namespace FlipLeaf.Pages._Manage
     public class EditModel : PageModel
     {
         private readonly IGitRepository _git;
-        private readonly IWebsiteIdentity _website;
-        private readonly IDocumentStore _docStore;
+        private readonly IWebsiteIdentity _websiteIdentity;
+        private readonly IWebsite _website;
         private readonly IFileSystem _fileSystem;
         private readonly IYamlMarkup _yaml;
 
@@ -24,12 +24,12 @@ namespace FlipLeaf.Pages._Manage
             IFileSystem fileSystem,
             IYamlMarkup yaml,
             IGitRepository git,
-            IWebsiteIdentity website,
-            IDocumentStore docStore)
+            IWebsiteIdentity websiteIdentity,
+            IWebsite website)
         {
             _git = git;
+            _websiteIdentity = websiteIdentity;
             _website = website;
-            _docStore = docStore;
             _fileSystem = fileSystem;
             _yaml = yaml;
             Path = string.Empty;
@@ -104,7 +104,7 @@ namespace FlipLeaf.Pages._Manage
 
         public IActionResult OnPost(string path)
         {
-            var user = _website.GetCurrentUser();
+            var user = _websiteIdentity.GetCurrentUser();
             if (user == null)
             {
                 return Unauthorized();
@@ -157,7 +157,7 @@ namespace FlipLeaf.Pages._Manage
                 _fileSystem.WriteAllText(file, writer.ToString());
             }
 
-            var websiteUser = _website.GetWebsiteUser();
+            var websiteUser = _websiteIdentity.GetWebsiteUser();
             _git.Commit(user, websiteUser, path, this.Comment);
             _git.PullPush(websiteUser);
 
@@ -200,7 +200,7 @@ namespace FlipLeaf.Pages._Manage
             }
 
             // try load template
-            var templateDoc = _docStore.Get<Docs.Template>(templateName);
+            var templateDoc = _website.Templates.Get(templateName);
             if (templateDoc == null)
             {
                 return false;

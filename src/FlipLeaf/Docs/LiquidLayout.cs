@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using FlipLeaf.Markup.Liquid;
 using FlipLeaf.Storage;
 
@@ -24,7 +23,5 @@ namespace FlipLeaf.Docs
         public override int GetHashCode() => Name.GetHashCode();
 
         public override string ToString() => Name;
-
-
     }
 }

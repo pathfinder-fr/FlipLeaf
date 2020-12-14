@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-namespace FlipLeaf.Readers
+﻿namespace FlipLeaf.Readers
 {
     public interface IReadResult
     {
-
     }
 
     public class RedirectReadResult : IReadResult

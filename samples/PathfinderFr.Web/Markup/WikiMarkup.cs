@@ -43,7 +43,7 @@ namespace PathfinderFr.Markup
             _yaml = yaml;
         }
 
-        public void OnLoad(IFileSystem fileSystem, IDocumentStore docs)
+        public void OnLoad(IFileSystem fileSystem, IWebsite website)
         {
             // chargement snippets
             var snippets = fileSystem.GetItem("_snippets");

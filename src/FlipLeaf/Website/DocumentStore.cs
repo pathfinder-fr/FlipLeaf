@@ -1,61 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using FlipLeaf.Docs;
 
 namespace FlipLeaf.Website
 {
-    public interface IDocumentStore
-    {
-        IEnumerable<T> GetAll<T>() where T : class, IDocument;
-
-        T? Get<T>(string name) where T : class, IDocument;
-
-        void Add<T>(T document) where T : class, IDocument;
-    }
-
-    public sealed class DocumentStore : IDocumentStore
-    {
-        private Dictionary<Type, Dictionary<string, IDocument>> _store = new Dictionary<Type, Dictionary<string, IDocument>>();
-
-        //private Dictionary<IDocument, HashSet<IDocument>> _dependsOn = new Dictionary<IDocument, HashSet<IDocument>>();
-        //private Dictionary<IDocument, HashSet<IDocument>> _isDependencyOf = new Dictionary<IDocument, HashSet<IDocument>>();
-
-        public IEnumerable<T> GetAll<T>()
+    public sealed class DocumentStore<T>
             where T : class, IDocument
-        {
-            if (!_store.TryGetValue(typeof(T), out var docs))
-            {
-                return Enumerable.Empty<T>();
-            }
+    {
+        private readonly Dictionary<string, T> _store = new(StringComparer.Ordinal);
 
-            return docs.Values.Cast<T>();
-        }
+        public IEnumerable<T> GetAll() => _store.Values;
 
-        public T? Get<T>(string name)
-            where T : class, IDocument
-        {
-            if (!_store.TryGetValue(typeof(T), out var docs))
-            {
-                return default;
-            }
+        public T? Get(string name) => _store[name];
 
-            return (T)docs[name];
-        }
-
-        public void Add<T>(T document)
-            where T : class, IDocument => Add(typeof(T), document);
-
-        public void Add(Type type, IDocument doc)
+        public void Add(T document)
         {
             lock (this)
             {
-                if (!_store.TryGetValue(type, out var set))
-                {
-                    _store[type] = set = new Dictionary<string, IDocument>();
-                }
-
-                set.Add(doc.Name, doc);
+                _store.Add(document.Name, document);
             }
         }
     }

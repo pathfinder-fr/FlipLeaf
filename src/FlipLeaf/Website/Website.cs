@@ -23,7 +23,9 @@ namespace FlipLeaf.Website
 
         public IReadOnlyDictionary<string, object> Data => _data;
 
-        public void OnLoad(IFileSystem fileSystem, IDocumentStore docs)
+        public DocumentStore<Docs.Template> Templates { get; } = new DocumentStore<Docs.Template>();
+
+        public void OnLoad(IFileSystem fileSystem, IWebsite website)
         {
             IStorageItem? dirItem;
 

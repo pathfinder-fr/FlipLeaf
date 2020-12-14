@@ -35,7 +35,7 @@ namespace FlipLeaf.Markup
             _yaml = yaml;
         }
 
-        public void OnLoad(IFileSystem fileSystem, IDocumentStore docs)
+        public void OnLoad(IFileSystem fileSystem, IWebsite website)
         {
             IStorageItem? dirItem;
 
@@ -70,7 +70,6 @@ namespace FlipLeaf.Markup
 
                     var layout = new Docs.LiquidLayout(file, yamlHeader, template);
                     _layouts.Add(layout.Name, layout);
-                    docs.Add(layout);
                 }
             }
 
@@ -92,7 +91,6 @@ namespace FlipLeaf.Markup
 
                     var include = new Docs.LiquidInclude(file, content);
                     _includes.Add(file.Name, include);
-                    docs.Add(include);
                 }
             }
         }

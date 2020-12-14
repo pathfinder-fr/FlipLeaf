@@ -12,7 +12,7 @@ namespace FlipLeaf.Templating
     {
         private readonly Dictionary<string, FormTemplate> _templates = new Dictionary<string, FormTemplate>(StringComparer.OrdinalIgnoreCase);
 
-        public void OnLoad(IFileSystem fileSystem, IDocumentStore docs)
+        public void OnLoad(IFileSystem fileSystem, IWebsite website)
         {
             _templates.Clear();
             var dirItem = fileSystem.GetItem(KnownFolders.Templates);
@@ -33,7 +33,7 @@ namespace FlipLeaf.Templating
                     if (template != null)
                     {
                         var doc = new Docs.Template(file, template);
-                        docs.Add(doc);
+                        website.Templates.Add(doc);
                     }
                 }
             }
