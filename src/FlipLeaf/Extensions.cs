@@ -25,7 +25,7 @@ namespace FlipLeaf
             var ago = DateTimeOffset.Now - @this;
 
             if (ago.TotalMinutes < 1)
-                return "Just now";
+                return "just now";
             if (ago.TotalMinutes < 2)
                 return "1 minute ago";
             if (ago.TotalMinutes < 60)

@@ -32,31 +32,6 @@ namespace FlipLeaf.Pages._Manage
 
         public List<ManageBrowseItem> Files { get; private set; }
 
-        public string CombineDirectory(string directoryName)
-        {
-            if (string.IsNullOrEmpty(Path))
-            {
-                return directoryName;
-            }
-            else
-            {
-                return Path + "/" + directoryName;
-            }
-
-        }
-
-        public string CombineFile(string fileName)
-        {
-            if (string.IsNullOrEmpty(Path))
-            {
-                return fileName;
-            }
-            else
-            {
-                return Path + "/" + fileName;
-            }
-        }
-
         public IActionResult OnGet(string path)
         {
             var directory = _fileSystem.GetItem(path);
@@ -145,7 +120,7 @@ namespace FlipLeaf.Pages._Manage
 
     public class ManageBrowseItem
     {
-        public ManageBrowseItem(Storage.IStorageItem path, bool isDirectory)
+        public ManageBrowseItem(IStorageItem path, bool isDirectory)
         {
             Path = path;
             IsDirectory = isDirectory;
@@ -153,7 +128,7 @@ namespace FlipLeaf.Pages._Manage
 
         public bool IsDirectory { get; }
 
-        public Storage.IStorageItem Path { get; }
+        public IStorageItem Path { get; }
 
         public DateTimeOffset? LastUpdate { get; set; }
 
