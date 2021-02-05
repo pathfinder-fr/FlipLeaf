@@ -11,15 +11,12 @@ namespace FlipLeaf.Templating
 {
     public interface IFormTemplateManager
     {
-        bool TryLoadTemplate(
-                    string? templateName,
-                    IStorageItem file,
-                    out FormTemplatePage? templatePage);
+        bool TryLoadTemplate(string? templateName, IStorageItem file, out FormTemplatePage? templatePage);
     }
 
     public class FormTemplateManager : IFormTemplateManager, IWebsiteComponent
     {
-        private readonly Dictionary<string, FormTemplate> _templates = new Dictionary<string, FormTemplate>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, FormTemplate> _templates = new(StringComparer.OrdinalIgnoreCase);
         private readonly IFileSystem _fileSystem;
         private readonly IYamlMarkup _yaml;
 
@@ -29,10 +26,7 @@ namespace FlipLeaf.Templating
             _yaml = yaml;
         }
 
-        public bool TryLoadTemplate(
-            string? templateName,
-            IStorageItem file,
-            out FormTemplatePage? templatePage)
+        public bool TryLoadTemplate(string? templateName, IStorageItem file, out FormTemplatePage? templatePage)
         {
             HeaderFieldDictionary yamlHeader;
             string content;
@@ -101,7 +95,7 @@ namespace FlipLeaf.Templating
             }
         }
 
-        private FormTemplate ParseJsonTemplate(IFileSystem fileSystem, IStorageItem item)
+        private static FormTemplate ParseJsonTemplate(IFileSystem fileSystem, IStorageItem item)
         {
             var templateSource = fileSystem.ReadAllText(item);
 
@@ -120,7 +114,7 @@ namespace FlipLeaf.Templating
             return formTemplate;
         }
 
-        private FormTemplate ParseYamlTemplate(IFileSystem fileSystem, IStorageItem item)
+        private static FormTemplate ParseYamlTemplate(IFileSystem fileSystem, IStorageItem item)
         {
             var templateSource = fileSystem.ReadAllText(item);
             var deserializer = new Deserializer();

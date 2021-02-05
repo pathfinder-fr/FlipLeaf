@@ -16,7 +16,6 @@ namespace FlipLeaf.Pages._Manage
     {
         private readonly IGitRepository _git;
         private readonly IWebsiteIdentity _websiteIdentity;
-        private readonly IWebsite _website;
         private readonly IFormTemplateManager _formTemplateManager;
         private readonly IFileSystem _fileSystem;
         private readonly IYamlMarkup _yaml;
@@ -26,12 +25,10 @@ namespace FlipLeaf.Pages._Manage
             IYamlMarkup yaml,
             IGitRepository git,
             IWebsiteIdentity websiteIdentity,
-            IWebsite website,
-            Templating.IFormTemplateManager formTemplateManager)
+            IFormTemplateManager formTemplateManager)
         {
             _git = git;
             _websiteIdentity = websiteIdentity;
-            _website = website;
             _formTemplateManager = formTemplateManager;
             _fileSystem = fileSystem;
             _yaml = yaml;

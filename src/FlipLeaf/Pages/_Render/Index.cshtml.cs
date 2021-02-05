@@ -13,8 +13,7 @@ namespace FlipLeaf.Pages._Render
         private readonly IGitRepository _git;
         private readonly IFileSystem _fileSystem;
         private readonly FlipLeafSettings _settings;
-        private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider =
-            new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+        private readonly Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider _contentTypeProvider = new();
 
         private readonly IEnumerable<Readers.IContentReader> _readers;
 

@@ -22,8 +22,8 @@ namespace FlipLeaf.Markup
 
     public class LiquidMarkup : ILiquidMarkup, IWebsiteComponent
     {
-        private readonly Dictionary<string, LiquidLayout> _layouts = new Dictionary<string, LiquidLayout>();
-        private readonly Dictionary<string, LiquidInclude> _includes = new Dictionary<string, LiquidInclude>();
+        private readonly Dictionary<string, LiquidLayout> _layouts = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, LiquidInclude> _includes = new(StringComparer.OrdinalIgnoreCase);
         private readonly FlipLeafFileProvider _fileProvider;
         private readonly string _baseUrl;
         private readonly IYamlMarkup _yaml;

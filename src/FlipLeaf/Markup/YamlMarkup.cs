@@ -142,7 +142,7 @@ namespace FlipLeaf.Markup
                 c = source[i];
             } while (c == '\r' || c == '\n');
 
-            source = source.Substring(i);
+            source = source[i..];
 
             return true;
         }
