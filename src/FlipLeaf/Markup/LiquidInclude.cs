@@ -1,8 +1,8 @@
 ﻿using FlipLeaf.Storage;
 
-namespace FlipLeaf.Docs
+namespace FlipLeaf.Markup
 {
-    public class LiquidInclude : FileDocument
+    public class LiquidInclude : LiquidFile
     {
         public LiquidInclude(IStorageItem file, byte[] content)
             : base(file)

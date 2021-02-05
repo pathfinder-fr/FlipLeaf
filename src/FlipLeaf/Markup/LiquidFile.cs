@@ -1,11 +1,11 @@
 ﻿using System;
 using FlipLeaf.Storage;
 
-namespace FlipLeaf.Docs
+namespace FlipLeaf.Markup
 {
-    public class FileDocument : IDocument
+    public class LiquidFile
     {
-        public FileDocument(IStorageItem file)
+        public LiquidFile(IStorageItem file)
         {
             File = file ?? throw new ArgumentNullException(nameof(file));
         }
@@ -18,7 +18,7 @@ namespace FlipLeaf.Docs
 
         public override bool Equals(object? obj)
         {
-            if (obj is FileDocument item)
+            if (obj is LiquidFile item)
             {
                 return File.Equals(item.File);
             }

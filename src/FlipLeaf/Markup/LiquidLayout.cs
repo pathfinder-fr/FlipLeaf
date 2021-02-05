@@ -2,9 +2,9 @@
 using FlipLeaf.Markup.Liquid;
 using FlipLeaf.Storage;
 
-namespace FlipLeaf.Docs
+namespace FlipLeaf.Markup
 {
-    public class LiquidLayout : FileDocument
+    public class LiquidLayout : LiquidFile
     {
         public LiquidLayout(IStorageItem file, HeaderFieldDictionary yamlHeader, LayoutTemplate template)
             : base(file)

@@ -6,6 +6,10 @@ namespace FlipLeaf.Templating
     public class FormTemplate
     {
         public static readonly FormTemplate Default = CreateDefaultTemplate();
+        
+        public FormTemplate()
+        {            
+        }
 
         public string? Title { get; set; }
 

@@ -17,6 +17,7 @@ namespace FlipLeaf.Pages._Manage
         private readonly IGitRepository _git;
         private readonly IWebsiteIdentity _websiteIdentity;
         private readonly IWebsite _website;
+        private readonly IFormTemplateManager _formTemplateManager;
         private readonly IFileSystem _fileSystem;
         private readonly IYamlMarkup _yaml;
 
@@ -25,11 +26,13 @@ namespace FlipLeaf.Pages._Manage
             IYamlMarkup yaml,
             IGitRepository git,
             IWebsiteIdentity websiteIdentity,
-            IWebsite website)
+            IWebsite website,
+            Templating.IFormTemplateManager formTemplateManager)
         {
             _git = git;
             _websiteIdentity = websiteIdentity;
             _website = website;
+            _formTemplateManager = formTemplateManager;
             _fileSystem = fileSystem;
             _yaml = yaml;
             Path = string.Empty;
@@ -69,8 +72,11 @@ namespace FlipLeaf.Pages._Manage
                 return this.RedirectToPage("EditRaw", new { path });
             }
 
-            if (!TryLoadTemplate(template, file, out var yamlHeader, out var templateName, out var formTemplate, out var content)
-                || formTemplate == null)
+            if (!_formTemplateManager.TryLoadTemplate(
+                template, 
+                file, 
+                out var templatePage)
+                || templatePage == null)
             {
                 if (form || template != null)
                 {
@@ -81,7 +87,7 @@ namespace FlipLeaf.Pages._Manage
             }
 
             var formValues = new Dictionary<string, StringValues>();
-            foreach (var yamlItem in yamlHeader)
+            foreach (var yamlItem in templatePage.PageHeader)
             {
                 if (yamlItem.Value is string yamlString)
                 {
@@ -95,9 +101,9 @@ namespace FlipLeaf.Pages._Manage
 
             this.Path = path;
             this.Form = formValues;
-            this.TemplateName = templateName;
-            this.FormTemplate = formTemplate;
-            this.PageContent = content;
+            this.TemplateName = templatePage.Name;
+            this.FormTemplate = templatePage.FormTemplate;
+            this.PageContent = templatePage.PageContent;
 
             return Page();
         }
@@ -121,8 +127,8 @@ namespace FlipLeaf.Pages._Manage
                 return BadRequest();
             }
 
-            if (!TryLoadTemplate(this.TemplateName, file, out var yamlHeader, out _, out var formTemplate, out _)
-                || formTemplate == null)
+            if (!_formTemplateManager.TryLoadTemplate(this.TemplateName, file, out var templatePage)
+                || templatePage == null)
             {
                 return BadRequest();
             }
@@ -132,7 +138,7 @@ namespace FlipLeaf.Pages._Manage
                 writer.WriteLine("---");
                 writer.WriteLine($"{KnownFields.Template}: {this.TemplateName}");
 
-                foreach (var field in formTemplate.Fields)
+                foreach (var field in templatePage.FormTemplate.Fields)
                 {
                     if (field.Id == null) continue;
                     if (!Request.Form.TryGetValue($"Fields.{field.Id}", out var formValues))
@@ -162,54 +168,6 @@ namespace FlipLeaf.Pages._Manage
             _git.PullPush(websiteUser);
 
             return RedirectToPage("Show", new { path });
-        }
-
-        private bool TryLoadTemplate(
-            string? templateName,
-            IStorageItem file,
-            out HeaderFieldDictionary yamlHeader,
-            out string? loadedTemplateName,
-            out FormTemplate? formTemplate,
-            out string content)
-        {
-            formTemplate = null;
-            loadedTemplateName = null;
-            content = string.Empty;
-
-            if (_fileSystem.FileExists(file) && templateName == null)
-            {
-                // read raw content
-                content = _fileSystem.ReadAllText(file);
-
-                // parse YAML header
-                yamlHeader = _yaml.ParseHeader(content, out content);
-
-                if (yamlHeader.TryGetValue(KnownFields.Template, out var templateNameObj))
-                {
-                    templateName = templateNameObj as string;
-                }
-            }
-            else
-            {
-                yamlHeader = new HeaderFieldDictionary();
-            }
-
-            if (templateName == null)
-            {
-                return false;
-            }
-
-            // try load template
-            var templateDoc = _website.Templates.Get(templateName);
-            if (templateDoc == null)
-            {
-                return false;
-            }
-
-            // parse template
-            formTemplate = templateDoc.FormTemplate;
-            loadedTemplateName = templateDoc.Name;
-            return true;
         }
     }
 }

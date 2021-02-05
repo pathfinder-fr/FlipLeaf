@@ -2,6 +2,5 @@
 {
     public interface IWebsite
     {
-        DocumentStore<Docs.Template> Templates { get; }
     }
 }

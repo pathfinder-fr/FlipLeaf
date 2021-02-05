@@ -22,8 +22,8 @@ namespace FlipLeaf.Markup
 
     public class LiquidMarkup : ILiquidMarkup, IWebsiteComponent
     {
-        private readonly Dictionary<string, Docs.LiquidLayout> _layouts = new Dictionary<string, Docs.LiquidLayout>();
-        private readonly Dictionary<string, Docs.LiquidInclude> _includes = new Dictionary<string, Docs.LiquidInclude>();
+        private readonly Dictionary<string, LiquidLayout> _layouts = new Dictionary<string, LiquidLayout>();
+        private readonly Dictionary<string, LiquidInclude> _includes = new Dictionary<string, LiquidInclude>();
         private readonly FlipLeafFileProvider _fileProvider;
         private readonly string _baseUrl;
         private readonly IYamlMarkup _yaml;
@@ -68,7 +68,7 @@ namespace FlipLeaf.Markup
                         throw new ArgumentException($"Layout {file} in invalid: Liquid errors", nameof(file), ex);
                     }
 
-                    var layout = new Docs.LiquidLayout(file, yamlHeader, template);
+                    var layout = new LiquidLayout(file, yamlHeader, template);
                     _layouts.Add(layout.Name, layout);
                 }
             }
@@ -89,7 +89,7 @@ namespace FlipLeaf.Markup
                         content = ms.ToArray();
                     }
 
-                    var include = new Docs.LiquidInclude(file, content);
+                    var include = new LiquidInclude(file, content);
                     _includes.Add(file.Name, include);
                 }
             }
