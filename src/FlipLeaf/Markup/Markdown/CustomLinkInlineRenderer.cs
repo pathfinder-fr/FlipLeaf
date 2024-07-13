@@ -35,13 +35,16 @@ namespace FlipLeaf.Markup.Markdown
 
         protected override void Write(HtmlRenderer renderer, LinkInline link)
         {
-            link.Url = PrependBasePath(link.Url);
+            if (link.Url != null)
+            {
+                link.Url = PrependBasePath(link.Url);
 
-            // quick hack to transform links into their html counterpart
-            //
-            // should be replaced with a more robust solution to handle extension transformation
-            // (moreover if pretty urls must be supported)
-            link.Url = link.Url.Replace(".md", ".html");
+                // quick hack to transform links into their html counterpart
+                //
+                // should be replaced with a more robust solution to handle extension transformation
+                // (moreover if pretty urls must be supported)
+                link.Url = link.Url.Replace(".md", ".html");
+            }
 
             base.Write(renderer, link);
         }

@@ -49,13 +49,13 @@ namespace FlipLeaf.Markup
                 foreach (var value in values)
                 {
                     writer.Write("  - ");
-                    WriteValue(writer, value);
+                    WriteValue(writer, value ?? string.Empty);
                 }
             }
             else
             {
                 // single value
-                WriteValue(writer, values[0]);
+                WriteValue(writer, values[0] ?? string.Empty);
             }
 
             static void WriteValue(TextWriter w, string value)
