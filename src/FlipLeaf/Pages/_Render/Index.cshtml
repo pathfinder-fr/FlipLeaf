@@ -37,17 +37,9 @@
             </div>
 
             <footer>
-                <a asp-page="/edit" asp-area="manager" asp-route-path="@Model.Path">Edit</a>
-                −
-                <a asp-page="/browse" asp-area="manager" asp-route-path="@Model.ManagePath">Manager</a>
-                −
-                <a asp-page="/_manage2/browse" asp-route-path="@Model.ManagePath">Manager</a>
+                <a asp-page="/_manage/edit" asp-route-path="@Model.Path">Edit</a>
                 −
                 <a asp-page="/_manage/browse" asp-route-path="@Model.ManagePath">Manager</a>
-                −
-                <a asp-page="_manage/browse" asp-route-path="@Model.ManagePath">Manager</a>
-                −
-                <a asp-page="_manage2/browse" asp-route-path="@Model.ManagePath">Manager</a>
                 −
                 Last updated <span title="@Model.LastUpdate">@Model.LastUpdate.ToRelativeTime()</span>
             </footer>

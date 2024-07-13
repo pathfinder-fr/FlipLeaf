@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Primitives;
 
-namespace FlipLeaf.Manager.Pages
+namespace FlipLeaf.Pages.Manage
 {
     public class EditModel : PageModel
     {

@@ -4,7 +4,7 @@ using FlipLeaf.Website;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace FlipLeaf.Manager.Pages
+namespace FlipLeaf.Pages.Manage
 {
     public class EditRawModel : PageModel
     {
