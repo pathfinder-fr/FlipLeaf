@@ -21,7 +21,7 @@
     <PackageReference Include="LibGit2Sharp" Version="0.26.2" />
     <PackageReference Include="Markdig" Version="0.37.0" />
     <PackageReference Include="Fluid.Core" Version="2.11.0" />
-    <PackageReference Include="YamlDotNet" Version="9.1.4" />
+    <PackageReference Include="YamlDotNet" Version="15.3.0" />
   </ItemGroup>
 
   <ItemGroup>
