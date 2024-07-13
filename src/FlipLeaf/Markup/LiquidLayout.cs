@@ -1,5 +1,4 @@
-﻿using System.IO;
-using FlipLeaf.Markup.Liquid;
+﻿using FlipLeaf.Markup.Liquid;
 using FlipLeaf.Storage;
 
 namespace FlipLeaf.Markup

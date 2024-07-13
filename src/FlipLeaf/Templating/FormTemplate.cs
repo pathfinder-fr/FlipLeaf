@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace FlipLeaf.Templating
+﻿namespace FlipLeaf.Templating
 {
     public class FormTemplate
     {

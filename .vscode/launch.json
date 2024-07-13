@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/FlipLeaf.Web/bin/Debug/net5.0/FlipLeaf.Web.dll",
+            "program": "${workspaceFolder}/src/FlipLeaf.Web/bin/Debug/net8.0/FlipLeaf.Web.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/FlipLeaf.Web",
             "stopAtEntry": false,

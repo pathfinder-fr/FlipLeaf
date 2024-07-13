@@ -1,5 +1,4 @@
-﻿using System;
-using FlipLeaf.Storage;
+﻿using FlipLeaf.Storage;
 
 namespace FlipLeaf.Markup
 {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using FlipLeaf.Storage.Git;
+﻿using FlipLeaf.Storage.Git;
 using LibGit2Sharp;
 
 namespace FlipLeaf.Storage

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FlipLeaf.Storage;
+﻿using FlipLeaf.Storage;
 
 namespace FlipLeaf.Readers
 {

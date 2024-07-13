@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FlipLeaf.Storage.Git
+﻿namespace FlipLeaf.Storage.Git
 {
     public class GitCommit
     {

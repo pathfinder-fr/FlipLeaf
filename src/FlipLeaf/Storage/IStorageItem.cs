@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FlipLeaf.Storage
+﻿namespace FlipLeaf.Storage
 {
     /// <summary>
     /// Represents an item in the storage disk.

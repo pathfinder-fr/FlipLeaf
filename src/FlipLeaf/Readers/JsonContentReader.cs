@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using FlipLeaf.Markup;
+﻿using FlipLeaf.Markup;
 using FlipLeaf.Storage;
 using FlipLeaf.Website;
 

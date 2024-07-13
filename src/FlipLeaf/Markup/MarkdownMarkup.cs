@@ -1,5 +1,4 @@
-﻿using System.IO;
-using FlipLeaf.Markup.Markdown;
+﻿using FlipLeaf.Markup.Markdown;
 using Markdig;
 using Markdig.Renderers;
 

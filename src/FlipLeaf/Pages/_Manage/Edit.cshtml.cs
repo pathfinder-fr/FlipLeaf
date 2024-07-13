@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
+﻿using System.ComponentModel.DataAnnotations;
 using FlipLeaf.Markup;
 using FlipLeaf.Storage;
 using FlipLeaf.Templating;

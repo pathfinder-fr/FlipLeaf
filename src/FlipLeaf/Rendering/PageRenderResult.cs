@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FlipLeaf.Rendering
+﻿namespace FlipLeaf.Rendering
 {
     public class PageRender
     {

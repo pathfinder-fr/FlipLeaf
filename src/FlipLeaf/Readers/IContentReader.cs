@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using FlipLeaf.Storage;
+﻿using FlipLeaf.Storage;
 
 namespace FlipLeaf.Readers
 {

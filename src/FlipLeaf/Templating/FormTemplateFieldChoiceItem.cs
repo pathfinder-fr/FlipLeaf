@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Microsoft.Extensions.Primitives;
+﻿using Microsoft.Extensions.Primitives;
 
 namespace FlipLeaf.Templating
 {

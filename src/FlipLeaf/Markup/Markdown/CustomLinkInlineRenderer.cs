@@ -1,5 +1,4 @@
-﻿using System;
-using Markdig;
+﻿using Markdig;
 using Markdig.Renderers;
 using Markdig.Renderers.Html.Inlines;
 using Markdig.Syntax.Inlines;

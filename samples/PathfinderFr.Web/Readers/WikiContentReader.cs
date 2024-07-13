@@ -5,7 +5,6 @@ using FlipLeaf.Markup;
 using FlipLeaf.Readers;
 using FlipLeaf.Storage;
 using FlipLeaf.Website;
-using Microsoft.AspNetCore.Mvc;
 using PathfinderFr.Markup;
 
 namespace PathfinderFr.Readers

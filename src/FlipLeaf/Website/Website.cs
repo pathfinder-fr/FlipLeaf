@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using FlipLeaf.Readers;
+﻿using FlipLeaf.Readers;
 using FlipLeaf.Storage;
 
 namespace FlipLeaf.Website
