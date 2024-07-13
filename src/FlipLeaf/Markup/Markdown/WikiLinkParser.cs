@@ -36,10 +36,13 @@ namespace FlipLeaf.Markup.Markdown
             var labelStart = start;
 
             var hasEscape = false;
+
             SourceSpan? labelSpan = null;
             string? label = null;
+
             SourceSpan? urlSpan = null;
             string? url = null;
+
             var success = false;
             var hasSeparator = false;
             while (true)
@@ -176,7 +179,6 @@ namespace FlipLeaf.Markup.Markdown
 
                     labelSpan = urlSpan;
                 }
-
                 if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
                     && !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
                 {
@@ -188,14 +190,19 @@ namespace FlipLeaf.Markup.Markdown
                     }
                 }
 
+                if (labelSpan == null || urlSpan == null)
+                {
+                    return false;
+                }
+
                 var link = new LinkInline()
                 {
                     Column = column,
                     Line = line,
-                    LabelSpan = labelSpan,
+                    LabelSpan = labelSpan.Value,
                     Label = label,
                     Url = url,
-                    UrlSpan = urlSpan,
+                    UrlSpan = urlSpan.Value,
                     IsClosed = true,
                     //IsShortcut = false,
                     IsImage = false,
