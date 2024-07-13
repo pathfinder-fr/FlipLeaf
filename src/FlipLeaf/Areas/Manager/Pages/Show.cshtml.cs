@@ -3,7 +3,7 @@ using FlipLeaf.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace FlipLeaf.Pages._Manage
+namespace FlipLeaf.Manager.Pages
 {
     public class ShowModel : PageModel
     {

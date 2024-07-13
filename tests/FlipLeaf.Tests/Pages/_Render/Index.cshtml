@@ -1,6 +1,6 @@
-﻿@page "/{**path}"
+@page "/{**path}"
 @using FlipLeaf
-@model FlipLeaf.Pages.Render.IndexModel
+@model FlipLeaf.Pages._Render.IndexModel
 
 <!DOCTYPE html>
 <html lang="en">
@@ -8,12 +8,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <title>@Model.Title - FlipLeaf</title>
+    <title>@Model.Title - FlipLeaf.Web</title>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
-            <a class="navbar-brand" href="/">FlipLeaf</a>
+            <a class="navbar-brand" href="/">FlipLeaf.Web</a>
 
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -40,14 +40,6 @@
                 <a asp-page="/edit" asp-area="manager" asp-route-path="@Model.Path">Edit</a>
                 −
                 <a asp-page="/browse" asp-area="manager" asp-route-path="@Model.ManagePath">Manager</a>
-                −
-                <a asp-page="/_manage2/browse" asp-route-path="@Model.ManagePath">Manager</a>
-                −
-                <a asp-page="/_manage/browse" asp-route-path="@Model.ManagePath">Manager</a>
-                −
-                <a asp-page="_manage/browse" asp-route-path="@Model.ManagePath">Manager</a>
-                −
-                <a asp-page="_manage2/browse" asp-route-path="@Model.ManagePath">Manager</a>
                 −
                 Last updated <span title="@Model.LastUpdate">@Model.LastUpdate.ToRelativeTime()</span>
             </footer>

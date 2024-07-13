@@ -1,5 +1,6 @@
-﻿@page "/_manage2/browse/{**path}"
-@model FlipLeaf.Pages.Manage.BrowseModel
+@page "/_manage/browse/{**path}"
+@using FlipLeaf
+@model FlipLeaf.Manager.Pages.BrowseModel
 
 @{ ViewData["Title"] = "Content Manager"; }
 
@@ -16,7 +17,7 @@
     </style>
 }
 
-<h3>Content Manager RCL 2</h3>
+<h3>Content Manager 2</h3>
 
 <nav aria-label="breadcrumb">
     <manage-breadcrumb path="@Model.Path"></manage-breadcrumb>

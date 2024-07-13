@@ -3,7 +3,7 @@ using FlipLeaf.Website;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace FlipLeaf.Pages.Manage
+namespace FlipLeaf.Manager.Pages
 {
     public class BrowseModel : PageModel
     {

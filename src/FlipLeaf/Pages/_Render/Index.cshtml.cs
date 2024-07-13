@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace FlipLeaf.Pages._Render
+namespace FlipLeaf.Pages.Render
 {
     public class IndexModel : PageModel
     {
