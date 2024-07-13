@@ -1,0 +1,1 @@
+﻿await FlipLeaf.App.Run(args);

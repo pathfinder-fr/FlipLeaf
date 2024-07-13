@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,18 +9,12 @@ namespace FlipLeaf
     /// <summary>
     /// Contains default program entry point for a FlipLeaf app.
     /// </summary>
-    public static class FlipLeafProgram
+    public static class App
     {
         /// <summary>
         /// Default program entry point for a standard FlipLeaf app.
         /// </summary>
-        public static void Main(string[] args) => Main<FlipLeafStartup>(args);
-
-        /// <summary>
-        /// Default program entry point for a standard FlipLeaf app, with a custom <typeparamref name="TStartup"/> startup class.
-        /// </summary>
-        public static void Main<TStartup>(string[] args)
-            where TStartup : class
+        public static Task Run(string[] args, Action<IServiceCollection, IConfiguration> configureServices = null)
         {
             var startConsole = false;
             if (args != null && args.Length != 0 && args[0] == "console")
@@ -31,28 +24,51 @@ namespace FlipLeaf
 
             if (!startConsole)
             {
-                Host
-                    .CreateDefaultBuilder(args)
-                    .ConfigureAppConfiguration((hostingContext, config) => config.AddEnvironmentVariables())
-                    .ConfigureWebHostDefaults(builder => builder.UseWebRoot(@".static").UseStartup<TStartup>())
-                    .Build()
-                    .Run();
+                var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, WebRootPath = ".static" });
 
-                return;
+                builder.Services.AddRazorPages();
+                builder.Services.AddHttpContextAccessor();
+                builder.Services.AddFlipLeaf(builder.Configuration);
+                builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteOptions>(o => o.LowercaseUrls = true);
+
+                configureServices?.Invoke(builder.Services, builder.Configuration);
+
+                var app = builder.Build();
+
+#if DEBUG
+                app.UseDeveloperExceptionPage();
+#endif
+
+                app.UseStaticFiles();
+                app.UseAuthorization();
+                app.MapRazorPages();
+                app.UseFlipLeaf(app.Environment);
+
+                return app.RunAsync();
             }
+            else
+            {
+                // TODO : start console version
+                Console.WriteLine("TODO: console");
 
-            // TODO : start console version
-            System.Console.WriteLine("TODO: console");
-            Host
+                var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { Args = args, ContentRootPath = ".static" });
+                
+// TODO Migrer
+
+                return Host
                     .CreateDefaultBuilder(args)
                     .ConfigureAppConfiguration((hostingContext, config) => config.AddEnvironmentVariables())
                     .ConfigureServices((ctx, services) =>
                     {
-                        var startup = new FlipLeafStartup(ctx.Configuration);
-                        startup.ConfigureServices(services);
+                        services.AddRazorPages();
+                        services.AddHttpContextAccessor();
+                        services.AddFlipLeaf(ctx.Configuration);
+                        services.Configure<Microsoft.AspNetCore.Routing.RouteOptions>(o => o.LowercaseUrls = true);
+                        configureServices?.Invoke(services, ctx.Configuration);
                         services.AddSingleton<IHostedService, ConsoleHostingService>();
                     })
                     .RunConsoleAsync(o => { o.SuppressStatusMessages = false; });
+            }
         }
 
         class ConsoleHostingService : IHostedService

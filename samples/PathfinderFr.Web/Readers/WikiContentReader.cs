@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using FlipLeaf;
 using FlipLeaf.Markup;
 using FlipLeaf.Readers;

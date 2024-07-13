@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace PathfinderFr.Markup.WikiFormatter
+﻿namespace PathfinderFr.Markup.WikiFormatter
 {
     /// <summary>Represents a Header.</summary>
     public class HPosition

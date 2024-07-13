@@ -1,51 +1,41 @@
 ﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace FlipLeaf
 {
     public static class ApplicationBuilderExtensions
     {
-        public static void UseFlipLeaf(this IApplicationBuilder app, IWebHostEnvironment environment)
+        public static void UseFlipLeaf(this IApplicationBuilder app, IHostEnvironment environment)
         {
-            // SourcePath validation
-            var settings = (FlipLeafSettings?)app.ApplicationServices.GetService(typeof(FlipLeafSettings));
-            if (settings == null)
-            {
-                throw new InvalidOperationException($"Type FlipLeafSettings must be registered");
-            }
+            var settings = app.ApplicationServices.GetRequiredService<FlipLeafSettings>();
 
+            // validate and normalize source path
             settings.SourcePath = ValidateSourcePath(environment, settings.SourcePath);
 
             // initialize website
             ExecuteComponentLoad(app);
         }
 
-        private static string ValidateSourcePath(IWebHostEnvironment environment, string sourcePath)
+        private static string ValidateSourcePath(IHostEnvironment environment, string sourcePath)
         {
+            // make sourcePath absolute relative to ContentRootPath
             if (!Path.IsPathRooted(sourcePath))
-            {
                 sourcePath = new Uri(Path.Combine(environment.ContentRootPath, sourcePath)).LocalPath;
-            }
 
+            // ensure sourcePath exists
             if (!Directory.Exists(sourcePath))
-            {
                 Directory.CreateDirectory(sourcePath);
-            }
 
             return sourcePath;
         }
 
         private static void ExecuteComponentLoad(IApplicationBuilder app)
         {
-            var fileSystem = app.ApplicationServices.GetService<Storage.IFileSystem>();
-            var website = app.ApplicationServices.GetService<Website.IWebsite>();
+            var fileSystem = app.ApplicationServices.GetRequiredService<Storage.IFileSystem>();
+            var website = app.ApplicationServices.GetRequiredService<Website.IWebsite>();
 
-            if (fileSystem == null || website == null) return;
-
-            var components = app.ApplicationServices.GetServices<Website.IWebsiteComponent>();
-
-            foreach (var component in components)
+            foreach (var component in app.ApplicationServices.GetServices<Website.IWebsiteComponent>())
             {
                 component.OnLoad(fileSystem, website);
             }

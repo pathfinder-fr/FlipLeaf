@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace PathfinderFr.Compatibility
+﻿namespace PathfinderFr.Compatibility
 {
     public sealed class AspNetFormsTicketAuthentication
     {

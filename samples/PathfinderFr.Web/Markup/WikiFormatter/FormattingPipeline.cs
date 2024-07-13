@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace PathfinderFr.Markup.WikiFormatter
+﻿namespace PathfinderFr.Markup.WikiFormatter
 {
     internal static class FormattingPipeline
     {

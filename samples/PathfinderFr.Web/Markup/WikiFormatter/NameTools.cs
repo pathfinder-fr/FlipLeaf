@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace PathfinderFr.Markup.WikiFormatter
+﻿namespace PathfinderFr.Markup.WikiFormatter
 {
     /// <summary>
     ///     Implements useful tools for handling full object names.

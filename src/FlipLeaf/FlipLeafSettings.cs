@@ -6,6 +6,9 @@
         /// Configured directory where the files are stored.
         /// This path is normalized when the app is started, and replaced with a full absolute path to the source directory.
         /// </summary>
+        /// <remarks>
+        /// Default value is ".content".
+        /// </remarks>
         public string SourcePath { get; set; } = ".content";
 
         public string BaseUrl { get; set; } = string.Empty;

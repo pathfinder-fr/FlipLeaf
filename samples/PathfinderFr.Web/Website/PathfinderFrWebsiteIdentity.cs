@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using Dapper;
 using FlipLeaf.Website;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
 using PathfinderFr.Compatibility;
 

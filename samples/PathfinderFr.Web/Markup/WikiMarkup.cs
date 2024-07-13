@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using FlipLeaf;
 using FlipLeaf.Markup;
 using FlipLeaf.Storage;
 using FlipLeaf.Website;
-using Microsoft.Extensions.Logging;
 using PathfinderFr.Docs;
 using PathfinderFr.Markup.WikiFormatter;
 
