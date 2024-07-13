@@ -11,7 +11,7 @@ namespace PathfinderFr.TagHelpers
 
         public UserMenuTagHelper(Website.IPathfinderFrWebsiteIdentity websitePlatform)
         {
-            this._websitePlatform = websitePlatform;
+            _websitePlatform = websitePlatform;
         }
 
         public string Section { get; set; }

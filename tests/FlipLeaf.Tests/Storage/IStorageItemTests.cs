@@ -39,9 +39,9 @@ namespace FlipLeaf.Storage
                 RelativePath = string.Empty;
             }
 
-            this.RelativePath = RelativePath.Replace('\\', '/');
-            this.Name = Path.GetFileName(fullPath);
-            this.Extension = Path.GetExtension(fullPath);
+            RelativePath = RelativePath.Replace('\\', '/');
+            Name = Path.GetFileName(fullPath);
+            Extension = Path.GetExtension(fullPath);
         }
 
         public string Name { get; }

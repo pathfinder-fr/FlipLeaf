@@ -4,29 +4,17 @@
     {
     }
 
-    public class RedirectReadResult : IReadResult
+    public class RedirectReadResult(string url) : IReadResult
     {
-        public RedirectReadResult(string url)
-        {
-            this.Url = url;
-        }
-
-        public string Url { get; }
+        public string Url { get; } = url;
     }
 
-    public class ContentReadResult : IReadResult
+    public class ContentReadResult(string content, HeaderFieldDictionary headers, string contentType) : IReadResult
     {
-        public ContentReadResult(string content, HeaderFieldDictionary headers, string contentType)
-        {
-            Content = content;
-            Headers = headers;
-            ContentType = contentType;
-        }
+        public string Content { get; } = content;
 
-        public string Content { get; }
+        public string ContentType { get; } = contentType;
 
-        public string ContentType { get; }
-
-        public HeaderFieldDictionary Headers { get; }
+        public HeaderFieldDictionary Headers { get; } = headers;
     }
 }

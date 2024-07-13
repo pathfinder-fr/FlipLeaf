@@ -24,14 +24,14 @@ namespace PathfinderFr.Pages._Render
         {
             if (string.IsNullOrEmpty(name))
             {
-                this.Name = null;
-                this.Pages = _wiki.GetAllCategories()
+                Name = null;
+                Pages = _wiki.GetAllCategories()
                     .Select(p => new CategoryPageModel { Title = p.Name, Path = $"category.html?name={p.FullName}" });
             }
             else
             {
-                this.Name = new WikiName(name);
-                this.Pages = _wiki.GetCategoryPages(Name)
+                Name = new WikiName(name);
+                Pages = _wiki.GetCategoryPages(Name)
                     .Select(n => _wiki.GetPage(n))
                     .Where(p => p != null)
                     .Select(p => new CategoryPageModel { Title = p.Title, Path = p.Name.FullName + ".html" });

@@ -52,9 +52,9 @@ namespace FlipLeaf.Pages.Manage
                 .OrderBy(f => f.Path.RelativePath)
                 .ToList();
 
-            this.Path = directory.RelativePath;
-            this.Directories = directories;
-            this.Files = files;
+            Path = directory.RelativePath;
+            Directories = directories;
+            Files = files;
 
             //_git.SetLastCommit(directory.RelativePath, this.Files.ToDictionary(f => f.Path.Name, f => f), (f, date) => f.WithCommit(date));
 

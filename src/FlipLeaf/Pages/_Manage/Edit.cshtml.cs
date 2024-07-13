@@ -63,7 +63,7 @@ namespace FlipLeaf.Pages.Manage
             // form edition reserved to markdown files
             if (!file.IsMarkdown())
             {
-                return this.RedirectToPage("EditRaw", new { path });
+                return RedirectToPage("EditRaw", new { path });
             }
 
             if (!_formTemplateManager.TryLoadTemplate(
@@ -77,7 +77,7 @@ namespace FlipLeaf.Pages.Manage
                     return BadRequest("This file does not supports form editing. No template or invalid template specified");
                 }
 
-                return this.RedirectToPage("EditRaw", new { path });
+                return RedirectToPage("EditRaw", new { path });
             }
 
             var formValues = new Dictionary<string, StringValues>();
@@ -93,11 +93,11 @@ namespace FlipLeaf.Pages.Manage
                 }
             }
 
-            this.Path = path;
-            this.Form = formValues;
-            this.TemplateName = templatePage.Name;
-            this.FormTemplate = templatePage.FormTemplate;
-            this.PageContent = templatePage.PageContent;
+            Path = path;
+            Form = formValues;
+            TemplateName = templatePage.Name;
+            FormTemplate = templatePage.FormTemplate;
+            PageContent = templatePage.PageContent;
 
             return Page();
         }
@@ -116,12 +116,12 @@ namespace FlipLeaf.Pages.Manage
                 return NotFound();
             }
 
-            if (!file.IsMarkdown() || string.IsNullOrEmpty(this.TemplateName))
+            if (!file.IsMarkdown() || string.IsNullOrEmpty(TemplateName))
             {
                 return BadRequest();
             }
 
-            if (!_formTemplateManager.TryLoadTemplate(this.TemplateName, file, out var templatePage)
+            if (!_formTemplateManager.TryLoadTemplate(TemplateName, file, out var templatePage)
                 || templatePage == null)
             {
                 return BadRequest();
@@ -130,7 +130,7 @@ namespace FlipLeaf.Pages.Manage
             using (var writer = new StringWriter())
             {
                 writer.WriteLine("---");
-                writer.WriteLine($"{KnownFields.Template}: {this.TemplateName}");
+                writer.WriteLine($"{KnownFields.Template}: {TemplateName}");
 
                 foreach (var field in templatePage.FormTemplate.Fields)
                 {
@@ -158,7 +158,7 @@ namespace FlipLeaf.Pages.Manage
             }
 
             var websiteUser = _websiteIdentity.GetWebsiteUser();
-            _git.Commit(user, websiteUser, path, this.Comment);
+            _git.Commit(user, websiteUser, path, Comment);
             _git.PullPush(websiteUser);
 
             return RedirectToPage("Show", new { path });

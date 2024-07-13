@@ -9,7 +9,7 @@ namespace FlipLeaf.Readers
 
         public JsonDataReader(IFileSystem fileSystem)
         {
-            this._fileSystem = fileSystem;
+            _fileSystem = fileSystem;
         }
 
         public bool Accept(IStorageItem file) => file.IsJson();

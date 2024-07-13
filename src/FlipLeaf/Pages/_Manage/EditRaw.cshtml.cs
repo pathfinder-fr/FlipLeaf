@@ -59,8 +59,8 @@ namespace FlipLeaf.Pages.Manage
             }
 
             // handle raw view
-            this.Path = path;
-            this.PageContent = content;
+            Path = path;
+            PageContent = content;
 
             return Page();
         }
@@ -79,13 +79,13 @@ namespace FlipLeaf.Pages.Manage
                 return NotFound();
             }
 
-            _fileSystem.WriteAllText(fileItem, this.PageContent ?? string.Empty);
+            _fileSystem.WriteAllText(fileItem, PageContent ?? string.Empty);
 
             var websiteUser = _websiteIdentity.GetWebsiteUser();
-            _git.Commit(user, websiteUser, path, this.Comment);
+            _git.Commit(user, websiteUser, path, Comment);
             _git.PullPush(websiteUser);
 
-            if (this.Action == "SaveAndContinue")
+            if (Action == "SaveAndContinue")
             {
                 return Page();
             }

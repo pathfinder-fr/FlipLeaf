@@ -12,7 +12,7 @@ namespace FlipLeaf.Readers
 
         public JsonLineDataReader(IFileSystem fileSystem)
         {
-            this._fileSystem = fileSystem;
+            _fileSystem = fileSystem;
         }
 
         public bool Accept(IStorageItem file) => file.Extension.EqualsOrdinal(".jsonl", true);

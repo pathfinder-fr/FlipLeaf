@@ -37,14 +37,14 @@ namespace FlipLeaf.Pages.Manage
 
             if (file.FamilyFolder != FamilyFolder.None)
             {
-                return this.Redirect(path);
+                return Redirect(path);
             }
 
             foreach (var reader in _contentReaders)
             {
                 if (reader.AcceptFileAsRequest(file, out var requestFile))
                 {
-                    return this.Redirect($"{_settings.BaseUrl}/" + requestFile.RelativePath);
+                    return Redirect($"{_settings.BaseUrl}/" + requestFile.RelativePath);
                 }
             }
 

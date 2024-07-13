@@ -40,7 +40,7 @@ namespace FlipLeaf.TagHelpers
 
             output.Content.AppendHtml($"<li class=\"breadcrumb-item\"><a href=\"{urlHelper.Page("Browse", new { path = string.Empty })}\">{Home}</a></li>");
 
-            var parts = this.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var parts = Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
             for (int i = 0; i < parts.Length; i++)
             {

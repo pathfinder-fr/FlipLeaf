@@ -65,7 +65,7 @@ namespace FlipLeaf.Markup
                     w.Write("''");
                     w.WriteLine();
                 }
-                else if (value.IndexOf(',') != -1)
+                else if (value.Contains(','))
                 {
                     w.Write("\"");
                     w.Write(value);
@@ -88,14 +88,14 @@ namespace FlipLeaf.Markup
             HeaderFieldDictionary? pageContext;
             try
             {
-                parsed = this.TryParseHeader(ref newContent, out pageContext);
+                parsed = TryParseHeader(ref newContent, out pageContext);
             }
             catch (SyntaxErrorException see)
             {
                 throw new InvalidOperationException($"The YAML header of the page is invalid", see);
             }
 
-            items = new HeaderFieldDictionary();
+            items = [];
 
             if (parsed && pageContext != null)
             {

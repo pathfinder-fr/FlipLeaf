@@ -4,10 +4,10 @@ namespace FlipLeaf.Templating
     {
         public FormTemplatePage(string name, FormTemplate template, HeaderFieldDictionary pageHeader, string pageContent)
         {
-            this.Name = name;
-            this.FormTemplate = template;
-            this.PageHeader = pageHeader;
-            this.PageContent = pageContent;
+            Name = name;
+            FormTemplate = template;
+            PageHeader = pageHeader;
+            PageContent = pageContent;
         }
 
         public string Name { get; }

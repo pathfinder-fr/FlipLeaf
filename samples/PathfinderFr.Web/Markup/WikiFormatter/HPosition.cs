@@ -7,10 +7,10 @@ namespace PathfinderFr.Markup.WikiFormatter
     {
         public HPosition(int index, string text, int level, int id)
         {
-            this.Index = index;
-            this.Text = text;
-            this.Level = level;
-            this.ID = id;
+            Index = index;
+            Text = text;
+            Level = level;
+            ID = id;
         }
 
         public int Index { get; set; }

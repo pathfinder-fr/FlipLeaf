@@ -6,7 +6,7 @@
 
         public NamespaceInfo(string ns)
         {
-            this.Name = ns;
+            Name = ns;
         }
 
         public string Name { get; }

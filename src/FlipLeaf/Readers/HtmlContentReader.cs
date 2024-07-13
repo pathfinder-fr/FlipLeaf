@@ -22,6 +22,8 @@ namespace FlipLeaf.Readers
             _website = website;
         }
 
+        public bool RawAllowed => false;
+
         public bool AcceptRequest(IStorageItem requestFile, out IStorageItem diskFile)
         {
             diskFile = requestFile;
@@ -38,8 +40,6 @@ namespace FlipLeaf.Readers
             requestFile = diskfile;
             return diskfile.IsHtml();
         }
-
-        public bool RawAllowed => false;
 
         public Task<HeaderFieldDictionary?> ReadHeaderAsync(IStorageItem file)
         {
