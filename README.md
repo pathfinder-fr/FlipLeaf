@@ -10,6 +10,7 @@ Principales fonctionnalités :
 * Entête de page format YAML
 * Syntaxe [liquid](https://shopify.github.io/liquid/) sur les pages
 * Site asp.net core pour le rendu et la gestion des pages
+* (TODO) générer un site statique à partir de la console
 * (TODO) templates de formulaire de gestion des pages
 * (TODO) prévisualisation du rendu avant enregistrement
 * (TODO) enregistrement temporaire des pages dans le stockage local du navigateur

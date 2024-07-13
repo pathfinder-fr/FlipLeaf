@@ -1,17 +1,16 @@
-﻿using FlipLeaf.Markup.Liquid;
-using FlipLeaf.Storage;
+﻿using FlipLeaf.Storage;
 using FlipLeaf.Website;
 using Fluid;
 using Fluid.Filters;
 using Fluid.Values;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Primitives;
 
 namespace FlipLeaf.Markup
 {
     public interface ILiquidMarkup
     {
         ValueTask<string> RenderAsync(string content, HeaderFieldDictionary headers, IWebsite website, out TemplateContext templateContext);
-
-        LayoutTemplate ParseLayout(string layout);
 
         ValueTask<string> ApplyLayoutAsync(string content, TemplateContext contentContext, IWebsite website);
     }
@@ -54,10 +53,25 @@ namespace FlipLeaf.Markup
                         throw new ArgumentException($"Layout {file} is invalid: YAML errors", nameof(file), ex);
                     }
 
-                    LayoutTemplate template;
+                    var parser = new FluidParser();
+                    parser.RegisterEmptyTag("body", async (writer, encoder, context) =>
+                    {
+                        if (context.AmbientValues.TryGetValue("body", out var body))
+                        {
+                            await writer.WriteAsync((string)body).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            throw new ParseException("Could not render body, Layouts can't be evaluated directly.");
+                        }
+
+                        return Fluid.Ast.Completion.Normal;
+                    });
+
+                    IFluidTemplate template;
                     try
                     {
-                        template = this.ParseLayout(content);
+                        template = parser.Parse(content);
                     }
                     catch (Exception ex)
                     {
@@ -94,7 +108,8 @@ namespace FlipLeaf.Markup
         public ValueTask<string> RenderAsync(string content, HeaderFieldDictionary headers, IWebsite website, out TemplateContext templateContext)
         {
             // parse content as template
-            var pageTemplate = PageTemplate.Parse(content);
+            var parser = new FluidParser();
+            var pageTemplate = parser.Parse(content);
 
             // prepare context
             templateContext = CreateTemplateContext();
@@ -103,11 +118,6 @@ namespace FlipLeaf.Markup
 
             // render content
             return pageTemplate.RenderAsync(templateContext);
-        }
-
-        public LayoutTemplate ParseLayout(string content)
-        {
-            return LayoutTemplate.Parse(content);
         }
 
         public async ValueTask<string> ApplyLayoutAsync(string source, TemplateContext sourceContext, IWebsite website)
@@ -144,10 +154,10 @@ namespace FlipLeaf.Markup
             layoutContext.SetValue(KnownVariables.Layout, layout.YamlHeader);
             layoutContext.SetValue(KnownVariables.Site, website);
 
-            layoutContext.AmbientValues.Add(LayoutTemplate.BodyAmbientValueKey, source);
+            layoutContext.AmbientValues.Add("body", source);
 
             // render layout
-            source = await layout.Template.RenderAsync(layoutContext).ConfigureAwait(false);
+            source = await layout.RenderAsync(layoutContext).ConfigureAwait(false);
 
             if (!layout.YamlHeader.TryGetValue(KnownVariables.Layout, out var outerLayoutObject) || !(outerLayoutObject is string outerLayoutFile))
             {
@@ -161,32 +171,84 @@ namespace FlipLeaf.Markup
 
         private TemplateContext CreateTemplateContext()
         {
-            var templateContext = new TemplateContext
-            {
-                MemberAccessStrategy = new MemberAccessStrategy
-                {
-                    IgnoreCasing = true,
-                    MemberNameStrategy = MemberNameStrategies.Default
-                }
-            };
+            var options = new TemplateOptions();
+            options.MemberAccessStrategy.Register(typeof(Website.IWebsite));
+            options.MemberAccessStrategy.Register(typeof(Website.Website));
+            options.Filters.AddFilter("relative_url", RelativeUrlFilterAsync);
+            options.FileProvider = _fileProvider;
 
-            templateContext.MemberAccessStrategy.Register(typeof(Website.IWebsite));
-            templateContext.MemberAccessStrategy.Register(typeof(Website.Website));
-            templateContext.Filters.AddFilter("relative_url", RelativeUrlFilter);
-            templateContext.FileProvider = _fileProvider;
-
-            return templateContext;
+            return new TemplateContext(options);
         }
 
-        private FluidValue RelativeUrlFilter(FluidValue input, FilterArguments arguments, TemplateContext context)
+        private ValueTask<FluidValue> RelativeUrlFilterAsync(FluidValue input, FilterArguments arguments, TemplateContext context)
         {
-            var baseUrl = _baseUrl;
-            if (string.IsNullOrEmpty(baseUrl))
-            {
-                return input;
-            }
+            return string.IsNullOrEmpty(_baseUrl)
+                ? ValueTask.FromResult(input)
+                : StringFilters.Prepend(input, new FilterArguments(new StringValue(_baseUrl)), context);
+        }
 
-            return StringFilters.Prepend(input, new FilterArguments(new StringValue(baseUrl)), context);
+        public class LiquidFile(IStorageItem file)
+        {
+            public virtual string Name => File.RelativePath;
+
+            protected IStorageItem File { get; } = file;
+
+            public override int GetHashCode() => File.GetHashCode();
+
+            public override bool Equals(object? obj) => obj switch
+            {
+                LiquidFile item => File.Equals(item.File),
+                _ => base.Equals(obj)
+            };
+        }
+
+        public class LiquidInclude(IStorageItem file, byte[] content) : LiquidFile(file)
+        {
+            public new IStorageItem File => base.File;
+
+            public byte[] Content { get; } = content;
+        }
+
+        public class LiquidLayout(IStorageItem file, HeaderFieldDictionary yamlHeader, IFluidTemplate template) : LiquidFile(file)
+        {
+
+            public override string Name { get; } = Path.GetFileNameWithoutExtension(file.Name);
+
+            public HeaderFieldDictionary YamlHeader { get; } = yamlHeader;
+
+            public ValueTask<string> RenderAsync(TemplateContext context) => template.RenderAsync(context);
+
+            public override int GetHashCode() => Name.GetHashCode();
+
+            public override string ToString() => Name;
+        }
+
+        private class FlipLeafFileProvider(IDictionary<string, LiquidInclude> includes) : IFileProvider
+        {
+            public IDirectoryContents GetDirectoryContents(string subpath) => NotFoundDirectoryContents.Singleton;
+
+            public IFileInfo GetFileInfo(string subpath) => includes.TryGetValue(subpath, out var include) ? new IncludeFileInfo(include) : new NotFoundFileInfo(subpath);
+
+            public IChangeToken Watch(string filter) => NullChangeToken.Singleton;
+
+            private class IncludeFileInfo(LiquidInclude include) : IFileInfo
+            {
+                private readonly byte[] _content = include.Content;
+
+                public bool Exists => true;
+
+                public long Length => 0;
+
+                public string PhysicalPath { get; } = include.File.FullPath;
+
+                public string Name { get; } = include.File.Name;
+
+                public DateTimeOffset LastModified => DateTime.MinValue;
+
+                public bool IsDirectory => false;
+
+                public Stream CreateReadStream() => new MemoryStream(_content);
+            }
         }
     }
 }
